@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- Homepage -->
+  <url>
+    <loc>https://exam-is-near.web.app/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <lastmod>2026-06-28</lastmod>
+    <image:image>
+      <image:loc>https://exam-is-near.web.app/logo_transparent__1_.png</image:loc>
+      <image:title>Exam Is Near — Free AI Study App for JEE, NEET &amp; CBSE by ArkSetu</image:title>
+    </image:image>
+  </url>
+
+  <!-- Static marketing page -->
+  <url>
+    <loc>https://exam-is-near.web.app/landing</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <lastmod>2026-06-28</lastmod>
+  </url>
+
+  <!-- Rank predictor pages (real static HTML — distinct content) -->
+  <url>
+    <loc>https://exam-is-near.web.app/neet/rank</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+    <lastmod>2026-06-28</lastmod>
+  </url>
+  <url>
+    <loc>https://exam-is-near.web.app/jee/rank</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+    <lastmod>2026-06-28</lastmod>
+  </url>
+
+  <!-- Legal / static pages -->
+  <url>
+    <loc>https://exam-is-near.web.app/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+    <lastmod>2026-06-28</lastmod>
+  </url>
+  <url>
+    <loc>https://exam-is-near.web.app/terms</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+    <lastmod>2026-06-28</lastmod>
+  </url>
+
+</urlset>

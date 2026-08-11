@@ -1,0 +1,16 @@
+{
+  "name": "exam-is-near",
+  "version": "2.0.0",
+  "description": "Exam Is Near — AI-powered study app by ArkSetu",
+  "private": true,
+  "scripts": {
+    "dev":     "firebase serve --only hosting",
+    "deploy":  "firebase deploy --only hosting",
+    "deploy:all": "firebase deploy",
+    "deploy:functions": "firebase deploy --only functions",
+    "deploy:rules": "firebase deploy --only firestore:rules"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.0.0"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "name": "Exam Is Near — Study Smart",
+  "short_name": "Exam Is Near",
+  "description": "AI-powered study companion by ArkSetu. Pomodoro, flashcards, quiz mode, analytics & more.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#08080f",
+  "theme_color": "#08080f",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Study Overview",
+      "short_name": "Overview",
+      "description": "Open study dashboard",
+      "url": "/index.html#dashboard",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "AI Tutor",
+      "short_name": "AI Tutor",
+      "description": "Ask the AI study assistant",
+      "url": "/index.html#ai",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

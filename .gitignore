@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+functions/node_modules/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Environment secrets — NEVER commit these
+.env
+.env.local
+functions/.env
+functions/.secret.local
+public/__env.js
+
+# Backup files from patch scripts
+*.bak_*
+*.bak
+
+# Throwaway patch/migration scripts (already applied)
+patch_exam_is_near.py
+patch_v2.py
+index_html_patch.html
+console.error_code
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+*.swp
+*.swo
+
+# User data exports — never commit real user data
+users.json

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>JEE Main Rank Predictor 2026 — Score to Percentile &amp; NIT Finder | ArkSetu</title>
+<meta name="description" content="Predict your JEE Main 2026 percentile and rank from your score. Free JEE rank predictor by ArkSetu — find NIT cutoffs and college options instantly."/>
+<meta name="keywords" content="JEE Main rank predictor, JEE 2026 rank predictor, JEE percentile calculator, JEE score to percentile, NIT cutoff 2026, JEE Main marks vs rank, ArkSetu"/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://exam-is-near.web.app/jee/rank"/>
+
+<meta property="og:title" content="JEE Main Rank Predictor 2026 — Score to Percentile &amp; NIT Finder"/>
+<meta property="og:description" content="Free JEE Main 2026 rank predictor. Enter your score and get your estimated percentile and NIT/IIT options. Based on 2025 cutoff data by ArkSetu."/>
+<meta property="og:url" content="https://exam-is-near.web.app/jee/rank"/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="https://exam-is-near.web.app/logo_transparent__1_.png"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="JEE Main Rank Predictor 2026 — Free Percentile Estimator"/>
+<meta name="twitter:description" content="Predict your JEE Main 2026 percentile from your score. Free tool by ArkSetu."/>
+<meta name="twitter:image" content="https://exam-is-near.web.app/logo_transparent__1_.png"/>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "JEE Main Rank Predictor 2026",
+  "url": "https://exam-is-near.web.app/jee/rank",
+  "description": "Free JEE Main 2026 rank predictor tool. Enter your score to get your estimated percentile and rank based on 2025 cutoff data.",
+  "applicationCategory": "EducationApplication",
+  "operatingSystem": "Web",
+  "isAccessibleForFree": true,
+  "author": {"@type": "Organization", "name": "ArkSetu", "url": "https://exam-is-near.web.app"},
+  "audience": {"@type": "EducationalAudience", "educationalRole": "student"}
+}
+</script>
+
+<link rel="icon" type="image/png" href="/logo_transparent__1_.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#08080f;font-family:'Inter','Segoe UI',system-ui,sans-serif;color:#EDE8E0;min-height:100vh;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:#0d0d14}
+::-webkit-scrollbar-thumb{background:#2a2a3a;border-radius:3px}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #4ECDC433}50%{box-shadow:0 0 0 12px #4ECDC400}}
+@keyframes countUp{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
+
+.fade-in{animation:fadeInUp 0.4s ease forwards}
+
+/* HEADER */
+header{border-bottom:1px solid #141420;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;background:#08080fee;backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-text{font-size:16px;font-weight:800;background:linear-gradient(90deg,#FFE66D,#ff6b35,#FFE66D);background-size:200%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:gradientShift 4s ease infinite}
+.logo-sub{font-size:9px;letter-spacing:3px;color:#444;text-transform:uppercase;margin-top:1px}
+.header-cta{background:#4ECDC4;color:#08080f;font-size:12px;font-weight:700;padding:8px 16px;border-radius:20px;text-decoration:none;transition:opacity 0.2s}
+.header-cta:hover{opacity:0.85}
+
+/* LAYOUT */
+.container{max-width:720px;margin:0 auto;padding:40px 16px 80px}
+
+/* HERO */
+.badge{display:inline-flex;align-items:center;gap:6px;background:#4ECDC415;border:1px solid #4ECDC433;border-radius:20px;padding:5px 14px;font-size:11px;color:#4ECDC4;font-weight:600;letter-spacing:0.5px;margin-bottom:20px}
+h1{font-size:clamp(1.8rem,5vw,2.8rem);font-weight:800;line-height:1.15;letter-spacing:-0.5px;margin-bottom:12px}
+.accent{background:linear-gradient(90deg,#4ECDC4,#FFE66D);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:1rem;color:#666;line-height:1.7;max-width:560px;margin-bottom:36px}
+
+/* PREDICTOR CARD */
+.predictor{background:#0d0d18;border:1px solid #4ECDC433;border-radius:20px;padding:32px;margin-bottom:32px;position:relative;overflow:hidden}
+.predictor::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#4ECDC4,#FFE66D,#4ECDC4);background-size:200%;animation:gradientShift 3s ease infinite}
+.input-label{font-size:11px;font-weight:600;letter-spacing:2px;color:#4ECDC4;text-transform:uppercase;margin-bottom:10px;display:block}
+.marks-input{width:100%;background:#08080f;border:2px solid #4ECDC433;border-radius:12px;padding:18px 20px;font-size:2rem;font-weight:800;color:#4ECDC4;font-family:'JetBrains Mono',monospace;text-align:center;outline:none;transition:border-color 0.2s;letter-spacing:2px}
+.marks-input:focus{border-color:#4ECDC4}
+.marks-input::placeholder{color:#2a2a3a}
+.marks-hint{font-size:11px;color:#444;text-align:center;margin-top:8px;margin-bottom:24px}
+.predict-btn{width:100%;background:linear-gradient(135deg,#4ECDC4,#06b6aa);color:#08080f;font-size:15px;font-weight:800;padding:16px;border:none;border-radius:12px;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif;letter-spacing:0.3px;animation:pulse 2s infinite}
+.predict-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px #4ECDC433}
+.predict-btn:active{transform:translateY(0)}
+
+/* RESULT */
+.result{display:none;margin-top:28px;border-top:1px solid #1a1a2a;padding-top:28px}
+.result.show{display:block;animation:countUp 0.4s ease forwards}
+.result-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.result-card{background:#08080f;border:1px solid #1e1e2e;border-radius:14px;padding:18px;text-align:center}
+.result-val{font-size:1.4rem;font-weight:800;font-family:'JetBrains Mono',monospace;color:#4ECDC4;line-height:1}
+.result-lbl{font-size:10px;color:#555;letter-spacing:1.5px;text-transform:uppercase;margin-top:6px}
+.result-note{font-size:12px;color:#444;text-align:center;line-height:1.7;margin-bottom:20px}
+.open-app-btn{display:block;width:100%;background:#FFE66D;color:#08080f;font-size:14px;font-weight:800;padding:14px;border-radius:12px;text-align:center;text-decoration:none;transition:all 0.2s}
+.open-app-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px #FFE66D33}
+
+/* INFO SECTIONS */
+.section{margin-bottom:40px}
+.section-title{font-size:13px;font-weight:700;letter-spacing:2px;color:#444;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.section-title::after{content:'';flex:1;height:1px;background:#1e1e2e}
+h2{font-size:1.3rem;font-weight:700;margin-bottom:12px;line-height:1.3}
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.info-card{background:#0d0d18;border:1px solid #1e1e2e;border-radius:14px;padding:18px}
+.info-card-icon{font-size:22px;margin-bottom:8px}
+.info-card-title{font-size:13px;font-weight:700;color:#EDE8E0;margin-bottom:4px}
+.info-card-text{font-size:12px;color:#555;line-height:1.6}
+
+/* CUTOFF TABLE */
+.table-wrap{background:#0d0d18;border:1px solid #1e1e2e;border-radius:14px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{background:#4ECDC410;padding:12px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1px;color:#4ECDC4;text-transform:uppercase;border-bottom:1px solid #1e1e2e}
+td{padding:11px 16px;font-size:13px;border-bottom:1px solid #0f0f18;color:#aaa}
+tr:last-child td{border-bottom:none}
+td:first-child{color:#EDE8E0;font-weight:600}
+td.rank{font-family:'JetBrains Mono',monospace;color:#4ECDC4;font-weight:700}
+
+/* FAQ */
+.faq-item{border-bottom:1px solid #1e1e2e;padding:16px 0}
+.faq-item:last-child{border-bottom:none}
+.faq-q{font-size:14px;font-weight:600;color:#EDE8E0;margin-bottom:6px}
+.faq-a{font-size:13px;color:#555;line-height:1.7}
+
+/* FOOTER */
+footer{border-top:1px solid #141420;padding:24px 20px;text-align:center}
+.footer-brand{font-size:13px;font-weight:700;background:linear-gradient(90deg,#FFE66D,#ff6b35);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.footer-links{display:flex;justify-content:center;gap:20px;margin-top:10px}
+.footer-links a{font-size:12px;color:#444;text-decoration:none}
+.footer-links a:hover{color:#aaa}
+
+@media(max-width:480px){
+  .result-grid{grid-template-columns:1fr 1fr}
+  .predictor{padding:20px}
+  h1{font-size:1.8rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">
+    <img src="/logo_transparent__1_.png" width="28" height="28" alt="ArkSetu logo"/>
+    <div>
+      <div class="logo-text">Exam Is Near</div>
+      <div class="logo-sub">by ArkSetu</div>
+    </div>
+  </a>
+  <a href="/" class="header-cta">Open App →</a>
+</header>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="fade-in" style="text-align:center;margin-bottom:48px">
+    <div class="badge" style="margin:0 auto 20px">⚡ JEE Main 2026</div>
+    <h1>JEE Main Rank Predictor<br/><span class="accent">Score to Percentile. Instantly.</span></h1>
+    <p class="hero-sub" style="margin:12px auto 0">Estimate your JEE Main 2026 percentile and rank from your score. Find which NITs and IITs are within reach — based on official 2025 cutoff data.</p>
+  </div>
+
+  <!-- PREDICTOR -->
+  <div class="predictor fade-in" style="animation-delay:0.1s">
+    <label class="input-label" for="jee-marks">Your JEE Main score (out of 300)</label>
+    <input class="marks-input" id="jee-marks" type="number" min="0" max="300" placeholder="e.g. 240" oninput="livePredict()"/>
+    <div class="marks-hint">Score = (Correct × 4) − (Wrong × 1) across Physics, Chemistry &amp; Maths</div>
+    <button class="predict-btn" onclick="predict()">⚡ Predict My Percentile &amp; Rank</button>
+
+    <div class="result" id="result">
+      <div class="result-grid">
+        <div class="result-card">
+          <div class="result-val" id="res-percentile">—</div>
+          <div class="result-lbl">Percentile</div>
+        </div>
+        <div class="result-card">
+          <div class="result-val" id="res-rank">—</div>
+          <div class="result-lbl">Est. Rank</div>
+        </div>
+        <div class="result-card">
+          <div class="result-val" id="res-college">—</div>
+          <div class="result-lbl">College Tier</div>
+        </div>
+      </div>
+      <div class="result-note" id="res-note"></div>
+      <a href="/?view=neetjee" class="open-app-btn">⚡ Open Full Rank Predictor in App →</a>
+    </div>
+  </div>
+
+  <!-- CUTOFF TABLE -->
+  <div class="section fade-in" style="animation-delay:0.2s">
+    <div class="section-title">2025 Cutoff Reference</div>
+    <h2>JEE Main Score vs Percentile — 2025 Data</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Score (out of 300)</th><th>Percentile</th><th>Est. Rank</th><th>Likely Options</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>280 – 300</td><td class="rank">99.99+</td><td class="rank">1 – 50</td><td>IIT Bombay / Delhi CSE</td></tr>
+          <tr><td>260 – 279</td><td class="rank">99.9 – 99.99</td><td class="rank">51 – 1,000</td><td>Top IITs</td></tr>
+          <tr><td>240 – 259</td><td class="rank">99.5 – 99.9</td><td class="rank">1,001 – 5,000</td><td>IITs / Top NITs</td></tr>
+          <tr><td>220 – 239</td><td class="rank">98.5 – 99.5</td><td class="rank">5,001 – 15,000</td><td>NITs (good branches)</td></tr>
+          <tr><td>200 – 219</td><td class="rank">96 – 98.5</td><td class="rank">15,001 – 40,000</td><td>NITs / IIITs</td></tr>
+          <tr><td>170 – 199</td><td class="rank">90 – 96</td><td class="rank">40,001 – 1,00,000</td><td>IIITs / GFTIs</td></tr>
+          <tr><td>140 – 169</td><td class="rank">80 – 90</td><td class="rank">1,00,001 – 2,50,000</td><td>GFTIs / State colleges</td></tr>
+          <tr><td>Below 140</td><td class="rank">&lt; 80</td><td class="rank">2,50,000+</td><td>State / Private colleges</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="section fade-in" style="animation-delay:0.25s">
+    <div class="section-title">In the App</div>
+    <h2>Built for JEE prep</h2>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-card-icon">📊</div>
+        <div class="info-card-title">Chapter Weightage</div>
+        <div class="info-card-text">JEE Mains chapter-wise marks distribution — know where to focus first.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon">🃏</div>
+        <div class="info-card-title">AI Flashcards</div>
+        <div class="info-card-text">Generate flashcards for any JEE topic — Physics, Chemistry, Maths.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon">🧠</div>
+        <div class="info-card-title">Quiz Mode</div>
+        <div class="info-card-text">Practice JEE-style MCQs with instant feedback and mistake logging.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon">📋</div>
+        <div class="info-card-title">OMR Practice</div>
+        <div class="info-card-text">Simulate the JEE bubble sheet — practice marking 90 questions accurately.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="section fade-in" style="animation-delay:0.3s">
+    <div class="section-title">FAQ</div>
+    <h2>Common questions</h2>
+    <div class="table-wrap" style="padding:0 20px">
+      <div class="faq-item">
+        <div class="faq-q">How accurate is this JEE percentile predictor?</div>
+        <div class="faq-a">Estimates are based on NTA's official score-percentile data from JEE Main 2025. Actual percentile varies session-to-session due to normalisation — use this as a reliable reference range.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What percentile do I need for NIT Trichy CSE?</div>
+        <div class="faq-a">NIT Trichy CSE typically closes around 99.1–99.3 percentile for general category under the home state quota. For other state quota it is slightly higher. Top branches at premier NITs require 98.5+ percentile.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Does JEE Main have negative marking?</div>
+        <div class="faq-a">Yes — MCQs follow +4 for correct and −1 for incorrect answers. Numerical answer type questions carry +4 for correct and no penalty for wrong answers.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What is the difference between JEE Main percentile and rank?</div>
+        <div class="faq-a">Percentile is your relative score — it shows what percentage of candidates scored below you. Rank is derived from percentile across all sessions. A 99 percentile roughly corresponds to rank ~11,000 given ~11 lakh candidates.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="fade-in" style="animation-delay:0.35s;background:#0d0d18;border:1px solid #4ECDC433;border-radius:20px;padding:32px;text-align:center">
+    <div style="font-size:32px;margin-bottom:12px">⚡</div>
+    <h2 style="margin-bottom:8px">Start your JEE prep today</h2>
+    <p style="font-size:13px;color:#555;margin-bottom:24px;line-height:1.7">AI tutor, flashcards, quiz mode, OMR practice, Pomodoro timer, rank predictor and analytics — all free, works offline.</p>
+    <a href="/" style="display:inline-block;background:linear-gradient(135deg,#4ECDC4,#06b6aa);color:#08080f;font-size:14px;font-weight:800;padding:14px 32px;border-radius:12px;text-decoration:none;transition:all 0.2s">Open Exam Is Near — Free →</a>
+  </div>
+
+</div>
+
+<!-- SEO content for crawlers -->
+<div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)" aria-hidden="true">
+  <h2>JEE Main Rank Predictor 2026 by ArkSetu</h2>
+  <p>Use ArkSetu's free JEE Main rank predictor to estimate your percentile and All India Rank from your JEE Main 2026 score. Based on NTA's official 2025 percentile data. Students scoring above 240 typically qualify for top NITs and IITs. Use our full app for chapter weightage, AI flashcards, quiz mode, OMR practice and Pomodoro timer for JEE preparation.</p>
+  <p>JEE Main 2026 percentile predictor — enter score out of 300 and get estimated rank. Useful for JoSAA counselling, NIT seat allotment, and IIT admission planning.</p>
+</div>
+
+<footer>
+  <div class="footer-brand">ArkSetu — Exam Is Near</div>
+  <div style="font-size:12px;color:#333">Free AI study app for JEE, NEET &amp; CBSE</div>
+  <div class="footer-links">
+    <a href="/">Home</a>
+    <a href="/neet/rank">NEET Rank Predictor</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/terms">Terms</a>
+  </div>
+</footer>
+
+<script>
+// JEE rank lookup table [minScore, maxScore, minPercentile, maxPercentile, minRank, maxRank, collegeTier]
+const JEE_TABLE = [
+  [280, 300, 99.99, 100,   1,      50,       'IIT Top'],
+  [260, 279, 99.9,  99.99, 51,    1000,      'IIT'],
+  [240, 259, 99.5,  99.9,  1001,  5000,      'IIT / NIT+'],
+  [220, 239, 98.5,  99.5,  5001,  15000,     'NIT Good'],
+  [200, 219, 96.0,  98.5,  15001, 40000,     'NIT / IIIT'],
+  [170, 199, 90.0,  96.0,  40001, 100000,    'IIIT / GFTI'],
+  [140, 169, 80.0,  90.0,  100001,250000,    'GFTI / State'],
+  [0,   139, 0,     80.0,  250001,1100000,   'State / Pvt'],
+];
+
+function getRankData(score){
+  for(const [mn,mx,pMin,pMax,rMin,rMax,tier] of JEE_TABLE){
+    if(score >= mn && score <= mx) return {pMin,pMax,rMin,rMax,tier};
+  }
+  return null;
+}
+
+function fmt(n){ return n >= 100000 ? (n/100000).toFixed(1)+'L+' : n.toLocaleString('en-IN'); }
+
+function predict(){
+  const score = parseInt(document.getElementById('jee-marks').value);
+  if(isNaN(score) || score < 0 || score > 300){
+    alert('Please enter a valid JEE Main score between 0 and 300.');
+    return;
+  }
+  const data = getRankData(score);
+  if(!data) return;
+
+  const pct = ((data.pMin + data.pMax) / 2).toFixed(2);
+  document.getElementById('res-percentile').textContent = pct + '%';
+  document.getElementById('res-rank').textContent = fmt(data.rMin) + '–' + fmt(data.rMax);
+  document.getElementById('res-college').textContent = data.tier;
+
+  let note = '';
+  if(score >= 260) note = '🎉 Outstanding! Top IIT branches are within reach. Focus on JEE Advanced now.';
+  else if(score >= 220) note = '✅ Strong score. Good NIT branches and several IITs are achievable through JoSAA counselling.';
+  else if(score >= 170) note = '📚 Decent score. IIITs and GFTIs are good options. Check state quota cutoffs in the app.';
+  else note = '💪 Keep going. Use chapter weightage and AI flashcards in the app to target your weak areas.';
+
+  document.getElementById('res-note').textContent = note;
+  const result = document.getElementById('result');
+  result.classList.remove('show');
+  void result.offsetWidth;
+  result.style.display = 'block';
+  result.classList.add('show');
+}
+
+function livePredict(){
+  const score = parseInt(document.getElementById('jee-marks').value);
+  if(!isNaN(score) && score >= 0 && score <= 300) predict();
+}
+
+document.getElementById('jee-marks').addEventListener('keydown', e => { if(e.key === 'Enter') predict(); });
+</script>
+
+</body>
+</html>

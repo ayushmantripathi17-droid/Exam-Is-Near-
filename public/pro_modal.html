@@ -1,0 +1,251 @@
+<!--
+  ══════════════════════════════════════════════════════
+  EXAM IS NEAR — NEW PRO MODAL
+  ══════════════════════════════════════════════════════
+  HOW TO USE:
+  Find this in index.html:
+    <!-- PRO UPGRADE MODAL -->
+    <div class="pro-upgrade-modal" id="pro-upgrade-modal">
+      ...
+    </div>
+
+  Replace the ENTIRE block (from <div class="pro-upgrade-modal"...>
+  to its closing </div>) with the code below.
+  ══════════════════════════════════════════════════════
+-->
+
+<style>
+/* ── Modal overlay ── */
+.pro-upgrade-modal{position:fixed;inset:0;background:#00000088;backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s}
+.pro-upgrade-modal.show{opacity:1;pointer-events:all}
+
+/* ── Modal box ── */
+.pro-modal-box{background:#0c0c16;border:1px solid #1e1e30;border-radius:20px;width:min(520px,94vw);max-height:90vh;overflow-y:auto;position:relative;animation:modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards}
+@keyframes modalIn{from{transform:scale(0.92) translateY(16px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+
+/* ── Close button ── */
+.pro-close-btn{position:absolute;top:14px;right:14px;background:#1a1a28;border:1px solid #2a2a3a;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#555;font-size:16px;line-height:1;transition:all 0.2s;z-index:10}
+.pro-close-btn:hover{background:#222234;color:#aaa;border-color:#444}
+
+/* ── Header gradient band ── */
+.pm-header{background:linear-gradient(135deg,#0f0f1e,#141428);border-radius:20px 20px 0 0;padding:28px 26px 22px;border-bottom:1px solid #1e1e30;position:relative;overflow:hidden}
+.pm-header::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,#FFE66D0a 0%,transparent 70%);pointer-events:none}
+
+/* ── Trial banner ── */
+.pm-trial{display:flex;align-items:center;gap:12px;background:#06D6A00d;border:1px solid #06D6A030;border-radius:12px;padding:12px 16px;margin-bottom:20px;cursor:pointer;transition:all 0.2s}
+.pm-trial:hover{background:#06D6A015;border-color:#06D6A055}
+.pm-trial-icon{width:36px;height:36px;background:#06D6A020;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.pm-trial-cta{margin-left:auto;background:#06D6A0;color:#021a12;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;border:none;cursor:pointer;font-family:'Inter',inherit;white-space:nowrap;flex-shrink:0;transition:all 0.2s}
+.pm-trial-cta:hover{background:#05c090;transform:translateY(-1px)}
+
+/* ── Plan cards grid ── */
+.pm-plans{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:0}
+.pm-plan{background:#0f0f1a;border:1px solid #1e1e2e;border-radius:12px;padding:14px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.pm-plan:hover{border-color:#333348;transform:translateY(-2px)}
+.pm-plan.featured{border-color:#FFE66D44;background:linear-gradient(135deg,#141400,#0f0f00)}
+.pm-plan.featured:hover{border-color:#FFE66D88}
+.pm-plan-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:2px 8px;border-radius:20px;margin-bottom:10px}
+.pm-plan-badge.free{background:#1e1e2e;color:#555}
+.pm-plan-badge.pro{background:#FFE66D22;color:#FFE66D;border:1px solid #FFE66D33}
+.pm-plan-badge.annual{background:#06D6A018;color:#06D6A0;border:1px solid #06D6A030}
+.pm-popular{position:absolute;top:0;right:0;background:#FFE66D;color:#0a0a00;font-size:8px;font-weight:800;padding:3px 8px;border-radius:0 12px 0 8px;letter-spacing:0.5px}
+.pm-save{position:absolute;top:0;right:0;background:#06D6A0;color:#011a0e;font-size:8px;font-weight:800;padding:3px 8px;border-radius:0 12px 0 8px;letter-spacing:0.5px}
+.pm-price{font-size:24px;font-weight:800;font-family:'JetBrains Mono',monospace;margin-bottom:2px}
+.pm-price.free-color{color:#444}
+.pm-price.pro-color{color:#FFE66D}
+.pm-price.annual-color{color:#06D6A0}
+.pm-price span{font-size:10px;font-weight:400;color:#555}
+.pm-price-sub{font-size:10px;color:#444;margin-top:2px}
+
+/* ── Features list ── */
+.pm-body{padding:20px 26px 24px}
+.pm-features-title{font-size:10px;color:#333;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px}
+.pm-feature{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #111120}
+.pm-feature:last-of-type{border-bottom:none;margin-bottom:0}
+.pm-check{width:20px;height:20px;background:#06D6A018;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:11px;color:#06D6A0;border:1px solid #06D6A025}
+.pm-feature-text{flex:1}
+.pm-feature-name{font-size:13px;font-weight:600;color:#ccc;margin-bottom:2px}
+.pm-feature-desc{font-size:11px;color:#444;line-height:1.4}
+.pm-feature-tag{font-size:10px;font-weight:600;color:#06D6A0;text-align:right;flex-shrink:0;min-width:72px}
+.pm-feature-free{font-size:9px;color:#2a2a3a;text-align:right;margin-top:2px}
+
+/* ── CTAs ── */
+.pm-cta-primary{width:100%;padding:15px;border:none;border-radius:12px;font-family:'Inter',inherit;font-size:15px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#FFE66D,#ffb700);color:#080800;letter-spacing:0.3px;transition:all 0.25s;margin-top:20px;box-shadow:0 4px 20px #FFE66D18}
+.pm-cta-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px #FFE66D28}
+.pm-cta-primary:active{transform:translateY(0)}
+.pm-cta-secondary{width:100%;padding:12px;border:1px solid #06D6A033;border-radius:12px;font-family:'Inter',inherit;font-size:13px;font-weight:700;cursor:pointer;background:#06D6A010;color:#06D6A0;letter-spacing:0.3px;transition:all 0.2s;margin-top:8px}
+.pm-cta-secondary:hover{background:#06D6A01a;border-color:#06D6A055}
+
+/* ── Trust bar ── */
+.pm-trust{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:10px;flex-wrap:wrap}
+.pm-trust-item{display:flex;align-items:center;gap:5px;font-size:10px;color:#2a2a3a;font-weight:500}
+
+/* ── Testimonial ── */
+.pm-testimonial{background:#0f0f1a;border:1px solid #1a1a28;border-radius:10px;padding:12px 14px;margin-top:14px}
+.pm-testimonial-text{font-size:12px;color:#555;font-style:italic;line-height:1.5;margin-bottom:8px}
+.pm-testimonial-author{display:flex;align-items:center;gap:8px}
+.pm-testimonial-avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#FFE66D,#ffb700);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#080800}
+.pm-testimonial-name{font-size:11px;color:#444;font-weight:500}
+</style>
+
+<div class="pro-upgrade-modal" id="pro-upgrade-modal">
+  <div class="pro-modal-box">
+    <button class="pro-close-btn" onclick="closeProModal()" aria-label="Close">✕</button>
+
+    <!-- ── Header ── -->
+    <div class="pm-header">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+        <div style="width:44px;height:44px;background:linear-gradient(135deg,#FFE66D22,#ffb70011);border:1px solid #FFE66D33;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;animation:float 3s ease-in-out infinite">⭐</div>
+        <div>
+          <div style="font-size:21px;font-weight:800;background:linear-gradient(90deg,#FFE66D,#ffb700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.3px">Upgrade to Pro</div>
+          <div style="font-size:12px;color:#555;margin-top:2px">Study smarter. Zero limits. Zero ads.</div>
+        </div>
+      </div>
+
+      <!-- Free trial banner -->
+      <div class="pm-trial" onclick="initiateTrialPayment()">
+        <div class="pm-trial-icon">🎁</div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#06D6A0;margin-bottom:2px">Try Pro FREE for 7 days</div>
+          <div style="font-size:10px;color:#444">No payment needed · Cancel anytime</div>
+        </div>
+        <button class="pm-trial-cta" onclick="event.stopPropagation();initiateTrialPayment()">Start free →</button>
+      </div>
+
+      <!-- Plan cards -->
+      <div class="pm-plans">
+        <!-- Free -->
+        <div class="pm-plan">
+          <div class="pm-plan-badge free">Free</div>
+          <div class="pm-price free-color">₹0<span>/mo</span></div>
+          <div class="pm-price-sub" style="color:#333">Basic access</div>
+        </div>
+        <!-- Monthly -->
+        <div class="pm-plan featured" onclick="initiateProPayment()">
+          <div class="pm-popular">POPULAR</div>
+          <div class="pm-plan-badge pro">Pro ✦</div>
+          <div class="pm-price pro-color">₹149<span>/mo</span></div>
+          <div class="pm-price-sub" style="color:#666">≈ ₹5/day</div>
+        </div>
+        <!-- Annual -->
+        <div class="pm-plan" onclick="initiateYearlyPayment()" style="border-color:#06D6A025">
+          <div class="pm-save">SAVE 44%</div>
+          <div class="pm-plan-badge annual">Annual ✦</div>
+          <div class="pm-price annual-color">₹999<span>/yr</span></div>
+          <div class="pm-price-sub" style="color:#444">≈ ₹83/mo</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Features ── -->
+    <div class="pm-body">
+      <div class="pm-features-title">Everything in Pro</div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Unlimited AI Flashcards & Quizzes</div>
+          <div class="pm-feature-desc">Generate unlimited cards and quiz sets from any topic</div>
+        </div>
+        <div>
+          <div class="pm-feature-tag">Unlimited</div>
+          <div class="pm-feature-free">Free: max 50</div>
+        </div>
+      </div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Priority AI Tutor</div>
+          <div class="pm-feature-desc">Faster responses, longer context, deeper explanations</div>
+        </div>
+        <div>
+          <div class="pm-feature-tag">Priority</div>
+          <div class="pm-feature-free">Free: standard</div>
+        </div>
+      </div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Ad-Free Experience</div>
+          <div class="pm-feature-desc">Zero interruptions — pure focus, always</div>
+        </div>
+        <div>
+          <div class="pm-feature-tag">No ads</div>
+          <div class="pm-feature-free">Free: ads shown</div>
+        </div>
+      </div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Cloud Backup &amp; Sync</div>
+          <div class="pm-feature-desc">Notes and PDFs auto-backed up with 500 MB storage</div>
+        </div>
+        <div>
+          <div class="pm-feature-tag">500 MB</div>
+          <div class="pm-feature-free">Free: local only</div>
+        </div>
+      </div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Export Progress as PDF</div>
+          <div class="pm-feature-desc">Download your full study report any time</div>
+        </div>
+        <div>
+          <div class="pm-feature-tag">Available</div>
+          <div class="pm-feature-free">Free: ✕</div>
+        </div>
+      </div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Advanced Analytics</div>
+          <div class="pm-feature-desc">Weekly reports, streak awards, subject-level insights</div>
+        </div>
+        <div>
+          <div class="pm-feature-tag">Full access</div>
+          <div class="pm-feature-free">Free: basic</div>
+        </div>
+      </div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Early Feature Access</div>
+          <div class="pm-feature-desc">New features before anyone else — shape the roadmap</div>
+        </div>
+        <div>
+          <div class="pm-feature-tag">Included</div>
+          <div class="pm-feature-free">Free: ✕</div>
+        </div>
+      </div>
+
+      <!-- Testimonial -->
+      <div class="pm-testimonial">
+        <div class="pm-testimonial-text">"Exam Is Near Pro helped me track my UPSC prep properly. The AI flashcards alone are worth it — I cleared mains this year!"</div>
+        <div class="pm-testimonial-author">
+          <div class="pm-testimonial-avatar">R</div>
+          <div class="pm-testimonial-name">Rahul S. · UPSC 2024 qualifier</div>
+        </div>
+      </div>
+
+      <!-- CTAs -->
+      <button onclick="initiateProPayment()" class="pm-cta-primary">⭐ Get Pro — ₹149/month →</button>
+      <button onclick="initiateYearlyPayment()" class="pm-cta-secondary">🏆 Annual Plan — ₹999/year &nbsp;·&nbsp; Save ₹792</button>
+
+      <!-- Trust signals -->
+      <div class="pm-trust">
+        <div class="pm-trust-item">🔒 Secure via Razorpay</div>
+        <div class="pm-trust-item">💳 UPI · Cards · NetBanking</div>
+        <div class="pm-trust-item">↩ Cancel anytime</div>
+      </div>
+
+      <button onclick="closeProModal()" style="display:block;width:100%;background:none;border:none;color:#1e1e2e;font-size:12px;cursor:pointer;padding:12px 0 2px;font-family:'Inter',inherit;transition:color 0.2s;font-weight:500;text-align:center" onmouseover="this.style.color='#444'" onmouseout="this.style.color='#1e1e2e'">Maybe later — keep Free plan</button>
+    </div>
+  </div>
+</div>

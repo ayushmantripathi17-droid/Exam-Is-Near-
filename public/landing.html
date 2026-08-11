@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Exam Is Near — Free AI Study App for JEE, NEET, CBSE | ArkSetu</title>
+<meta name="description" content="Free AI-powered study app with Pomodoro timer, smart flashcards, quiz mode, and AI tutor. Built for JEE, NEET, CBSE, CLAT, CUET, and every competitive exam. Start free today."/>
+<meta name="keywords" content="study app India, JEE study tracker, NEET preparation, CLAT prep, CUET, AI flashcards, pomodoro timer, exam preparation"/>
+<meta name="author" content="ArkSetu"/>
+<meta name="robots" content="index, follow"/>
+<meta property="og:title" content="Exam Is Near — AI Study Companion"/>
+<meta property="og:description" content="Free AI-powered study app with Pomodoro, flashcards, quiz mode & AI tutor. Built for Indian competitive exams."/>
+<meta property="og:url" content="https://exam-is-near.web.app"/>
+<meta property="og:type" content="website"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="theme-color" content="#08080f"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7615978175642990" crossorigin="anonymous"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#08080f;font-family:'Inter',system-ui,sans-serif;color:#EDE8E0;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#2a2a3a;border-radius:2px}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #FFE66D33}70%{box-shadow:0 0 0 12px #FFE66D00}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+.fade-up{animation:fadeUp 0.6s ease forwards}
+.delay-1{animation-delay:0.1s}
+.delay-2{animation-delay:0.2s}
+.delay-3{animation-delay:0.3s}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;background:#08080fcc;backdrop-filter:blur(16px);border-bottom:1px solid #141420;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-size:17px;font-weight:800;background:linear-gradient(90deg,#FFE66D,#ffb700,#FFE66D);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradShift 4s ease infinite;text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:6px}
+.nav-link{font-size:12px;color:#555;text-decoration:none;padding:6px 12px;border-radius:20px;transition:all 0.2s;font-weight:500}
+.nav-link:hover{color:#aaa;background:#ffffff08}
+.nav-cta{background:linear-gradient(135deg,#FFE66D,#ffb700);color:#08080f;font-size:12px;font-weight:700;padding:8px 18px;border-radius:20px;text-decoration:none;transition:all 0.2s;animation:pulse 2.5s infinite}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px #FFE66D33}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 24px 80px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:10%;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,#FFE66D06 0%,transparent 70%);pointer-events:none}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:#FFE66D0d;border:1px solid #FFE66D22;border-radius:20px;padding:6px 16px;font-size:11px;font-weight:700;color:#FFE66D88;letter-spacing:1px;text-transform:uppercase;margin-bottom:24px}
+.hero-title{font-size:clamp(36px,7vw,68px);font-weight:900;line-height:1.1;letter-spacing:-1.5px;margin-bottom:20px;max-width:820px}
+.hero-title .grad{background:linear-gradient(90deg,#FFE66D,#ffb700,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:clamp(15px,2.5vw,18px);color:#666;line-height:1.7;max-width:580px;margin:0 auto 36px}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:48px}
+.cta-primary{background:linear-gradient(135deg,#FFE66D,#ffb700);color:#080800;font-size:15px;font-weight:700;padding:14px 30px;border-radius:12px;text-decoration:none;transition:all 0.25s;letter-spacing:0.3px}
+.cta-primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px #FFE66D33}
+.cta-secondary{background:#0f0f18;color:#EDE8E0;font-size:14px;font-weight:600;padding:14px 28px;border-radius:12px;text-decoration:none;border:1px solid #2a2a3a;transition:all 0.25s}
+.cta-secondary:hover{border-color:#444;background:#141420}
+
+/* ── SOCIAL PROOF TICKER ── */
+.ticker-wrap{overflow:hidden;padding:12px 0;margin-bottom:12px;mask-image:linear-gradient(90deg,transparent,black 15%,black 85%,transparent)}
+.ticker{display:flex;gap:24px;animation:ticker 28s linear infinite;white-space:nowrap;width:max-content}
+.ticker-item{display:flex;align-items:center;gap:8px;background:#0f0f18;border:1px solid #1e1e2e;border-radius:8px;padding:6px 14px;font-size:12px;color:#555;flex-shrink:0}
+.ticker-item span{color:#FFE66D88}
+
+/* ── FEATURES ── */
+.section{padding:80px 24px;max-width:1080px;margin:0 auto}
+.section-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#FFE66D55;margin-bottom:12px}
+.section-title{font-size:clamp(24px,4vw,38px);font-weight:800;line-height:1.2;letter-spacing:-0.5px;margin-bottom:14px}
+.section-sub{font-size:15px;color:#555;line-height:1.7;max-width:540px;margin-bottom:48px}
+
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feature-card{background:#0c0c18;border:1px solid #1a1a28;border-radius:16px;padding:22px;transition:all 0.25s;position:relative;overflow:hidden}
+.feature-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#ffffff06,transparent)}
+.feature-card:hover{border-color:#2a2a3a;transform:translateY(-3px);box-shadow:0 16px 40px #00000055}
+.feature-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;flex-shrink:0}
+.feature-name{font-size:15px;font-weight:700;color:#ccc;margin-bottom:6px}
+.feature-desc{font-size:13px;color:#444;line-height:1.6}
+.feature-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:3px 8px;border-radius:20px;margin-top:12px;background:#FFE66D11;color:#FFE66D66;border:1px solid #FFE66D1a}
+.feature-badge.pro{background:#06D6A011;color:#06D6A066;border-color:#06D6A01a}
+
+/* ── STATS ── */
+.stats-bar{background:#0c0c18;border-top:1px solid #141420;border-bottom:1px solid #141420;padding:40px 24px}
+.stats-inner{max-width:860px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}
+.stat-val{font-size:32px;font-weight:900;font-family:'JetBrains Mono',monospace;background:linear-gradient(90deg,#FFE66D,#ffb700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px}
+.stat-label{font-size:12px;color:#444;font-weight:500}
+
+/* ── COMPARISON TABLE ── */
+.compare-wrap{background:#0c0c18;border:1px solid #1a1a28;border-radius:20px;overflow:hidden;margin-top:8px}
+.compare-table{width:100%;border-collapse:collapse}
+.compare-table th{padding:16px 20px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#555;text-align:left;border-bottom:1px solid #141420;background:#0f0f1a}
+.compare-table th:not(:first-child){text-align:center}
+.compare-table th.pro-col{color:#FFE66D88}
+.compare-table td{padding:14px 20px;font-size:13px;color:#666;border-bottom:1px solid #0d0d14;vertical-align:middle}
+.compare-table td:not(:first-child){text-align:center}
+.compare-table td.feature-name-cell{color:#aaa;font-weight:500}
+.compare-table tr:last-child td{border-bottom:none}
+.compare-table tr:hover td{background:#0d0d14}
+.check-yes{color:#06D6A0;font-size:16px}
+.check-no{color:#2a2a3a;font-size:14px}
+.check-limited{font-size:11px;color:#444;font-weight:500}
+
+/* ── PRICING ── */
+.pricing-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:8px}
+.price-card{background:#0c0c18;border:1px solid #1a1a28;border-radius:16px;padding:24px;position:relative;overflow:hidden;transition:all 0.25s}
+.price-card:hover{transform:translateY(-3px)}
+.price-card.featured{border-color:#FFE66D33;background:linear-gradient(135deg,#0f0f00,#0c0c00)}
+.price-popular{position:absolute;top:0;right:0;background:#FFE66D;color:#080800;font-size:8px;font-weight:800;padding:4px 12px;border-radius:0 16px 0 10px;letter-spacing:0.5px}
+.price-label{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#555;margin-bottom:14px}
+.price-amount{font-size:38px;font-weight:900;font-family:'JetBrains Mono',monospace;margin-bottom:4px}
+.price-amount.free-color{color:#333}
+.price-amount.pro-color{color:#FFE66D}
+.price-amount.annual-color{color:#06D6A0}
+.price-amount span{font-size:12px;font-weight:400;color:#444}
+.price-sub{font-size:11px;color:#444;margin-bottom:18px}
+.price-features{list-style:none;padding:0;border-top:1px solid #141420;padding-top:16px}
+.price-features li{font-size:12px;color:#555;padding:5px 0;display:flex;align-items:center;gap:8px}
+.price-features li .dot{width:5px;height:5px;border-radius:50%;background:#333;flex-shrink:0}
+.price-features li .dot.yes{background:#06D6A0}
+.price-btn{display:block;width:100%;margin-top:18px;padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;cursor:pointer;font-family:'Inter',inherit;transition:all 0.2s;border:none}
+.price-btn.free-btn{background:#0f0f18;color:#444;border:1px solid #1e1e2e}
+.price-btn.pro-btn{background:linear-gradient(135deg,#FFE66D,#ffb700);color:#080800}
+.price-btn.pro-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px #FFE66D22}
+.price-btn.annual-btn{background:#06D6A010;color:#06D6A0;border:1px solid #06D6A033}
+.price-btn.annual-btn:hover{background:#06D6A018}
+
+/* ── TESTIMONIALS ── */
+.testimonials-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.testi-card{background:#0c0c18;border:1px solid #1a1a28;border-radius:14px;padding:20px}
+.testi-stars{color:#FFE66D;font-size:12px;margin-bottom:12px;letter-spacing:1px}
+.testi-text{font-size:13px;color:#666;line-height:1.7;font-style:italic;margin-bottom:14px}
+.testi-author{display:flex;align-items:center;gap:10px}
+.testi-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.testi-name{font-size:12px;color:#555;font-weight:500}
+
+/* ── FAQ ── */
+.faq-item{border-bottom:1px solid #141420;padding:18px 0}
+.faq-q{font-size:14px;font-weight:600;color:#aaa;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.faq-q::after{content:'+';font-size:18px;color:#333;transition:transform 0.2s;flex-shrink:0}
+.faq-item.open .faq-q::after{transform:rotate(45deg);color:#FFE66D}
+.faq-a{font-size:13px;color:#555;line-height:1.7;max-height:0;overflow:hidden;transition:max-height 0.3s ease,padding 0.3s}
+.faq-item.open .faq-a{max-height:200px;padding-top:10px}
+
+/* ── FINAL CTA ── */
+.final-cta{background:linear-gradient(135deg,#0f0f1a,#141428);border:1px solid #1e1e2e;border-radius:24px;padding:60px 24px;text-align:center;margin:0 24px 80px;position:relative;overflow:hidden}
+.final-cta::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:400px;height:400px;background:radial-gradient(circle,#FFE66D07 0%,transparent 70%);pointer-events:none}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid #141420;padding:28px 24px;text-align:center}
+.footer-links{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:12px}
+.footer-link{font-size:12px;color:#333;text-decoration:none;transition:color 0.2s}
+.footer-link:hover{color:#666}
+.footer-copy{font-size:11px;color:#1e1e2e}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .features-grid,.pricing-grid,.testimonials-grid{grid-template-columns:1fr}
+  .stats-inner{grid-template-columns:1fr 1fr}
+  .compare-table{font-size:12px}
+  .nav-links .nav-link{display:none}
+}
+@media(max-width:520px){
+  .hero-ctas{flex-direction:column;align-items:stretch;text-align:center}
+  .stats-inner{grid-template-columns:1fr 1fr}
+}
+</style>
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Exam Is Near",
+  "alternateName": "Exam Is Near by ArkSetu",
+  "url": "https://exam-is-near.web.app",
+  "description": "India's free AI-powered study app for JEE Main, NEET UG, CBSE Class 10 & 12, CLAT, and CUET. AI tutor, Pomodoro timer, flashcards, mock tests, syllabus tracker, rank predictor, and study analytics — all in one installable PWA.",
+  "applicationCategory": "EducationApplication",
+  "operatingSystem": "Web, Android, iOS",
+  "inLanguage": "en",
+  "isAccessibleForFree": true,
+  "countryOfOrigin": {"@type": "Country", "name": "India"},
+  "audience": {
+    "@type": "EducationalAudience",
+    "educationalRole": "student",
+    "geographicArea": {"@type": "Country", "name": "India"}
+  },
+  "about": [
+    {"@type": "Thing", "name": "JEE Main Preparation"},
+    {"@type": "Thing", "name": "JEE Advanced Preparation"},
+    {"@type": "Thing", "name": "NEET UG Preparation"},
+    {"@type": "Thing", "name": "CBSE Class 10 Board Exams"},
+    {"@type": "Thing", "name": "CBSE Class 12 Board Exams"},
+    {"@type": "Thing", "name": "CLAT Preparation"},
+    {"@type": "Thing", "name": "CUET Preparation"}
+  ],
+  "offers": [
+    {"@type": "Offer", "name": "Free Plan", "price": "0", "priceCurrency": "INR", "availability": "https://schema.org/InStock"},
+    {"@type": "Offer", "name": "Pro Monthly", "price": "149", "priceCurrency": "INR", "availability": "https://schema.org/InStock"},
+    {"@type": "Offer", "name": "Pro Yearly", "price": "999", "priceCurrency": "INR", "availability": "https://schema.org/InStock"}
+  ],
+  "author": {
+    "@type": "Organization",
+    "name": "ArkSetu",
+    "url": "https://exam-is-near.web.app",
+    "contactPoint": {"@type": "ContactPoint", "email": "arksetu@gmail.com"},
+    "sameAs": ["https://twitter.com/ArkSetu"]
+  }
+}
+</script>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <a href="#" class="nav-logo">Exam Is Near</a>
+  <div class="nav-links">
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#pricing" class="nav-link">Pricing</a>
+    <a href="#faq" class="nav-link">FAQ</a>
+    <a href="index.html" class="nav-cta">Open App →</a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+
+
+<!-- ── FAQ ── -->
+<section class="section" id="faq" style="padding-top:0">
+  <div class="section-label">FAQ</div>
+  <h2 class="section-title">Common questions</h2>
+
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Is Exam Is Near really free?</div>
+    <div class="faq-a">Yes! The core features — Pomodoro timer, syllabus tracker, basic flashcards — are completely free with no time limit. Pro is optional and unlocks AI features and removes ads.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">How does the 7-day free trial work?</div>
+    <div class="faq-a">Sign in with Google, go to Pro → Start Free Trial. No payment details needed. After 7 days, you return to the free plan automatically. One trial per account.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Can I use it offline?</div>
+    <div class="faq-a">Yes! Exam Is Near is a PWA (Progressive Web App). Install it from your browser and most features work offline. AI features require internet.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Which payment methods are supported?</div>
+    <div class="faq-a">UPI (GPay, PhonePe, Paytm), credit/debit cards, and NetBanking — all via Razorpay, India's most trusted payment gateway.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Can I cancel my Pro subscription?</div>
+    <div class="faq-a">Yes, cancel any time from within the app. You keep Pro access until the end of your billing period. No hidden fees.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q" onclick="toggleFaq(this)">Is my study data safe?</div>
+    <div class="faq-a">Pro user data is backed up to Firebase (Google Cloud) and only accessible to you when signed in. We never sell your data. See our Privacy Policy for full details.</div>
+  </div>
+</section>
+
+<!-- ── FINAL CTA ── -->
+<div style="max-width:1080px;margin:0 auto">
+  <div class="final-cta">
+    <div style="font-size:40px;margin-bottom:16px;animation:float 3s ease-in-out infinite">🎓</div>
+    <h2 style="font-size:clamp(24px,4vw,38px);font-weight:900;letter-spacing:-0.5px;margin-bottom:12px">Your exam is near.<br>Start studying smarter today.</h2>
+    <p style="font-size:15px;color:#555;margin-bottom:32px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.7">Free to start. 7-day Pro trial available. No credit card needed.</p>
+    <a href="index.html" class="cta-primary" style="font-size:16px;padding:16px 36px">Open Exam Is Near — it's free →</a>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-links">
+    <a href="index.html" class="footer-link">App</a>
+    <a href="#features" class="footer-link">Features</a>
+    <a href="#pricing" class="footer-link">Pricing</a>
+    <a href="terms.html" class="footer-link">Terms of Service</a>
+    <a href="privacy.html" class="footer-link">Privacy Policy</a>
+    <a href="mailto:arksetu@gmail.com" class="footer-link">Contact</a>
+  </div>
+  <div class="footer-copy">© 2025 ArkSetu · Exam Is Near · exam-is-near.web.app · Made with ❤ in India</div>
+</footer>
+
+<script>
+function toggleFaq(el){
+  const item = el.parentElement;
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i=>i.classList.remove('open'));
+  if(!isOpen) item.classList.add('open');
+}
+
+// Intersection observer for scroll animations
+const obs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; } });
+},{threshold:0.1});
+document.querySelectorAll('.feature-card,.price-card,.testi-card').forEach(el=>{
+  el.style.opacity='0';el.style.transform='translateY(16px)';el.style.transition='opacity 0.5s ease,transform 0.5s ease';
+  obs.observe(el);
+});
+</script>
+
+</body>
+</html>

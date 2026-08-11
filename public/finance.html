@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>(function(){try{
+  var t = localStorage.getItem('eis_theme');
+  if(!t){ t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark'; }
+  document.documentElement.setAttribute('data-theme', t);
+}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ArkSetu Finance — Control Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:var(--bg);--surface:var(--surface);--border:var(--border);--border2:var(--border2);
+  --gold:#FFE66D;--gold2:#ffb700;--green:#06D6A0;--red:#FF4444;--blue:#4ECDC4;--orange:#FF6B35;--purple:#9B59B6;--pink:#FF6B9D;
+  --text:#EDE8E0;--muted:#4a4a6a;--dim:var(--dim);
+  --card:var(--card);--card2:var(--card2);
+  --glow-green:0 0 30px #06D6A015;--glow-gold:0 0 30px #FFE66D15;--glow-red:0 0 30px #FF444415;
+}
+body{background:var(--bg);font-family:'Syne',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── AUTH GATE ── */
+#auth-gate{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;
+  background-image:radial-gradient(ellipse at 50% 0%,#06D6A008 0%,transparent 70%)}
+.auth-orb{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#06D6A022,#4ECDC422);border:1px solid #06D6A033;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:8px;box-shadow:var(--glow-green)}
+.auth-logo{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:4px;color:var(--muted);text-transform:uppercase}
+.auth-title{font-size:36px;font-weight:800;background:linear-gradient(135deg,var(--green),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-1px}
+.auth-sub{font-size:12px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.auth-divider{width:40px;height:1px;background:var(--border2)}
+.auth-badge{font-size:10px;color:var(--green);background:#06D6A010;border:1px solid #06D6A030;border-radius:20px;padding:5px 16px;letter-spacing:2px;font-family:'Space Mono',monospace;text-transform:uppercase}
+.auth-btn{display:flex;align-items:center;gap:12px;background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:14px 32px;cursor:pointer;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text);transition:all .25s;letter-spacing:.5px;margin-top:4px}
+.auth-btn:hover{border-color:var(--green);box-shadow:var(--glow-green);transform:translateY(-1px)}
+.auth-btn img{width:20px;height:20px}
+#auth-error{color:var(--red);font-size:11px;background:#FF444410;border:1px solid #FF444430;padding:8px 16px;border-radius:8px;display:none;letter-spacing:.3px}
+
+/* ── PIN GATE ── */
+#pin-gate{position:fixed;inset:0;background:var(--bg);z-index:9998;display:none;align-items:center;justify-content:center;flex-direction:column;gap:18px;
+  background-image:radial-gradient(ellipse at 50% 0%,#06D6A008 0%,transparent 70%)}
+#pin-gate.show{display:flex}
+.pin-orb{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#06D6A022,#4ECDC422);border:1px solid #06D6A033;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:var(--glow-green)}
+.pin-title{font-size:20px;font-weight:800;color:var(--text)}
+.pin-sub{font-size:11px;color:var(--muted);letter-spacing:.5px}
+.pin-dots{display:flex;gap:12px;margin:4px 0}
+.pin-dot{width:12px;height:12px;border-radius:50%;background:var(--border2);border:1px solid var(--border2);transition:all .2s}
+.pin-dot.filled{background:var(--green);border-color:var(--green);box-shadow:0 0 10px #06D6A066}
+.pin-input{position:absolute;opacity:0;width:0;height:0}
+.pin-keypad{display:grid;grid-template-columns:repeat(3,56px);gap:8px;margin-top:4px}
+.pin-key{width:56px;height:56px;border-radius:12px;background:var(--card2);border:1px solid var(--border2);color:var(--text);font-family:'Space Mono',monospace;font-size:16px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.pin-key:hover{border-color:var(--green);background:#06D6A010;transform:scale(1.05)}
+.pin-key:active{transform:scale(.95)}
+.pin-key.del{color:var(--muted);font-size:18px}
+.pin-key.zero{grid-column:2}
+#pin-error{color:var(--red);font-size:11px;display:none;background:#FF444410;padding:6px 16px;border-radius:8px;border:1px solid #FF444430}
+
+/* ── LAYOUT ── */
+#app{display:none;min-height:100vh}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:232px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:200;transition:transform .28s cubic-bezier(.4,0,.2,1)}
+.sidebar-logo{padding:22px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#06D6A022,#4ECDC422);border:1px solid #06D6A033;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.logo-tag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;line-height:1}
+.logo-name{font-size:16px;font-weight:800;color:var(--text);line-height:1.2}
+.nav-section{padding:12px 12px 4px;font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.nav-items{flex:1;padding:8px 12px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.3px;color:var(--muted);transition:all .2s;border:1px solid transparent}
+.nav-item:hover{color:var(--text);background:#ffffff06;border-color:var(--border2)}
+.nav-item.active{color:var(--bg);background:var(--green);border-color:var(--green);box-shadow:0 4px 14px #06D6A030}
+.nav-item .icon{font-size:14px;width:18px;text-align:center}
+.nav-divider{height:1px;background:var(--border);margin:8px 12px}
+.sidebar-footer{padding:14px 16px;border-top:1px solid var(--border)}
+.admin-badge{display:flex;align-items:center;gap:10px;padding:10px;background:var(--card2);border-radius:10px;border:1px solid var(--border2)}
+.admin-avatar{width:30px;height:30px;border-radius:50%;border:2px solid var(--green);object-fit:cover;flex-shrink:0}
+.admin-name{font-size:11px;font-weight:700;color:var(--text);letter-spacing:.2px;line-height:1.2}
+.admin-role{font-size:9px;color:var(--green);letter-spacing:1.5px;text-transform:uppercase}
+.footer-btns{display:flex;gap:6px;margin-top:10px}
+.footer-btn{flex:1;background:none;border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:7px 6px;font-family:'Syne',sans-serif;font-size:10px;cursor:pointer;transition:all .2s;letter-spacing:.3px;font-weight:600;text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;gap:4px}
+.footer-btn:hover{border-color:var(--green);color:var(--green)}
+.footer-btn.danger:hover{border-color:var(--red);color:var(--red)}
+
+/* Mobile */
+.mobile-topbar{display:none;position:fixed;top:0;left:0;right:0;height:52px;background:var(--surface);border-bottom:1px solid var(--border);z-index:150;align-items:center;justify-content:space-between;padding:0 16px}
+.mobile-logo{font-size:14px;font-weight:800;color:var(--green);display:flex;align-items:center;gap:8px}
+.hamburger{background:none;border:1px solid var(--border2);border-radius:8px;width:34px;height:34px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:0;transition:all .2s}
+.hamburger span{display:block;width:14px;height:1.5px;background:var(--muted);border-radius:2px;transition:all .28s}
+.hamburger.open span:nth-child(1){transform:translateY(5.5px) rotate(45deg);background:var(--green)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg);background:var(--green)}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:#00000088;z-index:190;backdrop-filter:blur(4px)}
+.sidebar-overlay.show{display:block}
+.main{margin-left:232px;padding:28px 32px;min-height:100vh}
+.page{display:none}.page.active{display:block}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .mobile-topbar{display:flex}
+  .main{margin-left:0;padding:66px 14px 24px}
+  .topbar{flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:20px}
+  #toast{bottom:12px;right:12px;left:12px;text-align:center}
+}
+@media(max-width:480px){
+  .main{padding:60px 10px 20px}
+  .stat-card{padding:14px}
+  .stat-value{font-size:22px}
+}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:16px}
+.topbar-left{display:flex;flex-direction:column;gap:4px}
+.page-title{font-size:26px;font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:10px}
+.page-sub{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.refresh-btn{background:var(--card);border:1px solid var(--border2);color:var(--muted);border-radius:10px;padding:9px 18px;cursor:pointer;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.5px;transition:all .2s;display:flex;align-items:center;gap:7px}
+.refresh-btn:hover{border-color:var(--green);color:var(--green);box-shadow:var(--glow-green)}
+.refresh-btn.spinning .spin-icon{animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.action-btn{background:linear-gradient(135deg,var(--green),var(--blue));color:var(--bg);border:none;border-radius:10px;padding:9px 18px;cursor:pointer;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:.5px;transition:all .2s;display:flex;align-items:center;gap:7px}
+.action-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px #06D6A030}
+
+/* ── STAT CARDS ── */
+.grid{display:grid;gap:14px}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:1200px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.grid-3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}}
+
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;position:relative;overflow:hidden;transition:all .25s;cursor:default}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.stat-card.gold{border-color:#FFE66D18}.stat-card.gold:hover{border-color:#FFE66D44;box-shadow:var(--glow-gold)}
+.stat-card.green{border-color:#06D6A018}.stat-card.green:hover{border-color:#06D6A044;box-shadow:var(--glow-green)}
+.stat-card.red{border-color:#FF444418}.stat-card.red:hover{border-color:#FF444444;box-shadow:var(--glow-red)}
+.stat-card.blue{border-color:#4ECDC418}.stat-card.blue:hover{border-color:#4ECDC444}
+.stat-card.orange{border-color:#FF6B3518}.stat-card.orange:hover{border-color:#FF6B3544}
+.stat-card.purple{border-color:#9B59B618}.stat-card.purple:hover{border-color:#9B59B644}
+.stat-card.pink{border-color:#FF6B9D18}.stat-card.pink:hover{border-color:#FF6B9D44}
+.stat-glow{position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;opacity:.07;filter:blur(10px)}
+.stat-card.gold .stat-glow{background:var(--gold)}
+.stat-card.green .stat-glow{background:var(--green)}
+.stat-card.red .stat-glow{background:var(--red)}
+.stat-card.blue .stat-glow{background:var(--blue)}
+.stat-card.orange .stat-glow{background:var(--orange)}
+.stat-card.purple .stat-glow{background:var(--purple)}
+.stat-card.pink .stat-glow{background:var(--pink)}
+.stat-label{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.stat-label-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.stat-card.gold .stat-label-dot{background:var(--gold)}
+.stat-card.green .stat-label-dot{background:var(--green)}
+.stat-card.red .stat-label-dot{background:var(--red)}
+.stat-card.blue .stat-label-dot{background:var(--blue)}
+.stat-card.orange .stat-label-dot{background:var(--orange)}
+.stat-card.purple .stat-label-dot{background:var(--purple)}
+.stat-card.pink .stat-label-dot{background:var(--pink)}
+.stat-value{font-family:'Space Mono',monospace;font-size:30px;font-weight:700;line-height:1;letter-spacing:-1px}
+.stat-card.gold .stat-value{color:var(--gold)}
+.stat-card.green .stat-value{color:var(--green)}
+.stat-card.red .stat-value{color:var(--red)}
+.stat-card.blue .stat-value{color:var(--blue)}
+.stat-card.orange .stat-value{color:var(--orange)}
+.stat-card.purple .stat-value{color:var(--purple)}
+.stat-card.pink .stat-value{color:var(--pink)}
+.stat-change{font-size:10px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:4px}
+.stat-trend-up{color:var(--green);font-size:10px}
+.stat-trend-down{color:var(--red);font-size:10px}
+
+/* ── SECTION CARD ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:14px;transition:border-color .2s}
+.card:hover{border-color:var(--border2)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.card-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.card-title-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.card-action{font-size:10px;color:var(--green);cursor:pointer;font-weight:700;letter-spacing:.5px;background:none;border:1px solid #06D6A030;border-radius:6px;padding:4px 10px;font-family:'Syne',sans-serif;transition:all .2s}
+.card-action:hover{background:#06D6A010;border-color:var(--green)}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th{background:#06060f;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);padding:12px 16px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:12px 16px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#ffffff03}
+.mono{font-family:'Space Mono',monospace;font-size:11px}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.badge-pro{background:#FFE66D18;color:var(--gold);border:1px solid #FFE66D30}
+.badge-free{background:var(--card2);color:var(--muted);border:1px solid var(--border2)}
+.badge-annual{background:#9B59B618;color:var(--purple);border:1px solid #9B59B630}
+.badge-success{background:#06D6A018;color:var(--green);border:1px solid #06D6A030}
+.badge-fail{background:#FF444418;color:var(--red);border:1px solid #FF444430}
+.badge-cat{background:#4ECDC418;color:var(--blue);border:1px solid #4ECDC430}
+
+/* ── P&L SUMMARY ── */
+.pl-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.pl-row:last-child{border-bottom:none}
+.pl-row.total{border-top:1px solid var(--border2);margin-top:4px;padding-top:14px}
+.pl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pl-label{flex:1;font-size:12px;color:var(--text)}
+.pl-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.pl-amount{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;text-align:right}
+.pl-amount.positive{color:var(--green)}
+.pl-amount.negative{color:var(--red)}
+.pl-amount.neutral{color:var(--muted)}
+
+/* ── EXPENSE FORM ── */
+.exp-form{display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px;align-items:end;padding:16px;background:var(--card2);border-radius:12px;border:1px solid var(--border2);margin-bottom:16px}
+@media(max-width:768px){.exp-form{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.exp-form{grid-template-columns:1fr;}}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
+.form-input,.form-select{background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'Syne',sans-serif;font-size:12px;outline:none;transition:border-color .2s;width:100%}
+.form-input:focus,.form-select:focus{border-color:var(--green)}
+.form-select option{background:var(--card2)}
+.form-btn{background:linear-gradient(135deg,var(--green),var(--blue));color:var(--bg);border:none;border-radius:8px;padding:9px 18px;cursor:pointer;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:.5px;white-space:nowrap;transition:all .2s;height:36px}
+.form-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px #06D6A030}
+.form-btn-del{background:none;border:1px solid #FF444430;color:var(--red);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;transition:all .2s}
+.form-btn-del:hover{background:#FF444415;border-color:var(--red)}
+
+/* ── BREAKEVEN ── */
+.breakeven-bar{height:8px;background:var(--border2);border-radius:4px;overflow:hidden;margin:10px 0}
+.breakeven-fill{height:100%;border-radius:4px;transition:width .6s ease;background:linear-gradient(90deg,var(--red),var(--gold),var(--green))}
+.breakeven-markers{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-family:'Space Mono',monospace}
+
+/* ── RUNWAY ── */
+.runway-months{display:flex;gap:4px;flex-wrap:wrap;margin-top:12px}
+.runway-month{width:20px;height:20px;border-radius:4px;background:var(--border2);transition:all .2s}
+.runway-month.safe{background:#06D6A0}
+.runway-month.warn{background:var(--gold)}
+.runway-month.danger{background:var(--red)}
+
+/* ── BAR CHART ── */
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:100px;padding:0 2px}
+.bar{flex:1;border-radius:4px 4px 0 0;min-height:3px;transition:all .4s;cursor:pointer;position:relative}
+.bar.revenue{background:linear-gradient(180deg,var(--green),#06D6A060)}
+.bar.expense{background:linear-gradient(180deg,var(--red),#FF444460)}
+.bar:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1a2e;border:1px solid var(--border2);border-radius:8px;padding:5px 10px;font-size:10px;white-space:nowrap;font-family:'Space Mono',monospace;color:var(--text);z-index:10;pointer-events:none}
+.bar-labels{display:flex;justify-content:space-around;margin-top:6px}
+.bar-label{font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;text-align:center;flex:1}
+.chart-legend{display:flex;gap:14px;margin-bottom:12px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:2px}
+
+/* ── EMPTY / TOAST ── */
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.25}
+.empty-text{font-size:11px;letter-spacing:.5px}
+#toast{position:fixed;bottom:24px;right:24px;padding:13px 24px;border-radius:14px;font-size:12px;font-weight:700;z-index:99999;display:none;font-family:'Syne',sans-serif;letter-spacing:.3px;backdrop-filter:blur(16px);box-shadow:0 8px 32px #00000066}
+#toast.show{display:block;animation:toastIn .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+#toast.success{background:#06D6A0f0;color:var(--bg)}
+#toast.error{background:#FF4444f0;color:#fff}
+#toast.info{background:#FFE66Df0;color:var(--bg)}
+
+/* ── PAGE HEADER GRADIENT ── */
+.page-title{background:linear-gradient(135deg,var(--text) 60%,var(--muted));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+
+/* ── ANIMATED COUNTER ── */
+@keyframes countUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.stat-value.animating{animation:countUp .4s cubic-bezier(.34,1.56,.64,1)}
+
+/* ── CARD GLOW BORDER PULSE (profit/loss) ── */
+.stat-card.profit-positive{border-color:#06D6A044!important;box-shadow:0 0 24px #06D6A018,inset 0 0 20px #06D6A008}
+.stat-card.profit-negative{border-color:#FF444444!important;box-shadow:0 0 24px #FF444418,inset 0 0 20px #FF444408}
+
+/* ── SECTION DIVIDER ── */
+.section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);margin:20px 0}
+
+/* ── METRIC ROW (for PL) ── */
+.metric-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:10px;transition:background .15s}
+.metric-row:hover{background:#ffffff04}
+.metric-row.total-row{background:linear-gradient(135deg,#06D6A008,#4ECDC408);border:1px solid #06D6A020;border-radius:10px;padding:14px 16px;margin-top:8px}
+.metric-row.loss-row{background:linear-gradient(135deg,#FF444408,transparent);border:1px solid #FF444420;border-radius:10px;padding:14px 16px;margin-top:8px}
+
+/* ── EXPENSE CATEGORY PILL ── */
+.cat-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.3px;background:var(--card2);border:1px solid var(--border2)}
+
+/* ── INPUT FOCUS GLOW ── */
+.form-input:focus,.form-select:focus{border-color:var(--green);box-shadow:0 0 0 3px #06D6A015}
+
+/* ── RUNWAY MONTH TOOLTIP ── */
+.runway-month{position:relative}
+.runway-month:hover::after{content:attr(title);position:absolute;bottom:calc(100%+4px);left:50%;transform:translateX(-50%);background:#1a1a2e;border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:9px;white-space:nowrap;color:var(--text);z-index:10;pointer-events:none;font-family:'Space Mono',monospace}
+
+/* ── OVERVIEW HERO CARD ── */
+.hero-card{background:linear-gradient(135deg,#06D6A012 0%,#4ECDC408 50%,#9B59B608 100%);border:1px solid #06D6A025;border-radius:16px;padding:24px;position:relative;overflow:hidden;margin-bottom:14px}
+.hero-card::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,#06D6A015,transparent 70%)}
+.hero-label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--green);text-transform:uppercase;margin-bottom:6px}
+.hero-value{font-family:'Space Mono',monospace;font-size:42px;font-weight:700;color:var(--green);letter-spacing:-2px;line-height:1}
+.hero-sub{font-size:11px;color:var(--muted);margin-top:8px}
+
+
+[data-theme="light"]{
+  --bg:#f2f3fa;--surface:#ffffff;--border:#e3e6f2;--border2:#d3d7e8;
+  --text:#1a1a24;--muted:#7c8296;--dim:#c2c5d3;
+  --card:#ffffff;--card2:#f7f8fc;
+  --glow-gold:0 0 30px #FFE66D22;--glow-green:0 0 30px #06D6A022;--glow-red:0 0 30px #FF444422;
+  color-scheme: light;
+}
+[data-theme="light"] body{background:var(--bg)}
+[data-theme="light"] ::-webkit-scrollbar-thumb{background:var(--border2)}
+:root, [data-theme="dark"]{ color-scheme: dark; }
+body{transition:background .35s ease,color .35s ease}
+
+/* ── Glass surfaces + toggle (shared with main app) ── */
+.glass-surface{background:color-mix(in srgb, var(--surface) 55%, transparent);backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6)}
+.theme-toggle{position:fixed;bottom:18px;right:18px;z-index:9000;width:46px;height:46px;border-radius:50%;
+  background:color-mix(in srgb, var(--card) 55%, transparent);backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6);
+  border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:19px;box-shadow:0 8px 24px rgba(0,0,0,0.3);transition:transform .25s,box-shadow .25s}
+.theme-toggle:hover{transform:translateY(-2px) scale(1.05)}
+.theme-toggle:active{transform:scale(0.94)}
+@media(max-width:700px){.theme-toggle{bottom:78px;right:14px;width:42px;height:42px;font-size:17px}}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="theme-toggle-btn" onclick="window.__toggleTheme()" aria-label="Toggle light/dark theme" title="Toggle theme">🌙</button>
+
+
+<!-- ── AUTH GATE ── -->
+<div id="auth-gate">
+  <div class="auth-orb">💰</div>
+  <div class="auth-logo">ArkSetu Platform</div>
+  <div class="auth-title">Finance Portal</div>
+  <div class="auth-sub">Restricted · Finance Access Only</div>
+  <div class="auth-divider"></div>
+  <div class="auth-badge">🔒 Payments · Earnings · P&amp;L · Runway</div>
+  <button class="auth-btn" onclick="signInAdmin()">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G"/>
+    Continue with Google
+  </button>
+  <div id="auth-error">⚠️ Access denied — not a finance admin</div>
+</div>
+
+<!-- ── PIN GATE ── -->
+<div id="pin-gate">
+  <div class="pin-orb">🔐</div>
+  <div class="pin-title">Finance PIN</div>
+  <div class="pin-sub">Enter your 4-digit PIN to continue</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="dot-0"></div>
+    <div class="pin-dot" id="dot-1"></div>
+    <div class="pin-dot" id="dot-2"></div>
+    <div class="pin-dot" id="dot-3"></div>
+  </div>
+  <input id="pin-input" class="pin-input" type="password" maxlength="4" inputmode="none"/>
+  <div class="pin-keypad">
+    <button class="pin-key" onclick="pinKey('1')">1</button>
+    <button class="pin-key" onclick="pinKey('2')">2</button>
+    <button class="pin-key" onclick="pinKey('3')">3</button>
+    <button class="pin-key" onclick="pinKey('4')">4</button>
+    <button class="pin-key" onclick="pinKey('5')">5</button>
+    <button class="pin-key" onclick="pinKey('6')">6</button>
+    <button class="pin-key" onclick="pinKey('7')">7</button>
+    <button class="pin-key" onclick="pinKey('8')">8</button>
+    <button class="pin-key" onclick="pinKey('9')">9</button>
+    <button class="pin-key zero" onclick="pinKey('0')">0</button>
+    <button class="pin-key del" onclick="pinDel()">⌫</button>
+  </div>
+  <div id="pin-error">❌ Incorrect PIN — try again</div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <div class="mobile-topbar">
+    <div class="mobile-logo">💰 Finance</div>
+    <button class="hamburger" id="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">💰</div>
+      <div>
+        <div class="logo-tag">ArkSetu</div>
+        <div class="logo-name">Finance</div>
+      </div>
+    </div>
+    <div class="nav-items">
+      <div class="nav-section">Revenue</div>
+      <div class="nav-item active" id="nav-overview" onclick="showPage('overview')"><span class="icon">📊</span>Overview</div>
+      <div class="nav-item" id="nav-payments" onclick="showPage('payments')"><span class="icon">💳</span>Payments</div>
+      <div class="nav-item" id="nav-earnings" onclick="showPage('earnings')"><span class="icon">📈</span>Earnings</div>
+      <div class="nav-divider"></div>
+      <div class="nav-section">Operations</div>
+      <div class="nav-item" id="nav-expenses" onclick="showPage('expenses')"><span class="icon">💸</span>Expenditure</div>
+      <div class="nav-item" id="nav-pl" onclick="showPage('pl')"><span class="icon">⚖️</span>P&amp;L Statement</div>
+      <div class="nav-item" id="nav-runway" onclick="showPage('runway')"><span class="icon">🛫</span>Runway</div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="admin-badge">
+        <img class="admin-avatar" id="admin-avatar" src="" alt="A"/>
+        <div>
+          <div class="admin-name" id="admin-name">Admin</div>
+          <div class="admin-role">Finance Access</div>
+        </div>
+      </div>
+      <div class="footer-btns">
+        <a href="admin.html" class="footer-btn">← Admin</a>
+        <button class="footer-btn danger" onclick="signOutAdmin()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- ── OVERVIEW ── -->
+    <div class="page active" id="page-overview">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="page-title">📊 Overview</div>
+          <div class="page-sub">Financial snapshot · All time</div>
+        </div>
+        <div class="topbar-right">
+          <button class="refresh-btn" onclick="loadAll(this)"><span class="spin-icon">↻</span> Refresh</button>
+        </div>
+      </div>
+      <!-- Hero card -->
+      <div class="hero-card">
+        <div class="hero-label">💰 Total in Bank (after Razorpay)</div>
+        <div class="hero-value" id="ov-hero-bank">—</div>
+        <div class="hero-sub" id="ov-hero-sub">Loading financial data…</div>
+      </div>
+      <!-- KPI Row 1 -->
+      <div class="grid grid-4" style="margin-bottom:14px">
+        <div class="stat-card green"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Gross Collected</div><div class="stat-value" id="ov-gross">—</div><div class="stat-change">after discounts, before fees</div></div>
+        <div class="stat-card gold"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>After Razorpay</div><div class="stat-value" id="ov-after-rp">—</div><div class="stat-change" id="ov-after-rp-sub">what hits your bank</div></div>
+        <div class="stat-card red"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Total Expenses</div><div class="stat-value" id="ov-expenses">—</div><div class="stat-change">this month</div></div>
+        <div class="stat-card pink"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Net Profit / Loss</div><div class="stat-value" id="ov-net">—</div><div class="stat-change" id="ov-net-sub">revenue − expenses</div></div>
+      </div>
+      <!-- KPI Row 2 -->
+      <div class="grid grid-4" style="margin-bottom:20px">
+        <div class="stat-card blue"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>MRR</div><div class="stat-value" id="ov-mrr">—</div><div class="stat-change">monthly recurring</div></div>
+        <div class="stat-card purple"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>ARR</div><div class="stat-value" id="ov-arr">—</div><div class="stat-change">annual recurring</div></div>
+        <div class="stat-card orange"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Razorpay Fees</div><div class="stat-value" id="ov-rp-fee">—</div><div class="stat-change">2.36% per transaction</div></div>
+        <div class="stat-card gold"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Discount Lost</div><div class="stat-value" id="ov-discount">—</div><div class="stat-change">coupon revenue lost</div></div>
+      </div>
+      <!-- Chart -->
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><div class="card-title-dot"></div>Revenue vs Expenses (6 months)</div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Revenue</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Expenses</div>
+          </div>
+          <div class="bar-chart" id="ov-chart"></div>
+          <div class="bar-labels" id="ov-chart-labels"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><div class="card-title-dot"></div>This Month at a Glance</div></div>
+          <div id="ov-glance"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAYMENTS ── -->
+    <div class="page" id="page-payments">
+      <div class="topbar">
+        <div class="topbar-left"><div class="page-title">💳 Payments</div><div class="page-sub">Razorpay orders & transactions</div></div>
+        <button class="refresh-btn" onclick="loadPayments(this)"><span class="spin-icon">↻</span> Refresh</button>
+      </div>
+      <div class="grid grid-4" style="margin-bottom:14px">
+        <div class="stat-card green"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Successful</div><div class="stat-value" id="pay-success">—</div></div>
+        <div class="stat-card red"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Failed</div><div class="stat-value" id="pay-failed">—</div></div>
+        <div class="stat-card orange"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Pending</div><div class="stat-value" id="pay-pending">—</div></div>
+        <div class="stat-card gold"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Total Collected</div><div class="stat-value" id="pay-total">—</div></div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Order ID</th><th>Payment ID</th><th>User</th><th>Plan</th><th>MRP</th><th>Coupon</th><th>Discount</th><th>Net Paid</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody id="payments-tbody"><tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EARNINGS ── -->
+    <div class="page" id="page-earnings">
+      <div class="topbar">
+        <div class="topbar-left"><div class="page-title">📈 Earnings</div><div class="page-sub">Revenue analytics · Razorpay adjusted</div></div>
+        <button class="refresh-btn" onclick="loadEarnings(this)"><span class="spin-icon">↻</span> Refresh</button>
+      </div>
+      <div class="grid grid-4" style="margin-bottom:14px">
+        <div class="stat-card gold"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Gross Collected</div><div class="stat-value" id="earn-net">—</div><div class="stat-change" id="earn-net-sub">after discounts</div></div>
+        <div class="stat-card green"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>After Razorpay</div><div class="stat-value" id="earn-after-rp">—</div><div class="stat-change" id="earn-after-rp-sub">hits your bank</div></div>
+        <div class="stat-card red"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Razorpay Fees</div><div class="stat-value" id="earn-rp-fee">—</div><div class="stat-change" id="earn-rp-fee-sub">2.36%</div></div>
+        <div class="stat-card orange"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Discount Given</div><div class="stat-value" id="earn-discount">—</div><div class="stat-change" id="earn-discount-sub">coupon losses</div></div>
+      </div>
+      <div class="grid grid-4" style="margin-bottom:14px">
+        <div class="stat-card green"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>MRR (after fees)</div><div class="stat-value" id="earn-mrr">—</div><div class="stat-change" id="earn-mrr-sub">monthly recurring</div></div>
+        <div class="stat-card purple"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>ARR (after fees)</div><div class="stat-value" id="earn-arr">—</div><div class="stat-change" id="earn-arr-sub">annual recurring</div></div>
+        <div class="stat-card blue"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>ARPU (after fees)</div><div class="stat-value" id="earn-arpu">—</div><div class="stat-change">per paid user</div></div>
+        <div class="stat-card gold"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Gross MRP</div><div class="stat-value" id="earn-gross">—</div><div class="stat-change" id="earn-gross-sub">list price reference</div></div>
+      </div>
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Monthly Revenue Trend</div></div>
+          <div class="bar-chart" id="earn-bar-chart"></div>
+          <div class="bar-labels" id="earn-bar-labels"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Plan Breakdown</div></div>
+          <div id="plan-breakdown"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><div class="card-title-dot"></div>🎁 Admin Grants (Excluded from Revenue)</div></div>
+        <div id="grant-impact"><div style="font-size:12px;color:var(--muted);padding:8px 0">Load data to see admin grants</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Coupon Impact</div></div>
+        <div id="coupon-impact"></div>
+      </div>
+    </div>
+
+    <!-- ── EXPENDITURE ── -->
+    <div class="page" id="page-expenses">
+      <div class="topbar">
+        <div class="topbar-left"><div class="page-title">💸 Expenditure</div><div class="page-sub">Monthly operating costs</div></div>
+        <div style="display:flex;gap:8px">
+          <button class="refresh-btn" id="rzp-fetch-btn" onclick="fetchRazorpayExpense(this)" title="Auto-import Razorpay fees for this month">
+            <span class="spin-icon">↻</span> Razorpay Fees
+          </button>
+          <button class="refresh-btn" id="gcp-fetch-btn" onclick="fetchGCPExpense(this)" title="Auto-import Firebase/GCP costs for this month" style="border-color:#4285F433;color:#4ECDC4">
+            <span class="spin-icon">↻</span> GCP Costs
+          </button>
+          <button class="action-btn" onclick="document.getElementById('exp-form-wrap').style.display=document.getElementById('exp-form-wrap').style.display==='none'?'block':'none'">+ Add Expense</button>
+        </div>
+      </div>
+      <!-- Add form -->
+      <div id="exp-form-wrap" style="margin-bottom:16px;display:none">
+        <div class="exp-form">
+          <div class="form-group">
+            <div class="form-label">Description</div>
+            <input class="form-input" id="exp-desc" placeholder="e.g. Firebase Blaze plan"/>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Amount (₹)</div>
+            <input class="form-input" id="exp-amount" type="number" placeholder="500"/>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Category</div>
+            <select class="form-select" id="exp-cat">
+              <option value="infrastructure">🖥️ Infrastructure</option>
+              <option value="payment">💳 Payment Gateway</option>
+              <option value="marketing">📢 Marketing</option>
+              <option value="tools">🛠️ Tools & SaaS</option>
+              <option value="team">👥 Team / Salary</option>
+              <option value="legal">⚖️ Legal & Compliance</option>
+              <option value="other">📦 Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Month</div>
+            <input class="form-input" id="exp-month" type="month"/>
+          </div>
+          <div class="form-group" style="justify-content:flex-end">
+            <button class="form-btn" onclick="addExpense()">Add</button>
+          </div>
+        </div>
+      </div>
+      <!-- Stats -->
+      <div class="grid grid-4" style="margin-bottom:14px">
+        <div class="stat-card red"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>This Month</div><div class="stat-value" id="exp-this-month">—</div></div>
+        <div class="stat-card orange"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Last Month</div><div class="stat-value" id="exp-last-month">—</div></div>
+        <div class="stat-card purple"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>All Time</div><div class="stat-value" id="exp-all-time">—</div></div>
+        <div class="stat-card blue"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Avg / Month</div><div class="stat-value" id="exp-avg">—</div></div>
+      </div>
+      <!-- Table -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Description</th><th>Category</th><th>Amount</th><th>Month</th><th>Added</th><th></th></tr></thead>
+            <tbody id="exp-tbody"><tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No expenses logged yet. Add one above.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── P&L ── -->
+    <div class="page" id="page-pl">
+      <div class="topbar">
+        <div class="topbar-left"><div class="page-title">⚖️ P&amp;L Statement</div><div class="page-sub">Profit & loss · This month</div></div>
+        <button class="refresh-btn" onclick="loadPL(this)"><span class="spin-icon">↻</span> Refresh</button>
+      </div>
+      <div class="grid grid-2" style="margin-bottom:14px">
+        <div class="stat-card green"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Total Revenue</div><div class="stat-value" id="pl-revenue">—</div><div class="stat-change">after Razorpay fees</div></div>
+        <div class="stat-card red"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Total Expenses</div><div class="stat-value" id="pl-expenses">—</div><div class="stat-change">all categories</div></div>
+      </div>
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Income Statement</div></div>
+          <div id="pl-statement"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Expense Breakdown</div></div>
+          <div id="pl-exp-breakdown"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RUNWAY ── -->
+    <div class="page" id="page-runway">
+      <div class="topbar">
+        <div class="topbar-left"><div class="page-title">🛫 Runway</div><div class="page-sub">Break-even · Burn rate · Survival</div></div>
+      </div>
+      <!-- Runway config -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Your Inputs</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+          <div class="form-group">
+            <div class="form-label">Current Balance / Savings (₹)</div>
+            <input class="form-input" id="rw-balance" type="number" placeholder="50000" oninput="renderRunway()"/>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Monthly Burn (₹) — auto from expenses</div>
+            <input class="form-input" id="rw-burn" type="number" placeholder="auto" oninput="renderRunway()"/>
+          </div>
+          <div class="form-group">
+            <div class="form-label">Expected Monthly Growth (%)</div>
+            <input class="form-input" id="rw-growth" type="number" placeholder="10" oninput="renderRunway()"/>
+          </div>
+        </div>
+      </div>
+      <!-- Stats -->
+      <div class="grid grid-4" style="margin-bottom:14px">
+        <div class="stat-card blue"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Runway</div><div class="stat-value" id="rw-months">—</div><div class="stat-change">months remaining</div></div>
+        <div class="stat-card gold"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Monthly Burn</div><div class="stat-value" id="rw-burn-display">—</div><div class="stat-change">expenses − revenue</div></div>
+        <div class="stat-card green"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Break-even At</div><div class="stat-value" id="rw-breakeven-users">—</div><div class="stat-change">paid users needed</div></div>
+        <div class="stat-card pink"><div class="stat-glow"></div><div class="stat-label"><div class="stat-label-dot"></div>Users to Target</div><div class="stat-value" id="rw-users-needed">—</div><div class="stat-change">more users needed</div></div>
+      </div>
+      <!-- Break-even bar -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Break-even Progress</div></div>
+        <div class="breakeven-bar"><div class="breakeven-fill" id="rw-be-fill" style="width:0%"></div></div>
+        <div class="breakeven-markers"><span id="rw-be-left">0 users</span><span id="rw-be-target">— users needed</span></div>
+        <div style="margin-top:12px;font-size:11px;color:var(--muted)" id="rw-be-note"></div>
+      </div>
+      <!-- Runway visualizer -->
+      <div class="card">
+        <div class="card-header"><div class="card-title"><div class="card-title-dot"></div>Runway Visualizer</div></div>
+        <div class="runway-months" id="rw-visual"></div>
+        <div style="display:flex;gap:16px;margin-top:10px">
+          <div class="legend-item"><div class="runway-month safe" style="width:12px;height:12px;border-radius:3px;display:inline-block"></div> <span style="font-size:10px;color:var(--muted);margin-left:4px">Safe</span></div>
+          <div class="legend-item"><div class="runway-month warn" style="width:12px;height:12px;border-radius:3px;display:inline-block"></div> <span style="font-size:10px;color:var(--muted);margin-left:4px">Warning</span></div>
+          <div class="legend-item"><div class="runway-month danger" style="width:12px;height:12px;border-radius:3px;display:inline-block"></div> <span style="font-size:10px;color:var(--muted);margin-left:4px">Critical</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+<div id="toast"></div>
+
+<script type="module">
+// ── CONFIG ── (loaded from __env.js)
+const FINANCE_PIN_HASH = "8901e5df06abf35b898199e4b78a8376b724832f2206616315f5115b03896378";
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyAzd_5MxraedOo_3OuczMdNOvtOk-JRQBo",
+  authDomain:        "exam-is-near.firebaseapp.com",
+  projectId:         "exam-is-near",
+  storageBucket:     "exam-is-near.firebasestorage.app",
+  messagingSenderId: "568104262716",
+  appId:             "1:568104262716:web:5cfb621349b5e234be7739"
+};
+const ADMIN_EMAIL = ["ayushmantripathi17","gmail.com"].join("@");
+
+// Shared pure helper — single source of truth, see /js/utils/helpers.js.
+// Note: esc() here now also escapes single quotes, closing a minor gap
+// this file previously had (matches admin.html's stricter version). See AUDIT.md.
+import { esc } from "/js/utils/helpers.js";
+const PRO_MONTHLY = 149, PRO_ANNUAL = 999, RP_RATE = 0.0236;
+const CAT_LABELS = {infrastructure:'🖥️ Infrastructure',payment:'💳 Payment Gateway',marketing:'📢 Marketing',tools:'🛠️ Tools & SaaS',team:'👥 Team / Salary',legal:'⚖️ Legal',other:'📦 Other'};
+
+let db, auth, currentAdmin;
+let _users=[], _payments=[], _coupons=[], _expenses=[];
+
+const {initializeApp,getApps} = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+const {getFirestore,collection,getDocs,addDoc,deleteDoc,doc,serverTimestamp} = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+const {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+const {getFunctions,httpsCallable} = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
+
+const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+db = getFirestore(app); auth = getAuth(app);
+const functions = getFunctions(app, "asia-south1");
+
+// ── expose to window (done after all functions defined below) ──
+
+// ── PIN ──
+let _pinVal = '';
+function pinKey(k) {
+  if (_pinVal.length >= 4) return;
+  _pinVal += k;
+  updateDots();
+  if (_pinVal.length === 4) setTimeout(checkPinHash, 150);
+}
+function pinDel() { _pinVal = _pinVal.slice(0,-1); updateDots(); }
+function updateDots() {
+  [0,1,2,3].forEach(i => {
+    document.getElementById('dot-'+i).classList.toggle('filled', i < _pinVal.length);
+  });
+}
+async function checkPinHash() {
+  const encoded = new TextEncoder().encode(_pinVal);
+  const hashBuf = await crypto.subtle.digest('SHA-256', encoded);
+  const hashHex = [...new Uint8Array(hashBuf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  if (hashHex === FINANCE_PIN_HASH) {
+    document.getElementById('pin-gate').classList.remove('show');
+    document.getElementById('app').style.display = 'block';
+    loadAll();
+  } else {
+    document.getElementById('pin-error').style.display = 'block';
+    [0,1,2,3].forEach(i=>document.getElementById('dot-'+i).classList.add('filled'));
+    setTimeout(()=>{
+      _pinVal = ''; updateDots();
+      document.getElementById('pin-error').style.display='none';
+    }, 900);
+  }
+}
+
+// ── AUTH ──
+onAuthStateChanged(auth, user => {
+  if (user && user.email === ADMIN_EMAIL) {
+    currentAdmin = user;
+    document.getElementById('auth-gate').style.display = 'none';
+    document.getElementById('admin-name').textContent = user.displayName || 'Admin';
+    document.getElementById('admin-avatar').src = user.photoURL || '';
+    document.getElementById('pin-gate').classList.add('show');
+  } else if (user) {
+    signOut(auth);
+    const el = document.getElementById('auth-error');
+    el.style.display='block';
+    el.textContent = '⚠️ Access denied — ' + user.email;
+  }
+});
+async function signInAdmin() {
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch(e) { toast('Sign-in failed: '+e.message,'error'); }
+}
+async function signOutAdmin() { await signOut(auth); location.reload(); }
+
+// ── NAV ──
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('active');
+  if (window.innerWidth<=768) closeSidebar();
+  const loaders = {overview:loadAll, payments:loadPayments, earnings:loadEarnings, expenses:loadExpenses, pl:loadPL, runway:loadRunway};
+  if (loaders[id]) loaders[id]();
+}
+function toggleSidebar() {
+  const s=document.getElementById('sidebar'),h=document.getElementById('hamburger'),o=document.getElementById('sidebar-overlay');
+  const open=s.classList.toggle('open'); h.classList.toggle('open',open); o.classList.toggle('show',open);
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
+
+// ── HELPERS ──
+function toast(msg,type='info'){const t=document.getElementById('toast');t.textContent=msg;t.className='show '+type;setTimeout(()=>t.className='',2800)}
+function setText(id,val){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const old=el.textContent;
+  el.textContent=val;
+  if(old!==val&&el.classList.contains('stat-value')){
+    el.classList.remove('animating');
+    void el.offsetWidth;
+    el.classList.add('animating');
+    setTimeout(()=>el.classList.remove('animating'),400);
+  }
+}
+function fmtINR(n){return '₹'+Math.round(n).toLocaleString('en-IN')}
+function fmtDate(ts){if(!ts)return'—';const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'})}
+function spinBtn(btn,on){if(!btn)return;btn.classList.toggle('spinning',on);btn.disabled=on}
+function thisMonth(){return new Date().toISOString().slice(0,7)}
+function lastMonth(){const d=new Date();d.setMonth(d.getMonth()-1);return d.toISOString().slice(0,7)}
+
+// ── FETCH ──
+async function fetchUsers() {
+  const [snap,proSnap,usersSnap] = await Promise.all([
+    getDocs(collection(db,'study_tracker')).catch(()=>({docs:[]})),
+    getDocs(collection(db,'proUsers')).catch(()=>({docs:[]})),
+    getDocs(collection(db,'users')).catch(()=>({docs:[]})),
+  ]);
+  const proMap={},studyMap={},usersMap={};
+  proSnap.docs.forEach(d=>proMap[d.id]=d.data());
+  snap.docs.forEach(d=>studyMap[d.id]=d.data());
+  usersSnap.docs.forEach(d=>usersMap[d.id]=d.data());
+  const allUids=new Set([...Object.keys(studyMap),...Object.keys(proMap),...Object.keys(usersMap)]);
+  _users=[];
+  allUids.forEach(uid=>{
+    const data=studyMap[uid]||{},pro=proMap[uid]||{},uRec=usersMap[uid]||{};
+    _users.push({uid,displayName:uRec.displayName||pro.displayName||data.displayName||(uRec.email||'').split('@')[0]||'—',
+      email:uRec.email||pro.email||data.email||'—',photoURL:uRec.photoURL||data.photoURL||'',
+      isPro:pro.isPro===true&&(pro.expiresAt||0)>Date.now(),planType:pro.plan||'free',
+      expiresAt:pro.expiresAt||0,activatedAt:pro.activatedAt||0,orderId:pro.orderId||'—',
+      paymentId:pro.paymentId||'—',amountPaid:pro.amountPaid??null,couponCode:pro.couponCode||null,
+      grantedManually:pro.grantedManually===true,grantedBy:pro.grantedBy||null});
+  });
+}
+async function fetchPayments() {
+  const [ordersSnap,failSnap]=await Promise.all([
+    getDocs(collection(db,'pendingOrders')).catch(()=>({docs:[]})),
+    getDocs(collection(db,'paymentFailures')).catch(()=>({docs:[]})),
+  ]);
+  _payments=[];
+  ordersSnap.docs.forEach(d=>_payments.push({...d.data(),id:d.id,_src:'order'}));
+  failSnap.docs.forEach(d=>_payments.push({...d.data(),id:d.id,_src:'failure'}));
+  _payments.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+}
+async function fetchCoupons() {
+  const snap=await getDocs(collection(db,'coupons')).catch(()=>({docs:[]}));
+  _coupons=snap.docs.map(d=>({...d.data(),id:d.id}));
+}
+async function fetchExpenses() {
+  const snap=await getDocs(collection(db,'finance_expenses')).catch(()=>({docs:[]}));
+  _expenses=snap.docs.map(d=>({...d.data(),id:d.id}));
+  _expenses.sort((a,b)=>((b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)));
+}
+
+function buildCouponMap(){const m={};_coupons.forEach(c=>{if(c.code)m[c.code.toUpperCase()]=c});return m}
+function resolveNet(u,cm){
+  // Admin-granted free access — no payment was made, ₹0 revenue, no Razorpay
+  if(u.grantedManually===true) return 0;
+  const mrp=u.planType==='annual'?PRO_ANNUAL:PRO_MONTHLY;
+  // Coupon users — discount applied to MRP
+  if(u.couponCode){
+    const coup=(cm||buildCouponMap())[u.couponCode.toUpperCase()];
+    if(coup&&typeof coup.discount==='number'&&coup.discount>=100) return 0;
+    if(coup&&typeof coup.discount==='number'&&coup.discount>0){
+      // Trust amountPaid if explicitly stored and is less than MRP
+      if(typeof u.amountPaid==='number'&&u.amountPaid>=0&&u.amountPaid<mrp) return u.amountPaid;
+      return Math.round(mrp*(1-coup.discount/100));
+    }
+  }
+  // Full payment — trust amountPaid if stored, else use MRP
+  if(typeof u.amountPaid==='number'&&u.amountPaid>=0&&u.amountPaid<=mrp) return u.amountPaid;
+  return mrp;
+}
+// Returns true only if user actually paid money (not admin grant, not 100% coupon)
+function isActuallyPaid(u,cm){ return !u.grantedManually && resolveNet(u,cm)>0; }
+
+// ── LOAD ALL ──
+async function loadAll(btn) {
+  spinBtn(btn,true);
+  try {
+    await Promise.all([fetchUsers(),fetchPayments(),fetchCoupons(),fetchExpenses()]);
+    renderOverview(); renderPayments(); renderEarnings(); renderExpenses(); renderPL(); renderRunway();
+  } catch(e){toast('Error: '+e.message,'error');}
+  spinBtn(btn,false);
+}
+
+// ── OVERVIEW ──
+function renderOverview() {
+  const cm=buildCouponMap();
+  const realPaid=_users.filter(u=>u.isPro&&u.planType!=='trial'&&!u.grantedManually); // exclude admin grants
+  const monthly=realPaid.filter(u=>u.planType==='monthly');
+  const annual=realPaid.filter(u=>u.planType==='annual');
+  const net=realPaid.reduce((s,u)=>s+resolveNet(u,cm),0);
+  const rpFee=Math.round(net*RP_RATE);
+  const afterRP=net-rpFee;
+  const mrp=realPaid.reduce((s,u)=>s+(u.planType==='annual'?PRO_ANNUAL:PRO_MONTHLY),0);
+  const discount=Math.max(0,mrp-net);
+  const mrr=Math.round(monthly.reduce((s,u)=>s+resolveNet(u,cm),0)*(1-RP_RATE));
+  const arr=Math.round(annual.reduce((s,u)=>s+resolveNet(u,cm),0)*(1-RP_RATE));
+  const thisMonthExp=_expenses.filter(e=>e.month===thisMonth()).reduce((s,e)=>s+(e.amount||0),0);
+  const profit=afterRP-thisMonthExp;
+
+  // Hero card
+  const heroEl=document.getElementById('ov-hero-bank');
+  if(heroEl){heroEl.textContent=fmtINR(afterRP);heroEl.classList.remove('animating');void heroEl.offsetWidth;heroEl.classList.add('animating');}
+  const heroSub=document.getElementById('ov-hero-sub');
+  const grantCount=_users.filter(u=>u.isPro&&u.grantedManually).length;
+  if(heroSub)heroSub.textContent=`${realPaid.length} paying user${realPaid.length!==1?'s':''} · ₹${rpFee.toLocaleString('en-IN')} Razorpay fees · ${grantCount>0?grantCount+' admin grants excluded · ':''}${profit>=0?'Profitable 🟢':'Loss 🔴'}`;
+
+  // Profit card dynamic class
+  const profitCard=document.querySelector('#page-overview .stat-card.pink');
+  if(profitCard){profitCard.classList.toggle('profit-positive',profit>=0);profitCard.classList.toggle('profit-negative',profit<0);}
+
+  setText('ov-gross',fmtINR(net));
+  setText('ov-after-rp',fmtINR(afterRP));
+  setText('ov-after-rp-sub','₹'+rpFee.toLocaleString('en-IN')+' fees deducted');
+  setText('ov-expenses',fmtINR(thisMonthExp));
+  const netEl=document.getElementById('ov-net');
+  if(netEl){netEl.textContent=fmtINR(Math.abs(profit));netEl.style.color=profit>=0?'var(--green)':'var(--red)';}
+  setText('ov-net-sub',profit>=0?'profitable this month':'burning cash');
+  setText('ov-mrr',fmtINR(mrr));
+  setText('ov-arr',fmtINR(arr));
+  setText('ov-rp-fee',fmtINR(rpFee));
+  setText('ov-discount',fmtINR(discount));
+
+  // Chart: 6 months revenue vs expenses
+  const months=Array.from({length:6},(_,i)=>{const d=new Date();d.setMonth(d.getMonth()-5+i);return{label:d.toLocaleString('default',{month:'short'}),key:d.toISOString().slice(0,7)};});
+  const revVals=months.map(m=>realPaid.filter(u=>u.activatedAt&&new Date(u.activatedAt).toISOString().slice(0,7)===m.key).reduce((s,u)=>s+Math.round(resolveNet(u,cm)*(1-RP_RATE)),0));
+  const expVals=months.map(m=>_expenses.filter(e=>e.month===m.key).reduce((s,e)=>s+(e.amount||0),0));
+  const maxVal=Math.max(...revVals,...expVals,1);
+  const chart=document.getElementById('ov-chart');
+  if(chart){
+    chart.innerHTML=months.map((_,i)=>`
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end">
+        <div class="bar revenue" style="width:45%;height:${Math.round((revVals[i]/maxVal)*100)}%;min-height:${revVals[i]>0?3:0}px" data-tip="Rev: ${fmtINR(revVals[i])}"></div>
+        <div class="bar expense" style="width:45%;height:${Math.round((expVals[i]/maxVal)*100)}%;min-height:${expVals[i]>0?3:0}px" data-tip="Exp: ${fmtINR(expVals[i])}"></div>
+      </div>`).join('');
+  }
+  const labelsEl=document.getElementById('ov-chart-labels');
+  if(labelsEl)labelsEl.innerHTML=months.map(m=>`<div class="bar-label">${m.label}</div>`).join('');
+
+  // Glance
+  const glance=document.getElementById('ov-glance');
+  if(glance){
+    const rows=[
+      {label:'Paid Users',val:realPaid.length,color:'var(--green)'},
+      {label:'Free Users',val:_users.filter(u=>!u.isPro).length,color:'var(--muted)'},
+      {label:'This Month Revenue',val:fmtINR(revVals[5]),color:'var(--gold)'},
+      {label:'This Month Expenses',val:fmtINR(expVals[5]),color:'var(--red)'},
+      {label:'This Month P&L',val:fmtINR(revVals[5]-expVals[5]),color:revVals[5]-expVals[5]>=0?'var(--green)':'var(--red)'},
+      {label:'Razorpay Fees (all time)',val:fmtINR(rpFee),color:'var(--orange)'},
+    ];
+    glance.innerHTML=rows.map(r=>`
+      <div class="pl-row">
+        <div style="flex:1;font-size:12px;color:var(--muted)">${r.label}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:${r.color}">${typeof r.val==='number'?r.val:r.val}</div>
+      </div>`).join('');
+  }
+}
+
+// ── PAYMENTS ──
+async function loadPayments(btn) {
+  spinBtn(btn,true);
+  try{await Promise.all([_users.length?Promise.resolve():fetchUsers(),fetchPayments(),_coupons.length?Promise.resolve():fetchCoupons()]);renderPayments();}
+  catch(e){toast('Error: '+e.message,'error');}
+  spinBtn(btn,false);
+}
+function renderPayments(){
+  const cm=buildCouponMap();
+  const allPro=_users.filter(u=>u.isPro&&u.planType!=='trial');
+  const freeGrants=allPro.filter(u=>u.grantedManually===true);           // admin-granted, ₹0
+  const actualPaid=allPro.filter(u=>u.grantedManually!==true);           // real Razorpay payments
+  const failedPays=_payments.filter(p=>p._src==='failure');
+  const pendingPays=_payments.filter(p=>p._src==='order');
+  const totalCollected=actualPaid.reduce((s,u)=>s+resolveNet(u,cm),0);  // only real money
+  setText('pay-success',actualPaid.length);   // only actual paid transactions
+  setText('pay-failed',failedPays.length);
+  setText('pay-pending',pendingPays.length);
+  setText('pay-total',fmtINR(totalCollected));// revenue = only actual payments
+
+  // ── Rows: actual paid first, then failed, then free grants at bottom ──
+  const paidRows=actualPaid.map(u=>{
+    const mrp=u.planType==='annual'?PRO_ANNUAL:PRO_MONTHLY;
+    const net=resolveNet(u,cm),discAmt=Math.max(0,mrp-net),discPct=discAmt>0?Math.round((discAmt/mrp)*100):0;
+    return{orderId:u.orderId,paymentId:u.paymentId,name:u.displayName,email:u.email,photoURL:u.photoURL,
+      plan:u.planType,mrp,net,discAmt,discPct,coupon:u.couponCode||'—',
+      status:'success',type:'paid',date:u.activatedAt?fmtDate(u.activatedAt):'—'};
+  });
+  const failRows=failedPays.map(p=>{
+    const uMatch=p.userId?_users.find(u=>u.uid===p.userId):null;
+    const mrp=p.plan==='annual'?PRO_ANNUAL:PRO_MONTHLY,net=p.amount?Math.round(p.amount/100):mrp;
+    const discAmt=Math.max(0,mrp-net),discPct=discAmt>0?Math.round((discAmt/mrp)*100):0;
+    return{orderId:p.orderId||'—',paymentId:p.paymentId||'—',
+      name:uMatch?uMatch.displayName:(p.userId||'—'),email:uMatch?uMatch.email:'',photoURL:uMatch?.photoURL||'',
+      plan:p.plan||'—',mrp,net,discAmt,discPct,coupon:p.couponCode||'—',
+      status:'fail',type:'failed',date:fmtDate(p.createdAt)};
+  });
+  const grantRows=freeGrants.map(u=>({
+    orderId:'—',paymentId:'—',name:u.displayName,email:u.email,photoURL:u.photoURL,
+    plan:u.planType,mrp:u.planType==='annual'?PRO_ANNUAL:PRO_MONTHLY,net:0,discAmt:0,discPct:0,
+    coupon:'—',status:'grant',type:'grant',date:u.activatedAt?fmtDate(u.activatedAt):'—',
+    grantedBy:u.grantedBy||'Admin',
+  }));
+
+  const rows=[...paidRows,...failRows,...grantRows];
+  const tbody=document.getElementById('payments-tbody');
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="empty-icon">💳</div><div class="empty-text">No payment records</div></div></td></tr>`;return;}
+
+  tbody.innerHTML=rows.map(r=>{
+    // Net paid cell — 3 cases: admin grant, coupon-free, actual paid
+    const netCell = r.type==='grant'
+      ? `<span style="background:#4ECDC418;color:var(--blue);border:1px solid #4ECDC430;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:800">🎁 GRANT</span>`
+      : r.net===0
+        ? `<span style="background:#FF444418;color:var(--red);border:1px solid #FF444430;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:800">COUPON FREE</span>`
+        : `<span style="color:var(--green);font-family:'Space Mono',monospace;font-weight:700">${fmtINR(r.net)}</span>`;
+    // Discount cell — only for coupon users
+    const discCell = r.type==='grant'
+      ? `<span style="color:var(--blue);font-size:10px">Admin</span>`
+      : r.discPct>0
+        ? `<span style="background:#FF444418;color:#ff6b6b;border:1px solid #FF444430;padding:2px 8px;border-radius:6px;font-size:10px;white-space:nowrap">−${r.discPct}% −₹${r.discAmt.toLocaleString('en-IN')}</span>`
+        : `<span style="color:var(--muted)">—</span>`;
+    const rowBg = r.type==='grant' ? 'background:#4ECDC408;' : r.status==='fail' ? 'background:#FF444408;' : '';
+    return`<tr style="${rowBg}">
+      <td class="mono" style="color:var(--muted);font-size:10px">${esc(r.orderId)}</td>
+      <td class="mono" style="color:var(--muted);font-size:10px">${esc(r.paymentId)}</td>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        ${r.photoURL?`<img src="${esc(r.photoURL)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'"/>`:`<div style="width:26px;height:26px;border-radius:50%;background:var(--border2);display:flex;align-items:center;justify-content:center;font-size:11px">👤</div>`}
+        <div><div style="font-weight:600;font-size:12px">${esc(r.name)}</div><div style="color:var(--muted);font-size:10px">${esc(r.email)}</div></div>
+      </div></td>
+      <td><span class="badge ${r.plan==='annual'?'badge-annual':r.plan==='trial'?'badge-free':'badge-pro'}">${r.plan}</span></td>
+      <td class="mono" style="color:var(--muted);font-size:11px;${r.discPct>0&&r.type!=='grant'?'text-decoration:line-through':''}">₹${r.mrp.toLocaleString('en-IN')}</td>
+      <td>${r.type==='grant'
+        ? `<span style="color:var(--blue);font-size:10px;font-family:monospace">by ${esc(r.grantedBy?.split('@')[0]||'admin')}</span>`
+        : r.coupon!=='—'
+          ? `<span style="background:#FFE66D18;color:var(--gold);padding:2px 7px;border-radius:6px;font-size:10px;font-family:monospace">${esc(r.coupon)}</span>`
+          : `<span style="color:var(--muted)">—</span>`}</td>
+      <td>${discCell}</td>
+      <td>${netCell}</td>
+      <td><span class="badge ${r.status==='grant'?'badge-trial':r.status==='success'?'badge-success':'badge-fail'}">${r.status}</span></td>
+      <td class="mono" style="color:var(--muted);font-size:10px">${r.date}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── EARNINGS ──
+async function loadEarnings(btn){
+  spinBtn(btn,true);
+  try{await Promise.all([_users.length?Promise.resolve():fetchUsers(),_coupons.length?Promise.resolve():fetchCoupons()]);renderEarnings();}
+  catch(e){toast('Error: '+e.message,'error');}
+  spinBtn(btn,false);
+}
+function renderEarnings(){
+  const cm=buildCouponMap();
+  // ── Segment users clearly ──
+  const proUsers   = _users.filter(u=>u.isPro);
+  const trial      = proUsers.filter(u=>u.planType==='trial');
+  const freeUsers  = _users.filter(u=>!u.isPro);
+  const grants     = proUsers.filter(u=>u.grantedManually===true);          // admin-granted, ₹0 revenue
+  const realPaid   = proUsers.filter(u=>u.planType!=='trial'&&!u.grantedManually); // actually paid
+  const monthly    = realPaid.filter(u=>u.planType==='monthly');
+  const annual     = realPaid.filter(u=>u.planType==='annual');
+  const couponFree = realPaid.filter(u=>resolveNet(u,cm)===0&&u.couponCode); // 100% coupon, ₹0
+  const couponDisc = realPaid.filter(u=>{const n=resolveNet(u,cm);return n>0&&n<(u.planType==='annual'?PRO_ANNUAL:PRO_MONTHLY);}); // partial coupon
+  const fullPaid   = realPaid.filter(u=>!u.couponCode||resolveNet(u,cm)===(u.planType==='annual'?PRO_ANNUAL:PRO_MONTHLY)); // full price
+
+  // ── Revenue: exclude admin grants entirely ──
+  const gross      = realPaid.reduce((s,u)=>s+(u.planType==='annual'?PRO_ANNUAL:PRO_MONTHLY),0); // MRP of paid users
+  const net        = realPaid.reduce((s,u)=>s+resolveNet(u,cm),0);           // actual collected (after coupon discount)
+  const rpFee      = Math.round(net*RP_RATE);
+  const afterRP    = net-rpFee;
+  const couponLost = Math.max(0,gross-net);                                   // only coupon discounts, not grants
+  const mrr        = Math.round(monthly.reduce((s,u)=>s+resolveNet(u,cm),0)*(1-RP_RATE));
+  const arr        = Math.round(annual.reduce((s,u)=>s+resolveNet(u,cm),0)*(1-RP_RATE));
+  const arpu       = realPaid.filter(u=>resolveNet(u,cm)>0).length
+                     ? Math.round(net/realPaid.filter(u=>resolveNet(u,cm)>0).length) : 0;
+
+  setText('earn-net',fmtINR(net));
+  setText('earn-net-sub',`${realPaid.filter(u=>resolveNet(u,cm)>0).length} paying users · ${grants.length} admin grants excluded`);
+  setText('earn-after-rp',fmtINR(afterRP));
+  setText('earn-after-rp-sub',`₹${rpFee.toLocaleString('en-IN')} Razorpay fees`);
+  setText('earn-rp-fee',fmtINR(rpFee));
+  setText('earn-rp-fee-sub',`on ₹${net.toLocaleString('en-IN')} collected`);
+  setText('earn-discount',fmtINR(couponLost));
+  setText('earn-discount-sub',`${couponFree.length} coupon-free + ${couponDisc.length} partial discount`);
+  setText('earn-mrr',fmtINR(mrr));setText('earn-mrr-sub',`${monthly.length} monthly subs`);
+  setText('earn-arr',fmtINR(arr));setText('earn-arr-sub',`${annual.length} annual subs`);
+  setText('earn-arpu',fmtINR(arpu));setText('earn-gross',fmtINR(gross));
+  const months=Array.from({length:6},(_,i)=>{const d=new Date();d.setMonth(d.getMonth()-5+i);return{label:d.toLocaleString('default',{month:'short'}),key:d.toISOString().slice(0,7)};});
+  const monthRev=months.map(m=>realPaid.filter(u=>u.activatedAt&&new Date(u.activatedAt).toISOString().slice(0,7)===m.key).reduce((s,u)=>s+Math.round(resolveNet(u,cm)*(1-RP_RATE)),0));
+  const maxV=Math.max(...monthRev,1);
+  const bc=document.getElementById('earn-bar-chart');
+  if(bc)bc.innerHTML=monthRev.map((v,i)=>`<div class="bar revenue" style="height:${Math.round((v/maxV)*100)}%;min-height:${v>0?4:0}px" data-tip="${months[i].label}: ${fmtINR(v)}"></div>`).join('');
+  const bl=document.getElementById('earn-bar-labels');
+  if(bl)bl.innerHTML=months.map(m=>`<div class="bar-label">${m.label}</div>`).join('');
+  const pb=document.getElementById('plan-breakdown');
+  if(pb)pb.innerHTML=[
+    {label:'Monthly Pro (paid)',    count:monthly.filter(u=>resolveNet(u,cm)>0).length, color:'var(--gold)',   net:monthly.filter(u=>resolveNet(u,cm)>0).reduce((s,u)=>s+resolveNet(u,cm),0), tag:''},
+    {label:'Monthly (coupon free)', count:monthly.filter(u=>resolveNet(u,cm)===0&&u.couponCode).length, color:'var(--orange)', net:0, tag:'coupon'},
+    {label:'Annual Pro (paid)',     count:annual.filter(u=>resolveNet(u,cm)>0).length,  color:'var(--purple)', net:annual.filter(u=>resolveNet(u,cm)>0).reduce((s,u)=>s+resolveNet(u,cm),0), tag:''},
+    {label:'Annual (coupon free)',  count:annual.filter(u=>resolveNet(u,cm)===0&&u.couponCode).length,  color:'var(--orange)', net:0, tag:'coupon'},
+    {label:'🎁 Admin Grants (₹0)', count:grants.length, color:'var(--blue)', net:0, tag:'grant'},
+    {label:'Trial',                 count:trial.length,      color:'var(--muted)', net:0, tag:''},
+    {label:'Free',                  count:freeUsers.length,  color:'var(--dim)',   net:0, tag:''},
+  ].filter(p=>p.count>0).map(p=>`
+    <div class="pl-row">
+      <div class="pl-dot" style="background:${p.color}"></div>
+      <div><div class="pl-label">${p.label}</div></div>
+      <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace">${p.count} user${p.count!==1?'s':''}</div>
+      <div class="pl-amount ${p.net>0?'positive':'neutral'}">${p.net>0?fmtINR(p.net):'—'}</div>
+    </div>`).join('');
+  // Only coupon-discounted users (admin grants handled separately above)
+  const couponedFree=realPaid.filter(u=>resolveNet(u,cm)===0&&u.couponCode&&!u.grantedManually);
+  const couponedPartial=realPaid.filter(u=>{const n=resolveNet(u,cm);return n>0&&n<(u.planType==='annual'?PRO_ANNUAL:PRO_MONTHLY)&&!u.grantedManually;});
+  const totalUses=_coupons.reduce((s,c)=>{const left=typeof c.usesLeft==='number'?c.usesLeft:c.uses;return s+(c.uses-left);},0);
+  const avgDisc=_coupons.length?Math.round(_coupons.reduce((s,c)=>s+(c.discount||0),0)/_coupons.length):0;
+  // ── Admin Grants section (separate from revenue) ──
+  const gi=document.getElementById('grant-impact');
+  if(gi){
+    if(!grants.length){
+      gi.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0">No admin-granted free access yet.</div>';
+    } else {
+      gi.innerHTML=`
+        <div style="font-size:10px;color:var(--blue);background:#4ECDC410;border:1px solid #4ECDC430;border-radius:8px;padding:8px 14px;margin-bottom:14px;letter-spacing:.3px">
+          🎁 These ${grants.length} user${grants.length!==1?'s':''} have been given free Pro access by admin. They are <strong>excluded from all revenue calculations</strong> above.
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>User</th><th>Plan</th><th>Granted By</th><th>Expires</th><th>Net Revenue</th></tr></thead>
+          <tbody>${grants.map(u=>`<tr style="background:#4ECDC408">
+            <td><div style="display:flex;align-items:center;gap:7px">
+              ${u.photoURL?`<img src="${esc(u.photoURL)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'"/>`:''}
+              <div><div style="font-size:12px;font-weight:600">${esc(u.displayName)}</div><div style="font-size:10px;color:var(--muted)">${esc(u.email)}</div></div>
+            </div></td>
+            <td><span class="badge badge-pro">${u.planType}</span></td>
+            <td style="font-size:11px;color:var(--blue)">${esc(u.grantedBy||'Admin')}</td>
+            <td class="mono" style="font-size:10px;color:var(--muted)">${u.expiresAt?fmtDate(u.expiresAt):'—'}</td>
+            <td><span style="background:#4ECDC418;color:var(--blue);border:1px solid #4ECDC430;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800">₹0</span></td>
+          </tr>`).join('')}
+          </tbody>
+        </table></div>`;
+    }
+  }
+
+  const ci=document.getElementById('coupon-impact');
+  if(ci)ci.innerHTML=`
+    <div class="grid grid-4" style="gap:10px;margin-bottom:16px">
+      ${[{v:_coupons.length,l:'Coupons Created',c:'var(--gold)'},{v:totalUses,l:'Redemptions',c:'var(--orange)'},{v:avgDisc+'%',l:'Avg Rate',c:'var(--red)'},{v:fmtINR(couponLost),l:'Coupon Revenue Lost',c:'var(--red)'}].map(x=>`
+      <div style="text-align:center;padding:14px;background:var(--card2);border-radius:12px;border:1px solid var(--border2)">
+        <div style="font-size:22px;font-weight:800;color:${x.c};font-family:'Space Mono',monospace">${x.v}</div>
+        <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:5px;text-transform:uppercase">${x.l}</div>
+      </div>`).join('')}
+    </div>
+    ${[...couponedFree,...couponedPartial].length?`
+    <div style="font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-bottom:10px;text-transform:uppercase">Discounted Orders (${couponedFree.length+couponedPartial.length})</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>User</th><th>Plan</th><th>Coupon</th><th>MRP</th><th>Discount</th><th>Net Paid</th><th>Date</th></tr></thead>
+      <tbody>${[...couponedFree,...couponedPartial].map(u=>{
+        const mrp=u.planType==='annual'?PRO_ANNUAL:PRO_MONTHLY,paid=resolveNet(u,cm),discAmt=mrp-paid,discPct=Math.round((discAmt/mrp)*100);
+        return`<tr>
+          <td><div style="display:flex;align-items:center;gap:7px">${u.photoURL?`<img src="${esc(u.photoURL)}" style="width:24px;height:24px;border-radius:50%" onerror="this.style.display='none'"/>`:''}
+            <div><div style="font-size:12px;font-weight:600">${esc(u.displayName)}</div><div style="font-size:10px;color:var(--muted)">${esc(u.email)}</div></div></div></td>
+          <td><span class="badge ${u.planType==='annual'?'badge-annual':'badge-pro'}">${u.planType}</span></td>
+          <td><span style="background:#FFE66D18;color:var(--gold);padding:2px 7px;border-radius:6px;font-size:10px;font-family:monospace">${esc(u.couponCode)}</span></td>
+          <td class="mono" style="color:var(--muted);text-decoration:line-through;font-size:11px">₹${mrp.toLocaleString('en-IN')}</td>
+          <td><span style="background:#FF444418;color:#ff6b6b;border:1px solid #FF444430;padding:2px 7px;border-radius:6px;font-size:10px">−${discPct}% −₹${discAmt.toLocaleString('en-IN')}</span></td>
+          <td>${paid===0?`<span style="background:#06D6A018;color:var(--green);border:1px solid #06D6A030;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800">FREE</span>`:`<span class="mono" style="color:var(--green);font-weight:700">${fmtINR(paid)}</span>`}</td>
+          <td class="mono" style="font-size:10px;color:var(--muted)">${fmtDate(u.activatedAt)}</td>
+        </tr>`;}).join('')}
+      </tbody></table></div>`:'<div style="font-size:12px;color:var(--muted);padding:8px 0">No discounted orders yet.</div>'}`;
+}
+
+// ── EXPENSES ──
+async function loadExpenses(btn){
+  spinBtn(btn,true);
+  try{await fetchExpenses();renderExpenses();}
+  catch(e){toast('Error: '+e.message,'error');}
+  spinBtn(btn,false);
+}
+async function addExpense(){
+  const desc=document.getElementById('exp-desc').value.trim();
+  const amount=parseFloat(document.getElementById('exp-amount').value);
+  const cat=document.getElementById('exp-cat').value;
+  const month=document.getElementById('exp-month').value||thisMonth();
+  if(!desc||!amount||amount<=0){toast('Fill in description and amount','error');return;}
+  try{
+    await addDoc(collection(db,'finance_expenses'),{desc,amount,cat,month,createdAt:serverTimestamp()});
+    toast('Expense added ✓','success');
+    document.getElementById('exp-desc').value='';
+    document.getElementById('exp-amount').value='';
+    document.getElementById('exp-form-wrap').style.display='none';
+    await fetchExpenses(); renderExpenses(); renderOverview(); renderPL(); renderRunway();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+async function deleteExpense(id){
+  if(!confirm('Delete this expense?'))return;
+  try{
+    await deleteDoc(doc(db,'finance_expenses',id));
+    toast('Deleted','info');
+    await fetchExpenses(); renderExpenses(); renderOverview(); renderPL(); renderRunway();
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+window.deleteExpense=deleteExpense;
+function renderExpenses(){
+  const thisM=thisMonth(),lastM=lastMonth();
+  const thisMonthTotal=_expenses.filter(e=>e.month===thisM).reduce((s,e)=>s+(e.amount||0),0);
+  const lastMonthTotal=_expenses.filter(e=>e.month===lastM).reduce((s,e)=>s+(e.amount||0),0);
+  const allTime=_expenses.reduce((s,e)=>s+(e.amount||0),0);
+  const months=new Set(_expenses.map(e=>e.month));
+  const avg=months.size?Math.round(allTime/months.size):0;
+  setText('exp-this-month',fmtINR(thisMonthTotal));
+  setText('exp-last-month',fmtINR(lastMonthTotal));
+  setText('exp-all-time',fmtINR(allTime));
+  setText('exp-avg',fmtINR(avg));
+  // set default month input
+  const mi=document.getElementById('exp-month');if(mi&&!mi.value)mi.value=thisM;
+  const tbody=document.getElementById('exp-tbody');
+  if(!_expenses.length){tbody.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">💸</div><div class="empty-text">No expenses logged yet</div></div></td></tr>`;return;}
+  tbody.innerHTML=_expenses.map(e=>`<tr>
+    <td style="font-weight:600;font-size:12px">${esc(e.desc)}</td>
+    <td><span class="cat-pill">${CAT_LABELS[e.cat]||e.cat}</span></td>
+    <td class="mono" style="color:var(--red);font-weight:700">${fmtINR(e.amount)}</td>
+    <td class="mono" style="color:var(--muted)">${e.month||'—'}</td>
+    <td class="mono" style="color:var(--muted);font-size:10px">${e.createdAt?fmtDate(e.createdAt):'—'}</td>
+    <td><button class="form-btn-del" onclick="deleteExpense('${e.id}')">🗑️</button></td>
+  </tr>`).join('');
+}
+
+// ── P&L ──
+async function loadPL(btn){
+  spinBtn(btn,true);
+  try{await Promise.all([_users.length?Promise.resolve():fetchUsers(),_coupons.length?Promise.resolve():fetchCoupons(),fetchExpenses()]);renderPL();}
+  catch(e){toast('Error: '+e.message,'error');}
+  spinBtn(btn,false);
+}
+function renderPL(){
+  const cm=buildCouponMap();
+  const realPaid=_users.filter(u=>u.isPro&&u.planType!=='trial');
+  const net=realPaid.reduce((s,u)=>s+resolveNet(u,cm),0);
+  const rpFee=Math.round(net*RP_RATE),afterRP=net-rpFee;
+  const gross=realPaid.reduce((s,u)=>s+(u.planType==='annual'?PRO_ANNUAL:PRO_MONTHLY),0);
+  const discount=Math.max(0,gross-net);
+  const thisMonthExp=_expenses.filter(e=>e.month===thisMonth()).reduce((s,e)=>s+(e.amount||0),0);
+  const profit=afterRP-thisMonthExp;
+  setText('pl-revenue',fmtINR(afterRP));setText('pl-expenses',fmtINR(thisMonthExp));
+  const stmt=document.getElementById('pl-statement');
+  if(stmt)stmt.innerHTML=[
+    {label:'Gross MRP (list price)',sub:'before any discounts',val:gross,color:'var(--muted)',sign:''},
+    {label:'Coupon Discounts',sub:'revenue given away',val:-discount,color:'var(--red)',sign:'−'},
+    {label:'Gross Collected',sub:'after discounts',val:net,color:'var(--gold)',sign:'',bold:true},
+    {label:'Razorpay Fees (2.36%)',sub:'gateway charges',val:-rpFee,color:'var(--orange)',sign:'−'},
+    {label:'Net Revenue',sub:'hits your bank',val:afterRP,color:'var(--green)',sign:'',bold:true},
+    {label:'Total Expenses (this month)',sub:'all categories combined',val:-thisMonthExp,color:'var(--red)',sign:'−'},
+    {label:profit>=0?'Net Profit':'Net Loss',sub:'this month',val:Math.abs(profit),color:profit>=0?'var(--green)':'var(--red)',sign:profit>=0?'':'−',bold:true,total:true},
+  ].map(r=>`
+    <div class="${r.total?(r.sign===''?'metric-row total-row':'metric-row loss-row'):'metric-row'}">
+      <div style="width:${r.total?'10':'8'}px;height:${r.total?'10':'8'}px;border-radius:50%;background:${r.color};flex-shrink:0"></div>
+      <div style="flex:1"><div style="font-size:12px;font-weight:${r.bold?'700':'500'};color:${r.bold?'var(--text)':'var(--muted)'}">${r.label}</div><div style="font-size:10px;color:var(--muted);margin-top:1px">${r.sub}</div></div>
+      <div style="font-family:'Space Mono',monospace;font-size:${r.total?'17':'13'}px;font-weight:700;color:${r.color}">${r.sign}${fmtINR(r.val)}</div>
+    </div>`).join('');
+  // Expense by category
+  const catTotals={};
+  _expenses.filter(e=>e.month===thisMonth()).forEach(e=>{catTotals[e.cat]=(catTotals[e.cat]||0)+(e.amount||0);});
+  const expBreak=document.getElementById('pl-exp-breakdown');
+  if(expBreak){
+    if(!Object.keys(catTotals).length){expBreak.innerHTML='<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">No expenses this month</div></div>';return;}
+    const sorted=Object.entries(catTotals).sort((a,b)=>b[1]-a[1]);
+    const maxCat=sorted[0][1];
+    expBreak.innerHTML=sorted.map(([cat,amt])=>`
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:12px">${CAT_LABELS[cat]||cat}</span>
+          <span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--red);font-weight:700">${fmtINR(amt)}</span>
+        </div>
+        <div style="height:4px;background:var(--border2);border-radius:2px;overflow:hidden">
+          <div style="height:100%;width:${Math.round((amt/maxCat)*100)}%;background:var(--red);border-radius:2px;transition:width .5s"></div>
+        </div>
+      </div>`).join('');
+  }
+}
+
+// ── RUNWAY ──
+async function loadRunway(){
+  if(!_users.length)await fetchUsers();
+  if(!_coupons.length)await fetchCoupons();
+  if(!_expenses.length)await fetchExpenses();
+  renderRunway();
+}
+function renderRunway(){
+  const cm=buildCouponMap();
+  const realPaid=_users.filter(u=>u.isPro&&u.planType!=='trial');
+  const net=realPaid.reduce((s,u)=>s+resolveNet(u,cm),0);
+  const afterRP=net-Math.round(net*RP_RATE);
+  const thisMonthExp=_expenses.filter(e=>e.month===thisMonth()).reduce((s,e)=>s+(e.amount||0),0);
+  const arpu=realPaid.length?Math.round(afterRP/realPaid.length):149*(1-RP_RATE);
+
+  const balance=parseFloat(document.getElementById('rw-balance')?.value)||0;
+  const burnInput=parseFloat(document.getElementById('rw-burn')?.value);
+  const growth=parseFloat(document.getElementById('rw-growth')?.value)||0;
+  const burn=burnInput>0?burnInput:Math.max(0,thisMonthExp-afterRP);
+  const rwMonths=burn>0?(balance>0?Math.floor(balance/burn):999):999;
+  const beUsers=arpu>0?Math.ceil(thisMonthExp/arpu):0;
+  const usersNeeded=Math.max(0,beUsers-realPaid.length);
+
+  const rwEl=document.getElementById('rw-months');
+  if(rwEl){
+    rwEl.textContent=rwMonths===999?'∞':rwMonths;
+    rwEl.closest('.stat-card')?.classList.toggle('profit-positive',rwMonths===999||rwMonths>12);
+    rwEl.closest('.stat-card')?.classList.toggle('profit-negative',rwMonths!==999&&rwMonths<=3);
+  }
+  setText('rw-burn-display',fmtINR(burn));
+  setText('rw-breakeven-users',beUsers);
+  setText('rw-users-needed',usersNeeded>0?'+'+usersNeeded:'✓ Done');
+
+  const pct=beUsers>0?Math.min(100,Math.round((realPaid.length/beUsers)*100)):100;
+  const fill=document.getElementById('rw-be-fill');if(fill)fill.style.width=pct+'%';
+  setText('rw-be-left',realPaid.length+' paid users');
+  setText('rw-be-target',beUsers+' needed to break even');
+  const note=document.getElementById('rw-be-note');
+  if(note)note.textContent=pct>=100?'🎉 You have reached break-even! Every new user is pure profit.':`You are ${pct}% of the way to break-even. Need ${usersNeeded} more paid users at ₹${Math.round(arpu)}/user avg.`;
+
+  // Runway visual
+  const vis=document.getElementById('rw-visual');
+  if(vis){
+    const total=Math.min(rwMonths===999?24:Math.max(rwMonths+6,12),36);
+    vis.innerHTML=Array.from({length:total},(_,i)=>{
+      let cls='runway-month';
+      if(i<rwMonths){cls+= i<rwMonths*0.5?' safe':i<rwMonths*0.8?' warn':' danger';}
+      else cls+=' danger';
+      const d=new Date();d.setMonth(d.getMonth()+i);
+      const label=d.toLocaleString('default',{month:'short',year:'2-digit'});
+      return`<div class="${cls}" title="${label}"></div>`;
+    }).join('');
+  }
+}
+
+// ── Razorpay auto-fetch ──────────────────────────────────────────
+async function fetchRazorpayExpense(btn) {
+  if (btn) { btn.disabled = true; btn.querySelector('.spin-icon').style.animation = 'spin .7s linear infinite'; }
+  try {
+    const fn   = httpsCallable(functions, 'fetchRazorpayFees');
+    const res  = await fn();
+    const data = res.data;
+
+    // Check if already logged this month
+    const existing = _expenses.find(e =>
+      e.month === data.month && e.category === 'payment' && e.description && e.description.includes('Razorpay')
+    );
+    if (existing) {
+      toast(`Razorpay fees for ${data.month} already logged (₹${existing.amount})`, 'info');
+      return;
+    }
+
+    // Auto-add as expense
+    const feeINR = Math.round(data.totalFee);
+    await addDoc(collection(db, 'finance_expenses'), {
+      description: `Razorpay Gateway Fees (${data.txCount} txns, ${data.settlements} settlements)`,
+      amount:      feeINR,
+      category:    'payment',
+      month:       data.month,
+      createdAt:   serverTimestamp(),
+      autoFetched: true,
+      meta: {
+        grossCollected: data.totalCaptured,
+        feePaid:        data.totalFee,
+        gstPaid:        data.totalTax,
+        settled:        data.settled,
+      }
+    });
+
+    await fetchExpenses();
+    renderExpenses(); renderOverview(); renderPL(); renderRunway();
+    toast(`✅ Razorpay fees imported: ₹${feeINR} for ${data.month}`, 'success');
+  } catch (err) {
+    toast('Razorpay fetch failed: ' + (err.message || err), 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.querySelector('.spin-icon').style.animation = ''; }
+  }
+}
+
+// ── GCP Billing auto-fetch ───────────────────────────────────────
+async function fetchGCPExpense(btn) {
+  if (btn) { btn.disabled = true; btn.querySelector('.spin-icon').style.animation = 'spin .7s linear infinite'; }
+  try {
+    const fn   = httpsCallable(functions, 'fetchGCPBilling');
+    const res  = await fn();
+    const data = res.data;
+
+    // Check if already logged this month
+    const existing = _expenses.find(e =>
+      e.month === data.month && e.category === 'infrastructure' && e.description && e.description.includes('GCP')
+    );
+    if (existing) {
+      toast(`GCP costs for ${data.month} already logged (₹${existing.amount})`, 'info');
+      return;
+    }
+
+    if (data.totalINR === 0) {
+      toast(`No GCP charges found for ${data.month}`, 'info');
+      return;
+    }
+
+    // Build service breakdown summary
+    const breakdown = data.services
+      .filter(s => s.cost > 0)
+      .map(s => `${s.service}: $${s.cost.toFixed(2)}`)
+      .join(', ');
+
+    await addDoc(collection(db, 'finance_expenses'), {
+      description: `GCP/Firebase Costs — ${data.month} (${breakdown})`,
+      amount:      data.totalINR,
+      category:    'infrastructure',
+      month:       data.month,
+      createdAt:   serverTimestamp(),
+      autoFetched: true,
+      meta: {
+        totalUSD:  data.totalUSD,
+        totalINR:  data.totalINR,
+        usdToInr:  data.rate,
+        services:  data.services,
+      }
+    });
+
+    await fetchExpenses();
+    renderExpenses(); renderOverview(); renderPL(); renderRunway();
+    toast(`✅ GCP costs imported: ₹${data.totalINR} ($${data.totalUSD.toFixed(2)}) for ${data.month}`, 'success');
+  } catch (err) {
+    toast('GCP fetch failed: ' + (err.message || err), 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.querySelector('.spin-icon').style.animation = ''; }
+  }
+}
+
+// ── expose all to window after functions are defined ──
+Object.assign(window,{signInAdmin,signOutAdmin,showPage,loadPayments,loadEarnings,loadAll,loadPL,addExpense,deleteExpense,renderRunway,checkPin:()=>{},pinKey,pinDel,toggleSidebar,closeSidebar,fetchRazorpayExpense,fetchGCPExpense});
+
+</script>
+<script>
+(function(){
+  function paintIcon(){
+    var btn = document.getElementById('theme-toggle-btn');
+    if(!btn) return;
+    var t = document.documentElement.getAttribute('data-theme') || 'dark';
+    btn.textContent = t === 'dark' ? '🌙' : '☀️';
+  }
+  window.__toggleTheme = function(){
+    var cur = document.documentElement.getAttribute('data-theme') || 'dark';
+    var next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try{ localStorage.setItem('eis_theme', next); }catch(e){}
+    paintIcon();
+  };
+  document.addEventListener('DOMContentLoaded', paintIcon);
+  paintIcon();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,189 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Admin check: email-based (Firebase Auth verified server-side) ──
+    // This is enforced by Firebase Auth token — cannot be spoofed from client
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == "ayushmantripathi17@gmail.com";
+    }
+
+    // ── Authenticated user helper ──
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // ── Owns the document ──
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ── Pro status — users read own; only Cloud Functions (admin SDK) or super admin write ──
+    // Admin-granted free access sets amountPaid=0, grantedManually=true, no orderId/paymentId.
+    // Cloud Functions use Admin SDK (bypasses rules) — that path is always allowed.
+    // Super admin can also write directly (e.g. grantPro from admin panel).
+    match /proUsers/{uid} {
+      allow read:  if isOwner(uid) || isAdmin();
+      allow write: if isAdmin(); // Admin panel grantPro + extendSub; Cloud Functions bypass rules
+    }
+
+    // ── Study tracker — users own data; admin can read all ──
+    // FIX: added field validation to prevent fake study hours / streak manipulation
+    function isValidStudyWrite() {
+      let data = request.resource.data;
+      return (!('studyLog' in data) || data.studyLog is map)
+          && (!('streak' in data) || (data.streak is int && data.streak >= 0 && data.streak <= 3650))
+          && (!('totalHours' in data) || (data.totalHours is number && data.totalHours >= 0 && data.totalHours <= 100000))
+          && (!('activeCourse' in data) || data.activeCourse is string);
+    }
+    match /study_tracker/{uid} {
+      allow read:  if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid) && isValidStudyWrite();
+    }
+
+    // ── Backend-only collections — admin read only; no client writes ever ──
+    match /pendingOrders/{docId}   { allow read: if isAdmin(); allow write: if false; }
+    match /fraudAttempts/{docId}   { allow read: if isAdmin(); allow write: if false; }
+    match /webhookEvents/{docId}   { allow read: if isAdmin(); allow write: if false; }
+    match /paymentFailures/{docId} { allow read: if isAdmin(); allow write: if false; }
+
+    // ── User study data ──
+    match /users/{uid} {
+      allow read, write: if isOwner(uid) || isAdmin();
+    }
+    match /users/{uid}/{document=**} {
+      allow read, write: if isOwner(uid) || isAdmin();
+    }
+
+    // ── Coupons — NO client reads ever; validation is server-side only ──
+    // Users cannot enumerate coupon codes — Cloud Function validates via Admin SDK
+    // which bypasses these rules entirely. Client never needs to read coupons directly.
+    // Coupon validation flow: client calls activateTrial CF with validateOnly:true →
+    // CF reads coupons via Admin SDK → returns {success, discount} to client.
+    // Client-side Firestore SDK query of /coupons will always fail with
+    // "Missing or insufficient permissions" by design — this is intentional.
+    match /coupons/{couponId} {
+      allow read:  if isAdmin();   // only you can see coupon list in Firebase Console
+      allow write: if isAdmin();
+    }
+
+    // ── Official study materials published from admin Control Room ──
+    match /study-materials/{docId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Quick links shown in app (admin-managed) ──
+    match /links/{docId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Quiz question banks ──
+    match /quiz-banks/{bankId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Shared files — FIX: was allow write: if request.auth != null (any user!)
+    // Now only admin can write shared files; all signed-in users can read
+    match /shared-files/{docId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Admin-managed public collections ──
+    match /admin-notes/{docId}    { allow read: if true;        allow write: if isAdmin(); }
+    match /admin-links/{docId}    { allow read: if true;        allow write: if isAdmin(); }
+    match /admin-youtube/{docId}  { allow read: if true;        allow write: if isAdmin(); }
+    match /youtube-links/{docId}  { allow read: if true;        allow write: if isAdmin(); }
+    match /themes/{docId}         { allow read: if true;        allow write: if isAdmin(); }
+    match /announcements/{docId}  { allow read: if true;        allow write: if isAdmin(); }
+    // ── Legal updates cache (bare act amendments + legal news) for NFSU AI tutor ──
+    // Written only by the refreshLegalUpdates Cloud Function (Admin SDK) or admin panel.
+    // Read by all signed-in clients so groq.js can inject it into the AI system prompt.
+    match /legal-updates/{docId}  { allow read: if true;        allow write: if isAdmin(); }
+    // FIX: was allow read: if true (maintenance flag + config values were public)
+    match /config/{docId}         { allow read: if isSignedIn(); allow write: if isAdmin(); }
+
+    // ── User files ──
+    match /user-files/{uid}/{document=**} {
+      allow read, write: if isOwner(uid) || isAdmin();
+    }
+
+    // ── Course files — public read (shown to unsigned users too); only admin writes ──
+    match /course-files/{fileId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Admin roles — team access management ──
+    // Super admin: full read/write
+    // Team members: can read ONLY their own doc (to verify their own access on login)
+    // docId is the member's email with dots replaced by underscores
+    // No client can self-grant (write locked to super admin only)
+    // FIX: was `isSignedIn()` which let ANY logged-in user list all team members.
+    // Now restricted: team members can only read their own doc (by email-derived docId).
+    match /adminRoles/{docId} {
+      allow read:  if isAdmin()
+                   || (isSignedIn() && docId == request.auth.token.email.replace('.', '_'));
+      allow write: if isAdmin();
+    }
+
+    // ── Finance expenses — only admin can read/write ──
+    match /finance_expenses/{docId} {
+      allow read:  if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ── App config — admin-managed; signed-in users can read ──
+    // Used by: loadTheme(), checkMaintenance(), loadAnnouncement()
+    match /app_config/{docId} {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Exam schedule — admin-managed; signed-in users can read ──
+    // Used by: loadExamSchedule() in dashboard countdown
+    match /exam_schedule/{docId} {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ── Payment records — admin read only; written by Cloud Functions (Admin SDK) ──
+    // Stores Razorpay order + payment history. Client never writes directly.
+    // Used by: finance.html and admin panel payment history views.
+    match /payments/{docId} {
+      allow read:  if isAdmin();
+      allow write: if false; // Cloud Functions write via Admin SDK (bypasses rules)
+    }
+
+    // ── Payment logs (append-only history) — admin read only ──
+    match /payment_logs/{docId} {
+      allow read:  if isAdmin();
+      allow write: if false;
+    }
+
+    // ── Free access grants — admin read/write; tracks manually granted Pro access ──
+    // Written by grantPro() in admin.html; grantedManually=true, amountPaid=0.
+    // Used by: resolveNet() to show ₹0 net for these users in admin panel.
+    match /free_grants/{docId} {
+      allow read:  if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ── Admin audit log — admin write only; records all admin actions ──
+    match /admin_audit/{docId} {
+      allow read:  if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ── Pro-users subcollection on users doc (dual-write path) ──
+    // Written by grantPro() and Cloud Functions for consistency
+    match /users/{uid}/pro/{docId} {
+      allow read:  if isOwner(uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+  }
+}
