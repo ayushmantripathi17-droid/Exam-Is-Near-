@@ -1340,24 +1340,140 @@ body.has-pro-bar footer.site-footer{padding-bottom:80px}
      verified via reconstruction diff at split time. Order below MUST be
      preserved exactly; see AUDIT.md.
      BUGFIX (2026-08-09): all now load with `defer` — see the long comment
-     on the helpers <script type="module"> tag near the top of <head> for why. -->
-<script defer src="/js/data/subjects.js"></script>
+     on the helpers <script type="module"> tag near the top of <head> for why.
+
+     PHASE-2 WIRING (2026-08-12): the 4 flat /js/courses/<course>/data.js
+     files + /js/courses/registry.js are replaced below by the split
+     courses/{JEE,NEET,CBSE,NFSU}/ tree (see RESTRUCTURING_NOTES.md) plus
+     the new courses/subjects-bridge.js (rebuilds the SUBJECTS_* aggregate
+     arrays the split retired) and core/course-selector.js (replaces
+     registry.js as the course-switching engine).
+
+     The per-course /features/ and /ui/ files were duplicated byte-for-byte
+     into all 4 course folders in phase 1 (not yet trimmed per-course), so
+     they still declare identical top-level `let`/`const` names — loading
+     more than one course's copies on the same page throws immediately
+     ("already been declared"). So unlike the syllabus/manifest files
+     (uniquely named, safe to load for all 4 courses at once — needed so
+     the course-selector popup can show every course), the feature/ui
+     files are injected for ONLY the active course, keyed off
+     localStorage.activeCourse, written via document.write so they still
+     land in the correct position in the single shared defer queue. -->
+<script defer src="/js/shared/app-constants.js"></script>
+<script>
+(function(){
+  function U(p){ return encodeURI(p).replace(/&/g, '%26'); }
+  function tag(src){ document.write('<script defer src="'+U(src)+'"></scr'+'ipt>'); }
+
+  // Syllabus/manifest/core files for ALL 4 courses — uniquely-named globals,
+  // no collision risk, and needed regardless of which course is active so
+  // the "Switch Course" popup works for every course, not just the current one.
+  var allCourseFiles = [
+    '/js/courses/NFSU/NFSU.js',
+    '/js/courses/NFSU/Semester 1/Syllabus/Legal Methods.js',
+    '/js/courses/NFSU/Semester 1/Syllabus/Law of Tort and Consumer Protection Laws.js',
+    '/js/courses/NFSU/Semester 1/Syllabus/Fundamentals of Computer Organization & Embedded Systems.js',
+    '/js/courses/NFSU/Semester 1/Syllabus/Basic Programming Concepts Using C.js',
+    '/js/courses/NFSU/Semester 1/Syllabus/Discrete Mathematics.js',
+    '/js/courses/NFSU/Semester 1/Syllabus/Law and Literature.js',
+    '/js/courses/NFSU/Semester 2/Syllabus/C++.js',
+    '/js/courses/NFSU/Semester 2/Syllabus/RDBMS.js',
+    '/js/courses/NFSU/Semester 2/Syllabus/Statistics.js',
+    '/js/courses/NFSU/Semester 2/Syllabus/Legal Language.js',
+    '/js/courses/NFSU/Semester 2/Syllabus/Law & Society.js',
+    '/js/courses/NFSU/Semester 2/Syllabus/Jurisprudence.js',
+    '/js/courses/NFSU/Semester 3/Syllabus/Constitutional Law I.js',
+    '/js/courses/NFSU/Semester 3/Syllabus/Law of Crimes I.js',
+    '/js/courses/NFSU/Semester 3/Syllabus/Law of Contract I.js',
+    '/js/courses/NFSU/Semester 3/Syllabus/Family Law I.js',
+    '/js/courses/NFSU/Semester 3/Syllabus/Operating System Concepts.js',
+    '/js/courses/NFSU/Semester 3/Syllabus/Web Programming.js',
+    '/js/courses/JEE/JEE.js',
+    '/js/courses/JEE/core/formulas.js',
+    '/js/courses/JEE/Syllabus/Physics.js',
+    '/js/courses/JEE/Syllabus/Chemistry.js',
+    '/js/courses/JEE/Syllabus/Mathematics.js',
+    '/js/courses/NEET/NEET.js',
+    '/js/courses/NEET/core/ncert-lines.js',
+    '/js/courses/NEET/Syllabus/Physics.js',
+    '/js/courses/NEET/Syllabus/Chemistry.js',
+    '/js/courses/NEET/Syllabus/Botany.js',
+    '/js/courses/NEET/Syllabus/Zoology.js',
+    '/js/courses/CBSE/CBSE.js',
+    '/js/courses/CBSE/Class 10/Syllabus/Mathematics.js',
+    '/js/courses/CBSE/Class 10/Syllabus/Science.js',
+    '/js/courses/CBSE/Class 10/Syllabus/English.js',
+    '/js/courses/CBSE/Class 10/Syllabus/Social Science.js',
+    '/js/courses/CBSE/Class 10/Syllabus/Hindi.js',
+    '/js/courses/CBSE/Class 11/streams.js',
+    '/js/courses/CBSE/Class 11/Syllabus/Physics.js',
+    '/js/courses/CBSE/Class 11/Syllabus/Chemistry.js',
+    '/js/courses/CBSE/Class 11/Syllabus/Mathematics.js',
+    '/js/courses/CBSE/Class 11/Syllabus/Biology.js',
+    '/js/courses/CBSE/Class 11/Syllabus/English Core.js',
+    '/js/courses/CBSE/Class 11/Syllabus/Accountancy.js',
+    '/js/courses/CBSE/Class 11/Syllabus/Business Studies.js',
+    '/js/courses/CBSE/Class 11/Syllabus/Economics.js',
+    '/js/courses/CBSE/Class 11/Syllabus/History.js',
+    '/js/courses/CBSE/Class 11/Syllabus/Political Science.js',
+    '/js/courses/CBSE/Class 11/Syllabus/Geography.js',
+    '/js/courses/CBSE/Class 11/Syllabus/Psychology.js',
+    '/js/courses/CBSE/Class 11/Syllabus/Sociology.js',
+    '/js/courses/CBSE/Class 12/streams.js',
+    '/js/courses/CBSE/Class 12/Syllabus/Physics.js',
+    '/js/courses/CBSE/Class 12/Syllabus/Chemistry.js',
+    '/js/courses/CBSE/Class 12/Syllabus/Mathematics.js',
+    '/js/courses/CBSE/Class 12/Syllabus/Biology.js',
+    '/js/courses/CBSE/Class 12/Syllabus/English Core.js',
+    '/js/courses/CBSE/Class 12/Syllabus/Accountancy.js',
+    '/js/courses/CBSE/Class 12/Syllabus/Business Studies.js',
+    '/js/courses/CBSE/Class 12/Syllabus/Economics.js',
+    '/js/courses/CBSE/Class 12/Syllabus/History.js',
+    '/js/courses/CBSE/Class 12/Syllabus/Political Science.js',
+    '/js/courses/CBSE/Class 12/Syllabus/Geography.js',
+    '/js/courses/CBSE/Class 12/Syllabus/Psychology.js',
+    '/js/courses/CBSE/Class 12/Syllabus/Sociology.js'
+  ];
+  for (var i=0;i<allCourseFiles.length;i++) tag(allCourseFiles[i]);
+  tag('/js/courses/subjects-bridge.js');
+  tag('/js/core/course-selector.js');
+
+  // Compute + stash the active course's family for the feature/ui injector
+  // block further down (after app-state.js/firebase-sync.js). Default
+  // (unset/'nfsu') matches getSubjects()'s own default fallback.
+  var ac = localStorage.getItem('activeCourse');
+  window.__EIN_COURSE_FAMILY =
+    (ac === 'jee') ? 'JEE' :
+    (ac === 'neet') ? 'NEET' :
+    (ac === 'cbse10' || ac === 'cbse11' || ac === 'cbse12') ? 'CBSE' :
+    'NFSU';
+})();
+</script>
 <script defer src="/js/core/app-state.js"></script>
 <script defer src="/js/core/firebase-sync.js"></script>
-<script defer src="/js/features/clock-alarms-timer.js"></script>
-<script defer src="/js/features/exam-dates-actions.js"></script>
-<script defer src="/js/ui/render-core.js"></script>
-<script defer src="/js/features/files-materials.js"></script>
-<script defer src="/js/features/subjects-profile.js"></script>
-<script defer src="/js/features/ai-assistant-setup.js"></script>
-<script defer src="/js/features/pomodoro-full.js"></script>
-<script defer src="/js/features/flashcards.js"></script>
-<script defer src="/js/features/quiz.js"></script>
-<script defer src="/js/features/analytics.js"></script>
-<script defer src="/js/features/ai-assistant-view.js"></script>
-<script defer src="/js/ui/nav-shortcuts-export.js"></script>
-<script defer src="/js/ui/render-about.js"></script>
-<script defer src="/js/features/payments-pro.js"></script>
+<script>
+(function(){
+  function tag(src){ document.write('<script defer src="'+src+'"></scr'+'ipt>'); }
+  var fam = window.__EIN_COURSE_FAMILY || 'NFSU';
+  var files = [
+    'features/clock-alarms-timer.js',
+    'features/exam-dates-actions.js',
+    'ui/render-core.js',
+    'features/files-materials.js',
+    'features/subjects-profile.js',
+    'features/ai-assistant-setup.js',
+    'features/pomodoro-full.js',
+    'features/flashcards.js',
+    'features/quiz.js',
+    'features/analytics.js',
+    'features/ai-assistant-view.js',
+    'ui/nav-shortcuts-export.js',
+    'ui/render-about.js',
+    'features/payments-pro.js'
+  ];
+  for (var i=0;i<files.length;i++) tag('/js/courses/'+fam+'/'+files[i]);
+})();
+</script>
 
 <!-- ══════════════════════════════════════════
      PRO UPGRADE MODAL (Upgraded Premium Design)
@@ -1592,10 +1708,19 @@ body.has-pro-bar footer.site-footer{padding-bottom:80px}
      lexical environment), so behavior is byte-for-byte identical to before —
      verified via reconstruction diff at split time. Order below MUST be
      preserved exactly; see AUDIT.md. -->
-<script defer src="/js/features/neetjee-hub-data.js"></script>
-<script defer src="/js/features/neetjee-features-1to4.js"></script>
-<script defer src="/js/features/neetjee-features-5to8.js"></script>
-<script defer src="/js/features/neetjee-hub-renderer.js"></script>
+<script defer src="/js/shared/pro-footer-bar.js"></script>
+<script defer src="/js/courses/jee/rank-data.js"></script>
+<script defer src="/js/courses/neet/rank-data.js"></script>
+<script defer src="/js/shared/exam-hub-state.js"></script>
+<!-- PHASE-2 WIRING (2026-08-12): now loaded from the split tree. Content is
+     byte-identical between courses/JEE/ and courses/NEET/ copies per
+     RESTRUCTURING_NOTES.md, so either works; JEE/ picked as the single
+     canonical source to avoid loading both (same top-level-const collision
+     risk as the main feature block above). rank-data.js / exam-hub-state.js
+     above have no equivalent in the restructuring zip, left untouched. -->
+<script defer src="/js/courses/JEE/features/neetjee-features-1to4.js"></script>
+<script defer src="/js/courses/JEE/features/neetjee-features-5to8.js"></script>
+<script defer src="/js/courses/JEE/features/neetjee-hub-renderer.js"></script>
 
 <div class="ai-sidebar-overlay" id="ai-sidebar-overlay" onclick="_closeAISidebarMobile()"></div>
 <script>

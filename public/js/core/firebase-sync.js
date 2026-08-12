@@ -399,10 +399,13 @@ async function subscribeToFirestore(){
                       "appConfig","cbse11Stream","cbse12Stream","courseChosen","flashDecks",
                       "quizLog","flashLog"];
           // [FIX] Also pull per-course studyLog/hoursToday keys from remote
+          // [Course isolation] ...and the additional per-course fields below, same pattern.
           const courseIds=["jee","neet","nfsu","nfsu1","nfsu3","cbse10","cbse11","cbse12"];
+          const perCourseKeys=["studyLog","hoursToday","quizLog","flashLog","flashDecks","njMistakes","njSRSCards","njDiffMap","pomSubjectHours"];
           courseIds.forEach(cid=>{
-            if(remote["studyLog_"+cid]!==undefined) keys.push("studyLog_"+cid);
-            if(remote["hoursToday_"+cid]!==undefined) keys.push("hoursToday_"+cid);
+            perCourseKeys.forEach(base=>{
+              if(remote[base+"_"+cid]!==undefined) keys.push(base+"_"+cid);
+            });
           });
           keys.forEach(k=>{
             if(remote[k]===undefined) return;
@@ -432,6 +435,44 @@ async function subscribeToFirestore(){
               const cid=k.slice(11);
               localStorage.setItem("st_"+k, JSON.stringify(remote[k]));
               if(activeCourse===cid) state.hoursToday=remote[k];
+            }
+            // [Course isolation] Per-course quiz/flashcard/mistake/SRS/difficulty/pomodoro copies.
+            // Always cached to localStorage under the suffixed key; only applied to live
+            // in-memory state when it matches the currently active course.
+            else if(k.startsWith("quizLog_")) {
+              const cid=k.slice(8);
+              localStorage.setItem("st_"+k, JSON.stringify(remote[k]));
+              if(activeCourse===cid && Array.isArray(remote[k])){ quizLog=remote[k]; localStorage.setItem('ein_quiz_log',JSON.stringify(quizLog)); }
+            }
+            else if(k.startsWith("flashLog_")) {
+              const cid=k.slice(9);
+              localStorage.setItem("st_"+k, JSON.stringify(remote[k]));
+              if(activeCourse===cid && Array.isArray(remote[k])){ flashLog=remote[k]; localStorage.setItem('ein_flash_log',JSON.stringify(flashLog)); }
+            }
+            else if(k.startsWith("flashDecks_")) {
+              const cid=k.slice(11);
+              localStorage.setItem("st_"+k, JSON.stringify(remote[k]));
+              if(activeCourse===cid && remote[k]&&typeof remote[k]==='object'){ Object.assign(flashDecks,remote[k]); saveFlashDecks(); }
+            }
+            else if(k.startsWith("njMistakes_")) {
+              const cid=k.slice(11);
+              localStorage.setItem("st_"+k, JSON.stringify(remote[k]));
+              if(activeCourse===cid) njState.mistakes=remote[k];
+            }
+            else if(k.startsWith("njSRSCards_")) {
+              const cid=k.slice(11);
+              localStorage.setItem("st_"+k, JSON.stringify(remote[k]));
+              if(activeCourse===cid) njState.srsCards=remote[k];
+            }
+            else if(k.startsWith("njDiffMap_")) {
+              const cid=k.slice(10);
+              localStorage.setItem("st_"+k, JSON.stringify(remote[k]));
+              if(activeCourse===cid) njState.diffMap=remote[k];
+            }
+            else if(k.startsWith("pomSubjectHours_")) {
+              const cid=k.slice(16);
+              localStorage.setItem("st_"+k, JSON.stringify(remote[k]));
+              if(activeCourse===cid) pomState.subjectHours=remote[k];
             }
             else                             { state[k]=remote[k]; }
           });
@@ -508,7 +549,20 @@ async function pushToFirebase(){
     };
     const data=sanitizeForFirestore(raw);
     // [FIX] Inject per-course keys
-    if(activeCourse){ data["studyLog_"+activeCourse]=state.studyLog; data["hoursToday_"+activeCourse]=state.hoursToday; }
+    if(activeCourse){
+      data["studyLog_"+activeCourse]=state.studyLog;
+      data["hoursToday_"+activeCourse]=state.hoursToday;
+      // [Course isolation] Additive per-course copies — the unsuffixed fields above are
+      // left in place untouched as a shared/legacy fallback. See switchCourse() in
+      // courses/registry.js, which loads these back in when the active course changes.
+      data["quizLog_"+activeCourse]=data.quizLog;
+      data["flashLog_"+activeCourse]=data.flashLog;
+      data["flashDecks_"+activeCourse]=data.flashDecks;
+      data["njMistakes_"+activeCourse]=data.njMistakes;
+      data["njSRSCards_"+activeCourse]=data.njSRSCards;
+      data["njDiffMap_"+activeCourse]=data.njDiffMap;
+      data["pomSubjectHours_"+activeCourse]=data.pomSubjectHours;
+    }
     await setDoc(doc(db,"study_tracker",syncUserId),data);
     syncStatus="synced";
     updateSyncBadge();
