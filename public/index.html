@@ -7,6 +7,16 @@
   if(!t){ t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark'; }
   document.documentElement.setAttribute('data-theme', t);
 }catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BXC6Y2JPYM"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-BXC6Y2JPYM');
+</script>
+
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <!-- SECURITY FIX #13: Content Security Policy — enforced via firebase.json's
@@ -81,6 +91,38 @@
 <meta name="publisher" content="ArkSetu"/>
 <meta name="brand" content="ArkSetu"/>
 
+<!-- Structured data — helps Google understand the brand/site. No CSP change
+     needed: application/ld+json is inert data and exempt from script-src. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "ArkSetu",
+  "alternateName": "Exam Is Near",
+  "url": "https://exam-is-near.web.app/",
+  "logo": "https://exam-is-near.web.app/logo_transparent__1_.png"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Exam Is Near",
+  "alternateName": "ArkSetu",
+  "url": "https://exam-is-near.web.app/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  "name": "Exam Is Near",
+  "url": "https://exam-is-near.web.app/",
+  "description": "Free AI study app for JEE, NEET, CBSE and UPSC — AI tutor, Pomodoro timer, flashcards, mock tests, rank predictor and analytics.",
+  "areaServed": "IN"
+}
+</script>
+
 <!-- Professional Typography — Inter + JetBrains Mono -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -88,7 +130,7 @@
 <!-- SECURITY: DOMPurify sanitizes mammoth docx HTML output to prevent XSS from malicious .docx files -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js" crossorigin="anonymous"></script>
 
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7615978175642990" crossorigin="anonymous"></script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3561295354854983" crossorigin="anonymous"></script>
 
 <!-- MODULE MIGRATION (2026-07-08): pure helpers now live in public/js/utils/helpers.js
      as real ES module exports — NOT the top-level /src/ folder, since
@@ -1462,6 +1504,7 @@ body.has-pro-bar footer.site-footer{padding-bottom:80px}
     'features/files-materials.js',
     'features/subjects-profile.js',
     'features/ai-assistant-setup.js',
+    'features/topic-reference.js',
     'features/pomodoro-full.js',
     'features/flashcards.js',
     'features/quiz.js',
@@ -1667,7 +1710,7 @@ body.has-pro-bar footer.site-footer{padding-bottom:80px}
 <div id="ad-unit-bottom" style="max-width:880px;margin:0 auto 10px;padding:0 16px;display:none">
   <ins class="adsbygoogle"
        style="display:block"
-       data-ad-client="ca-pub-7615978175642990"
+       data-ad-client="ca-pub-3561295354854983"
        data-ad-slot="AUTO"
        data-ad-format="auto"
        data-full-width-responsive="true"></ins>

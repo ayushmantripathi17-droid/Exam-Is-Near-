@@ -1,16 +1,6 @@
 User-agent: *
 Allow: /
-
-# Block Firebase internal paths
-Disallow: /__/
-
-# Block auth/profile pages from indexing (not useful for search)
-Disallow: /profile
-Disallow: /sync
-Disallow: /log
-
-# Block admin
-Disallow: /admin
-Disallow: /backend
+Disallow: /admin.html
+Disallow: /admin/
 
 Sitemap: https://exam-is-near.web.app/sitemap.xml
