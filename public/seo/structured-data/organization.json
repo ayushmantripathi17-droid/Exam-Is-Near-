@@ -1,0 +1,18 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "ArkSetu",
+  "alternateName": ["Exam Is Near", "ArkSetu Exam Is Near"],
+  "url": "https://exam-is-near.web.app",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://exam-is-near.web.app/assets/images/logo.png",
+    "width": 192,
+    "height": 192
+  },
+  "description": "ArkSetu builds Exam Is Near, India's free AI-powered study app for JEE, NEET, CBSE and UPSC aspirants.",
+  "foundingDate": "2024",
+  "areaServed": {"@type": "Country", "name": "India"},
+  "email": "arksetu.help@gmail.com",
+  "sameAs": ["https://x.com/ExamIsNear", "https://www.instagram.com/exam_is_near_by_arksetu", "https://exam-is-near.web.app"]
+}

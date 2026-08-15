@@ -251,7 +251,7 @@ function renderRankPredictor(){
     </div>
  
     <div id="rank-pwa-banner" style="margin-top:14px;background:linear-gradient(135deg,#0d1a12,#0a1020);border:1px solid #06D6A044;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px">
-      <img src="logo_transparent__1_.png" style="width:44px;height:44px;border-radius:10px;flex-shrink:0" alt="ArkSetu"/>
+      <img src="/assets/images/logo.png" style="width:44px;height:44px;border-radius:10px;flex-shrink:0" alt="ArkSetu"/>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:700;color:#EDE8E0">ArkSetu — Exam Is Near</div>
         <div style="font-size:10px;color:#555;margin-top:2px">AI tutor · Flashcards · Mock tests · Rank predictor</div>
