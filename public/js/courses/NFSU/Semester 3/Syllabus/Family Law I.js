@@ -7,6 +7,7 @@ const SUBJECT_S3_FAMILY = {
   "exam": "",
   "color": "#C77DFF",
   "icon": "👨‍👩‍👧",
+  "lawRef": true,
   "units": [
     {
       "id": "u1",

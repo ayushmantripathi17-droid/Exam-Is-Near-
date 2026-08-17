@@ -7,6 +7,7 @@ const SUBJECT_LAWS = {
   "exam": "22 May",
   "color": "#C77DFF",
   "icon": "⚖️",
+  "lawRef": true,
   "units": [
     {
       "id": "u1",

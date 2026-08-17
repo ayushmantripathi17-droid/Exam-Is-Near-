@@ -7,6 +7,7 @@ const SUBJECT_S1_TORT = {
   "exam": "",
   "color": "#FF6B35",
   "icon": "⚖️",
+  "lawRef": true,
   "units": [
     {
       "id": "u1",

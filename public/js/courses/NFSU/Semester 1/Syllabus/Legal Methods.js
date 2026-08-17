@@ -7,6 +7,7 @@ const SUBJECT_S1_LEGAL = {
   "exam": "",
   "color": "#FFD23F",
   "icon": "📚",
+  "lawRef": true,
   "units": [
     {
       "id": "u1",

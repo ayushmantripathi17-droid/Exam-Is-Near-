@@ -8,7 +8,6 @@ const SUBJECT_S3_CRIMES = {
   "exam": "",
   "color": "#FF6B35",
   "icon": "⚖️",
-  "lawRef": true,
   "units": [
     {
       "id": "u1",

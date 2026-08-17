@@ -1,0 +1,89 @@
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "ArkSetu — Exam Is Near",
+  "alternateName": ["Exam Is Near", "Exam Is Near by ArkSetu", "ArkSetu", "ArkSetu Study App"],
+  "url": "https://exam-is-near.web.app",
+  "description": "India's free AI-powered study app for JEE Main, JEE Advanced, NEET UG, CBSE Class 10 & 12, UPSC, CLAT, and CUET. AI tutor, Pomodoro timer, flashcards, mock tests, syllabus tracker, rank predictor, and study analytics — all in one installable PWA.",
+  "applicationCategory": "EducationApplication",
+  "applicationSubCategory": "Exam Preparation",
+  "operatingSystem": "Web, Android, iOS",
+  "browserRequirements": "Requires JavaScript. Works on Chrome, Firefox, Safari.",
+  "inLanguage": "en",
+  "isAccessibleForFree": true,
+  "countryOfOrigin": {"@type": "Country", "name": "India"},
+  "audience": {
+    "@type": "EducationalAudience",
+    "educationalRole": "student",
+    "geographicArea": {"@type": "Country", "name": "India"}
+  },
+  "about": [
+    {"@type": "Thing", "name": "JEE Main Preparation"},
+    {"@type": "Thing", "name": "JEE Advanced Preparation"},
+    {"@type": "Thing", "name": "NEET UG Preparation"},
+    {"@type": "Thing", "name": "UPSC Civil Services Preparation"},
+    {"@type": "Thing", "name": "CBSE Class 10 Board Exams"},
+    {"@type": "Thing", "name": "CBSE Class 12 Board Exams"},
+    {"@type": "Thing", "name": "CLAT Preparation"},
+    {"@type": "Thing", "name": "CUET Preparation"}
+  ],
+  "featureList": [
+    "Pomodoro Timer for Students",
+    "AI Tutor (Groq-powered)",
+    "Flashcards with Spaced Repetition",
+    "Mock Tests and Quiz Mode",
+    "Syllabus Tracker",
+    "JEE Rank Predictor",
+    "NEET Rank Predictor",
+    "Study Analytics and Progress Tracking",
+    "Cloud Sync",
+    "Offline PWA Support",
+    "Study Alarm",
+    "PDF Notes Upload"
+  ],
+  "author": {
+    "@type": "Organization",
+    "name": "ArkSetu",
+    "alternateName": "Exam Is Near",
+    "url": "https://exam-is-near.web.app",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://exam-is-near.web.app/assets/images/logo.png",
+      "width": 192,
+      "height": 192
+    },
+    "contactPoint": {"@type": "ContactPoint", "email": "arksetu.help@gmail.com", "contactType": "customer support"},
+    "sameAs": ["https://x.com/ExamIsNear", "https://www.instagram.com/exam_is_near_by_arksetu", "https://exam-is-near.web.app"]
+  },
+  "image": "https://exam-is-near.web.app/assets/images/logo.png",
+  "thumbnailUrl": "https://exam-is-near.web.app/assets/images/logo.png",
+  "publisher": {
+    "@type": "Organization",
+    "name": "ArkSetu",
+    "logo": {"@type": "ImageObject", "url": "https://exam-is-near.web.app/assets/images/logo.png"}
+  },
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Free Plan",
+      "price": "0",
+      "priceCurrency": "INR",
+      "availability": "https://schema.org/InStock"
+    },
+    {
+      "@type": "Offer",
+      "name": "Pro Monthly",
+      "price": "149",
+      "priceCurrency": "INR",
+      "availability": "https://schema.org/InStock"
+    },
+    {
+      "@type": "Offer",
+      "name": "Pro Yearly",
+      "price": "999",
+      "priceCurrency": "INR",
+      "availability": "https://schema.org/InStock"
+    }
+  ],
+  "keywords": "JEE preparation app, NEET study app, CBSE Class 10 app, CBSE Class 12 app, UPSC free app, CLAT prep, CUET preparation, free AI tutor India, JEE Main mock test, NEET mock test, flashcards JEE NEET, Pomodoro timer students, JEE rank predictor, NEET rank predictor, syllabus tracker India, study analytics, exam preparation India, ArkSetu, Exam Is Near"
+}

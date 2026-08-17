@@ -1,12 +1,13 @@
 // ══════════════════════════════════════════════════════════
 // Service Worker — Exam Is Near by ArkSetu
-// Version: v6 — index.html split into public/js/**; cache bumped so
-// returning users' service workers evict stale cached state and
-// pick up the new file structure. See AUDIT.md.
+// Version: v7 — asset/SEO/ads reorg (logo + icons moved to /assets/,
+// JSON-LD moved to /seo/, ads-display.js restored at /ads/); cache bumped
+// so returning users' service workers evict stale cached state and pick
+// up the new file structure. See AUDIT.md.
 // ══════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'exam-is-near-v7';
-const CACHE_STATIC = 'ein-static-v6';
+const CACHE_NAME = 'exam-is-near-v8';
+const CACHE_STATIC = 'ein-static-v7';
 
 // Core assets to pre-cache on install — NO external URLs (they fail in SW context)
 const PRECACHE_ASSETS = [

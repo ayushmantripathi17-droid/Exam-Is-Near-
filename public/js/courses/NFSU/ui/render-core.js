@@ -376,11 +376,14 @@ function renderSubjects(){
     const topics=unit.topics.map((topic,idx)=>{
       const k=`${sub.id}-${unit.id}-${idx}`;
       const isDone=!!state.progress[k];
+      const refKey = sub.lawRef ? topicRefKey(sub.id,unit.id,idx) : null;
+      const refOpen = sub.lawRef && refOpenTopic===refKey;
       return `<div class="topic-row" onclick="toggleTopic('${sub.id}','${unit.id}',${idx})" style="--acc:${sub.color}">
         <div class="cb ${isDone?"done":""}">${isDone?"✓":""}</div>
-        <span style="font-size:13px;color:${isDone?"#444":"#bbb"};text-decoration:${isDone?"line-through":"none"};transition:all 0.3s">${esc(topic)}</span>
-        ${isDone?`<span style="margin-left:auto;font-size:10px;color:${sub.color}">✓</span>`:""}
-      </div>`;
+        <span style="font-size:13px;color:${isDone?"#444":"#bbb"};text-decoration:${isDone?"line-through":"none"};transition:all 0.3s;flex:1">${esc(topic)}</span>
+        ${isDone?`<span style="margin-right:${sub.lawRef?"4px":"0"};font-size:10px;color:${sub.color}">✓</span>`:""}
+        ${sub.lawRef?`<div style="font-size:11px;color:var(--text-muted,#555);padding:4px 6px;border-radius:6px;transition:transform .2s;transform:rotate(${refOpen?90:0}deg);color:${refOpen?"#FFE66D":"var(--text-muted,#555)"}" onclick="event.stopPropagation();toggleTopicRefExpand('${sub.id}','${unit.id}',${idx})">▸</div>`:""}
+      </div>${sub.lawRef?renderTopicRefPanel(sub,unit,idx):""}`;
     }).join("");
     return `<div class="card" style="animation:fadeInUp 0.3s ease ${ui*0.08}s both">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -459,7 +462,9 @@ function renderSubjects(){
       </div>
       <div class="pbar"><div class="pfill" style="width:${pct}%;background:linear-gradient(90deg,${sub.color}88,${sub.color})"></div></div>
     </div>
+    ${sub.lawRef?renderTopicRefModeSwitch():""}
     ${unitCards}
+    ${sub.lawRef?renderSubjectPyqAccordion(sub):""}
     ${formulasPanel}
     ${ncertPanel}
     <div class="card" style="margin-top:8px">

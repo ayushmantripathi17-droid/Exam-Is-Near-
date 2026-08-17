@@ -397,7 +397,7 @@ async function _launchRazorpay({ plan, amount, description, couponCode=null }){
     order_id:    orderData.orderId,
     name:        "Exam Is Near",
     description,
-    image:       "https://exam-is-near.web.app/icon-192.png",
+    image:       "https://exam-is-near.web.app/assets/icons/icon-192.png",
     prefill:     { name: currentUser.displayName||"", email: currentUser.email||"" },
     notes:       { uid: currentUser.uid, plan },
     theme:       { color: "#FFE66D" },

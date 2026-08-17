@@ -7,6 +7,7 @@ const SUBJECT_S3_CONTRACT = {
   "exam": "",
   "color": "#06D6A0",
   "icon": "📜",
+  "lawRef": true,
   "units": [
     {
       "id": "u1",
