@@ -31,6 +31,7 @@ let topicRefMode = localStorage.getItem("st_topicRefMode") || "curated"; // 'cur
 let refOpenTopic = null;          // currently expanded topic key, or null
 let refNotesOpen = {};            // { topicKey: bool }
 let refPyqOpen = {};              // { subjectId: bool }
+let refSubTab = {};                // { topicKey: 'explain' | 'case' } — which tab is showing
 let refAiCache = JSON.parse(localStorage.getItem("st_topicRefAiCache") || "{}"); // { topicKey: {...} }
 let refAiLoading = {};            // { topicKey: bool }
 
@@ -48,7 +49,7 @@ function topicRefKey(subId, unitId, idx){ return `${subId}:${unitId}:${idx}`; }
 //   features/reference-caselaws.js   → CURATED_CASELAWS[key]   = [{name,cite,facts,holding}]
 //   features/reference-definitions.js → CURATED_DEFINITIONS[key] = {items:[{term,def}], examTip}
 //   features/reference-bareacts.js   → CURATED_BAREACTS[key]   = ["Act — Section", ...]
-// This function reassembles them into the shape renderRefContentBlock() expects.
+// This function reassembles them into the shape renderRefSubTabs() expects.
 // A topic with entries in some files but not others still renders correctly —
 // each block is independently optional.
 function getCuratedRef(key){
@@ -121,6 +122,11 @@ function toggleSubjectPyq(subId){
   render();
 }
 
+function setRefSubTab(key, tab){
+  refSubTab[key] = tab;
+  render();
+}
+
 // ── Renderers ──
 
 function renderTopicRefModeSwitch(){
@@ -163,22 +169,8 @@ function renderTopicRefNotesButton(key, subId){
   return html;
 }
 
-function renderRefContentBlock(data){
+function renderExplanationBlock(data){
   let html = "";
-  if(data.caselaws?.length){
-    html += `<div style="margin-bottom:12px"><div style="font-size:10px;letter-spacing:1px;color:#C77DFF;text-transform:uppercase;margin-bottom:6px;font-weight:bold">⚖️ Related Caselaws (${data.caselaws.length})</div>`;
-    data.caselaws.forEach(c=>{
-      html += `<div style="margin-bottom:10px;padding:10px 12px;background:var(--card-bg,#0f0f18);border:1px solid var(--border-color,#1e1e2e);border-left:2px solid #C77DFF;border-radius:0 8px 8px 0">
-        <div style="color:var(--text-primary,#EDE8E0);font-weight:bold;font-size:12px">${esc(c.name)}</div>
-        <div style="color:var(--text-muted,#555);font-size:10px;font-family:monospace;margin-bottom:6px">${esc(c.cite||"")}</div>
-        <div style="font-size:9px;letter-spacing:0.5px;color:#5B9BD5;text-transform:uppercase;font-weight:bold;margin-bottom:2px">Facts</div>
-        <div style="color:var(--text-dim,#aaa);font-size:11px;line-height:1.55">${esc(c.facts||"")}</div>
-        <div style="font-size:9px;letter-spacing:0.5px;color:#06D6A0;text-transform:uppercase;font-weight:bold;margin-top:6px;margin-bottom:2px">Judgment / Held</div>
-        <div style="color:var(--text-dim,#aaa);font-size:11px;line-height:1.55">${esc(c.holding||"")}</div>
-      </div>`;
-    });
-    html += `</div>`;
-  }
   if(data.acts?.length){
     html += `<div style="margin-bottom:12px"><div style="font-size:10px;letter-spacing:1px;color:#FF6B35;text-transform:uppercase;margin-bottom:6px;font-weight:bold">📜 Relevant Act / Sections</div>`;
     data.acts.forEach(a=>{
@@ -196,7 +188,39 @@ function renderRefContentBlock(data){
   if(data.notes){
     html += `<div><div style="font-size:10px;letter-spacing:1px;color:#FFE66D;text-transform:uppercase;margin-bottom:6px;font-weight:bold">💡 Exam Notes</div><div style="color:var(--text-dim,#999);font-size:11px;line-height:1.5">${esc(data.notes)}</div></div>`;
   }
+  if(!html){
+    html = `<div style="color:var(--text-muted,#555);font-size:11px;text-align:center;padding:8px">No bare act / explanation added yet for this topic.</div>`;
+  }
   return html;
+}
+
+function renderCaseLawBlock(data){
+  if(!data.caselaws?.length){
+    return `<div style="color:var(--text-muted,#555);font-size:11px;text-align:center;padding:8px">No case law added yet for this topic.</div>`;
+  }
+  let html = `<div style="font-size:10px;letter-spacing:1px;color:#C77DFF;text-transform:uppercase;margin-bottom:6px;font-weight:bold">⚖️ Related Caselaws (${data.caselaws.length})</div>`;
+  data.caselaws.forEach(c=>{
+    html += `<div style="margin-bottom:10px;padding:10px 12px;background:var(--card-bg,#0f0f18);border:1px solid var(--border-color,#1e1e2e);border-left:2px solid #C77DFF;border-radius:0 8px 8px 0">
+      <div style="color:var(--text-primary,#EDE8E0);font-weight:bold;font-size:12px">${esc(c.name)}</div>
+      <div style="color:var(--text-muted,#555);font-size:10px;font-family:monospace;margin-bottom:6px">${esc(c.cite||"")}</div>
+      <div style="font-size:9px;letter-spacing:0.5px;color:#5B9BD5;text-transform:uppercase;font-weight:bold;margin-bottom:2px">Facts</div>
+      <div style="color:var(--text-dim,#aaa);font-size:11px;line-height:1.55">${esc(c.facts||"")}</div>
+      <div style="font-size:9px;letter-spacing:0.5px;color:#06D6A0;text-transform:uppercase;font-weight:bold;margin-top:6px;margin-bottom:2px">Judgment / Held</div>
+      <div style="color:var(--text-dim,#aaa);font-size:11px;line-height:1.55">${esc(c.holding||"")}</div>
+    </div>`;
+  });
+  return html;
+}
+
+function renderRefSubTabs(key, data){
+  const tab = refSubTab[key] || "explain";
+  const explainCount = (data.acts?.length||0) + (data.definitions?.length||0);
+  const caseCount = data.caselaws?.length || 0;
+  return `<div style="display:flex;gap:6px;margin-bottom:10px">
+    <button onclick="setRefSubTab('${key}','explain')" style="flex:1;text-align:center;padding:7px 6px;border-radius:8px;cursor:pointer;font-size:10px;font-weight:bold;border:1px solid ${tab==='explain'?'#06D6A0':'var(--border-color,#2a2a3a)'};font-family:inherit;background:${tab==='explain'?'#06D6A01a':'transparent'};color:${tab==='explain'?'#06D6A0':'var(--text-muted,#666)'}">📜 Bare Act & Explanation${explainCount?` (${explainCount})`:''}</button>
+    <button onclick="setRefSubTab('${key}','case')" style="flex:1;text-align:center;padding:7px 6px;border-radius:8px;cursor:pointer;font-size:10px;font-weight:bold;border:1px solid ${tab==='case'?'#C77DFF':'var(--border-color,#2a2a3a)'};font-family:inherit;background:${tab==='case'?'#C77DFF1a':'transparent'};color:${tab==='case'?'#C77DFF':'var(--text-muted,#666)'}">⚖️ Case Law${caseCount?` (${caseCount})`:''}</button>
+  </div>
+  ${tab==='explain' ? renderExplanationBlock(data) : renderCaseLawBlock(data)}`;
 }
 
 function renderTopicRefPanel(sub, unit, idx){
@@ -209,13 +233,13 @@ function renderTopicRefPanel(sub, unit, idx){
   if(topicRefMode === "curated"){
     const data = getCuratedRef(key);
     body = data
-      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#06D6A0;background:#06D6A014;border:1px solid #06D6A033;padding:2px 7px;border-radius:20px;margin-bottom:8px">📗 Curated</span>${renderRefContentBlock(data)}`
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#06D6A0;background:#06D6A014;border:1px solid #06D6A033;padding:2px 7px;border-radius:20px;margin-bottom:8px">📗 Curated</span>${renderRefSubTabs(key, data)}`
       : `<div style="color:var(--text-muted,#555);font-size:11px;text-align:center;padding:8px">No curated reference added yet for this topic. Try ✨ AI Generate instead.</div>`;
   }else{
     if(refAiLoading[key]){
       body = `<div style="display:flex;align-items:center;gap:8px;justify-content:center;padding:16px 0;color:var(--text-muted,#666);font-size:11px"><span class="spinner-inline"></span> Generating reference…</div>`;
     }else if(refAiCache[key]){
-      body = `<span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#FFE66D;background:#FFE66D14;border:1px solid #FFE66D33;padding:2px 7px;border-radius:20px;margin-bottom:8px">✨ AI-generated · cached</span>${renderRefContentBlock(refAiCache[key])}<div style="margin-top:10px;padding:8px 10px;background:#FF6B3510;border:1px solid #FF6B3533;border-radius:8px;font-size:10px;color:#e69a7a;line-height:1.4">⚠️ AI-generated — verify citations, facts and sections before using in an exam answer.</div>`;
+      body = `<span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;color:#FFE66D;background:#FFE66D14;border:1px solid #FFE66D33;padding:2px 7px;border-radius:20px;margin-bottom:8px">✨ AI-generated · cached</span>${renderRefSubTabs(key, refAiCache[key])}<div style="margin-top:10px;padding:8px 10px;background:#FF6B3510;border:1px solid #FF6B3533;border-radius:8px;font-size:10px;color:#e69a7a;line-height:1.4">⚠️ AI-generated — verify citations, facts and sections before using in an exam answer.</div>`;
     }else{
       body = `<div style="text-align:center;padding:14px 4px">
         <button onclick="generateTopicRef('${sub.id}','${unit.id}',${idx})" style="background:#FFE66D;color:#08080f;border:none;padding:8px 16px;border-radius:20px;font-size:11px;font-weight:bold;cursor:pointer;font-family:inherit">✨ Generate reference</button>

@@ -647,6 +647,268 @@ const CURATED_DEFINITIONS = {
       { term:"Custody vs Guardianship", def:"Custody concerns day-to-day care and upbringing of the child; guardianship is the broader legal responsibility for the child's person and property, and the two can be held by different people." }
     ]
   },
+  // ── Gap-fill: topics that had caselaw + bare act tags but no definitions yet ──
+  "s1-legal:u2:1": {
+    items: [
+      { term:"Internal Aids to Interpretation", def:"Aids found within the statute itself — preamble, title, definition/interpretation clauses, marginal notes, illustrations, and schedules." },
+      { term:"External Aids to Interpretation", def:"Aids found outside the statute — parliamentary debates, Law Commission reports, dictionaries, earlier/repealed statutes on the same subject, and foreign judgments." },
+      { term:"Mischief Rule", def:"An interpretive approach asking what defect the statute was meant to cure, and construing it to suppress that mischief and advance the remedy (from Heydon's Case)." }
+    ]
+  },
+  "juris:u2:0": {
+    items: [
+      { term:"Natural Law (Jus Naturale)", def:"The theory that certain laws are derived from nature/reason/morality and exist independent of human enactment — a 'higher law' against which man-made law can be judged." },
+      { term:"Ancient Natural Law", def:"Rooted in Greek/Roman philosophy (Aristotle, Cicero) — natural law as universal reason (logos) governing both nature and human affairs." },
+      { term:"Modern Natural Law (Revival)", def:"20th-century natural law thinking (e.g. Lon Fuller's 'inner morality of law') responding to the horrors of Nazi-era positivist law, arguing law must meet a moral threshold to count as valid law at all." }
+    ]
+  },
+  "juris:u2:3": {
+    items: [
+      { term:"Sociological Jurisprudence (Pound)", def:"Roscoe Pound's approach studying law's actual social effects and treating it as a tool for 'social engineering' — balancing individual, public, and social interests." },
+      { term:"Interessenjurisprudenz (Ihering)", def:"Rudolf von Ihering's 'jurisprudence of interests' — law exists to protect and reconcile competing social interests, not to serve abstract logical consistency." },
+      { term:"Legal Realism", def:"The school (largely American) treating law as what courts actually do in practice, rather than the formal rules on paper — emphasising judicial behaviour and outcomes over doctrine." }
+    ]
+  },
+  "juris:u3:2": {
+    items: [
+      { term:"Natural Person", def:"A human being recognised by law as capable of holding rights and duties." },
+      { term:"Juristic Person", def:"An entity other than a human being (e.g. a corporation, deity, or registered society) that the law treats as capable of holding rights and duties, through legal fiction." },
+      { term:"Legal Fiction Theory", def:"The view that juristic personality is an artificial creation of law — attributed to an entity for legal/administrative convenience, not because it is literally a person." }
+    ]
+  },
+  "juris:u3:3": {
+    items: [
+      { term:"Fiction Theory", def:"A corporation has no real existence of its own — its 'personality' is a pure legal fiction created by the State for convenience (associated with Savigny)." },
+      { term:"Realist Theory", def:"A corporation has a real, factual existence as a group entity with its own will, distinct from a mere fiction (associated with Gierke)." },
+      { term:"Concession Theory", def:"A corporation's legal personality exists only because the State chooses to 'concede'/grant it — without State recognition, no corporate personality arises." }
+    ]
+  },
+  "laws:u2:2": {
+    items: [
+      { term:"Law as a Mirror of Society", def:"The view that legal rules reflect the values, morality, and power structures of the society that produced them at a given time." },
+      { term:"Law as a Social Construct", def:"The idea that legal categories and rules are not natural/inevitable but actively built and reshaped by social processes, and can therefore be reshaped as social values change." }
+    ]
+  },
+  "laws:u4:0": {
+    items: [
+      { term:"Reservation", def:"A constitutionally sanctioned policy setting aside a percentage of seats/posts for historically disadvantaged groups (SC/ST/OBC/EWS) to ensure adequate representation." },
+      { term:"Creamy Layer", def:"The relatively advanced/well-off section within an otherwise backward class, excluded from reservation benefits meant for the genuinely disadvantaged." }
+    ]
+  },
+  "laws:u4:2": {
+    items: [
+      { term:"Child Labour", def:"Employment of children below the legally permitted age, particularly in hazardous occupations, prohibited under Article 24 and the Child Labour (Prohibition and Regulation) Act, 1986." },
+      { term:"Forced/Bonded Labour", def:"Labour extracted through compulsion, debt bondage, or economic desperation rather than genuine free choice — prohibited under Article 23." }
+    ]
+  },
+  "laws:u4:3": {
+    items: [
+      { term:"Domestic Violence", def:"Physical, emotional, sexual, or economic abuse within a domestic/family relationship, addressed in India through the Protection of Women from Domestic Violence Act, 2005." },
+      { term:"Dowry", def:"Property or valuable security given or demanded in connection with a marriage — prohibited under the Dowry Prohibition Act, 1961, and linked to specific criminal offences (dowry death, cruelty) under the BNS." }
+    ]
+  },
+  "s3-const:u1:2": {
+    items: [
+      { term:"Federal System", def:"A system where power is constitutionally divided between a central/national government and constituent states, each supreme within its own sphere." },
+      { term:"Unitary System", def:"A system where all governmental power is concentrated in a single central authority, with any regional units existing only by its delegation." },
+      { term:"Quasi-Federal", def:"India's actual structure — federal in form (division of powers, written Constitution) but with a strong unitary bias (single citizenship, residuary powers with the Centre, Article 356)." }
+    ]
+  },
+  "s3-const:u2:1": {
+    items: [
+      { term:"State (Article 12)", def:"Includes the Government and Parliament of India, State legislatures/governments, local authorities, and 'other authorities' within India's territory — the entities against whom fundamental rights can be enforced." },
+      { term:"Instrumentality or Agency Test", def:"The test (from Ramana Shetty, refined in Ajay Hasia and Pradeep Kumar Biswas) asking whether a body is functionally an extension of government — based on financial, functional, and administrative control." },
+      { term:"Other Authorities", def:"Bodies not formally part of government but brought within Article 12 because of deep government control — e.g. statutory corporations, government companies." }
+    ]
+  },
+  "s3-const:u2:2": {
+    items: [
+      { term:"Doctrine of Eclipse", def:"A pre-Constitution law inconsistent with fundamental rights is not void but merely dormant/unenforceable ('eclipsed'), and can revive if the inconsistency is later removed." },
+      { term:"Void Ab Initio", def:"Void from the very moment of enactment — the status of a post-Constitution law inconsistent with fundamental rights, which cannot be revived even if the inconsistency is later removed." },
+      { term:"Prospective Operation of Article 13(1)", def:"Article 13(1) only invalidates inconsistent pre-Constitution laws from the date the Constitution commenced — it doesn't retrospectively erase actions validly taken under that law before that date." }
+    ]
+  },
+  "s3-const:u2:4": {
+    items: [
+      { term:"Reservation (Articles 15/16)", def:"Constitutionally permitted special provisions for socially/educationally backward classes and SC/ST in education (Art.15) and public employment (Art.16), as an exception to formal equality." },
+      { term:"Creamy Layer", def:"The relatively advanced members of a backward class, excluded from reservation benefits to ensure they reach the genuinely disadvantaged." },
+      { term:"50% Ceiling", def:"The general rule (from Indra Sawhney) that total reservations should not exceed 50% of available seats/posts, except in extraordinary circumstances." }
+    ]
+  },
+  "s3-const:u3:0": {
+    items: [
+      { term:"Freedom of Speech and Expression (Art.19(1)(a))", def:"Includes the right to express oneself through any medium, and — per Romesh Thappar — the right to circulate what is published." },
+      { term:"Reasonable Restrictions (Art.19(2))", def:"Specific, listed grounds (security of the State, public order, decency, defamation, etc.) on which the State may restrict free speech — restrictions must fit within these grounds and be proportionate." },
+      { term:"Prior Restraint", def:"Government action preventing speech/publication before it occurs (e.g. censorship), generally viewed with the highest suspicion under Article 19(1)(a)." }
+    ]
+  },
+  "s3-const:u3:2": {
+    items: [
+      { term:"Right to Life and Personal Liberty (Art.21)", def:"Guarantees no person shall be deprived of life or personal liberty except according to procedure established by law — now read expansively to include livelihood, dignity, privacy, and more." },
+      { term:"Procedure Established by Law", def:"India's original (narrower) textual standard for Article 21, later reinterpreted in Maneka Gandhi to require the procedure itself be fair, just and reasonable." },
+      { term:"Golden Triangle", def:"The interlinked reading of Articles 14, 19 and 21 (from Maneka Gandhi) — a law affecting personal liberty must satisfy all three, not be tested against each in isolation." }
+    ]
+  },
+  "s3-const:u3:3": {
+    items: [
+      { term:"Protection Against Arrest and Detention (Art.22)", def:"Guarantees a person arrested must be informed of grounds, allowed to consult a lawyer, and produced before a magistrate within 24 hours — subject to a distinct, more permissive regime for preventive detention." },
+      { term:"Preventive Detention", def:"Detention without trial, based on the executive's assessment that a person's future conduct threatens public order/security — permitted under Article 22(3)-(7), subject to safeguards like an Advisory Board review." }
+    ]
+  },
+  "s3-const:u3:4": {
+    items: [
+      { term:"Forced Labour (Art.23)", def:"Prohibits traffic in human beings and forced/begar labour — now read (per PUDR) to include even paying below minimum wage where the worker had no real economic choice." },
+      { term:"Child Labour (Art.24)", def:"Prohibits employing children below 14 in factories, mines, or other hazardous employment." }
+    ]
+  },
+  "s3-const:u4:2": {
+    items: [
+      { term:"Judicial Review", def:"The power of courts to examine the constitutionality of legislative and executive action, and strike down what violates the Constitution." },
+      { term:"Basic Structure Doctrine", def:"The principle (from Kesavananda Bharati) that certain core features of the Constitution — including judicial review — cannot be amended away by Parliament under Article 368." }
+    ]
+  },
+  "s3-const:u4:3": {
+    items: [
+      { term:"Public Interest Litigation (PIL)", def:"Litigation brought not for a personal grievance but in the interest of the public or a disadvantaged group, with relaxed standing rules allowing a public-spirited person to approach the court on their behalf." },
+      { term:"Locus Standi", def:"The traditional requirement that only a person personally/directly affected can sue — significantly relaxed by the Supreme Court to enable PIL." },
+      { term:"Epistolary Jurisdiction", def:"The Supreme Court's practice of treating even an informal letter addressed to a judge as a formal writ petition, pioneered to make justice accessible to those who cannot litigate conventionally." }
+    ]
+  },
+  "s3-const:u4:4": {
+    items: [
+      { term:"Writ Jurisdiction (Art.226)", def:"Empowers High Courts to issue writs (habeas corpus, mandamus, certiorari, prohibition, quo warranto) for enforcement of fundamental rights and 'for any other purpose' — broader than the Supreme Court's Article 32." },
+      { term:"Certiorari", def:"A writ quashing a decision made without jurisdiction, in excess of jurisdiction, or containing an error of law apparent on the face of the record." },
+      { term:"Mandamus", def:"A writ commanding a public authority to perform a public duty it has failed or refused to perform." }
+    ]
+  },
+  "s3-const:u5:1": {
+    items: [
+      { term:"Directive Principles of State Policy (DPSP)", def:"Non-justiciable guidelines in Part IV directing State policy toward social/economic welfare goals." },
+      { term:"Harmonious Construction", def:"The interpretive principle (applied in Minerva Mills) that Fundamental Rights and Directive Principles must be read together in balance, neither swallowing the other entirely." }
+    ]
+  },
+  "s3-contract:u1:4": {
+    items: [
+      { term:"Offer/Proposal", def:"A clear signal of willingness to do or abstain from something, made to obtain the other party's assent (S.2(a), Indian Contract Act)." },
+      { term:"Acceptance", def:"Unqualified assent to a proposal's exact terms, generally requiring communication to the offeror to complete the contract." },
+      { term:"Communication of Acceptance", def:"Acceptance must ordinarily be actually communicated — silence alone (Felthouse v. Bindley) is not enough, and an offeror cannot force acceptance by decreeing silence will count as assent." }
+    ]
+  },
+  "s3-contract:u2:2": {
+    items: [
+      { term:"Capacity to Contract (S.11)", def:"A person is competent to contract if of the age of majority, of sound mind, and not disqualified by any law they're subject to." },
+      { term:"Minor's Agreement", def:"Void ab initio under Indian law (Mohori Bibee) — a minor cannot be held to an ordinary contract even if they received a benefit under it." },
+      { term:"Necessaries Exception", def:"A minor can still be liable to pay a reasonable price for genuine necessaries actually needed at the time (S.68), though not for goods merely suited to their social station in general (Nash v. Inman)." }
+    ]
+  },
+  "s3-contract:u2:4": {
+    items: [
+      { term:"Mistake of Fact (Bilateral)", def:"Both parties are mistaken about the same fundamental fact essential to the contract — can render the agreement void (S.20)." },
+      { term:"Mistake as to Identity", def:"Where a party intends to contract only with a specific person and is deceived about who they're actually dealing with, there is no genuine consensus ad idem, and the resulting contract is void (Cundy v. Lindsay)." },
+      { term:"Coercion (S.15)", def:"Committing or threatening an act forbidden by law, or unlawfully detaining/threatening to detain property, to induce agreement — includes even a threat of suicide (Chikkam Ammiraju)." }
+    ]
+  },
+  "s3-contract:u2:5": {
+    items: [
+      { term:"Misrepresentation (S.18)", def:"An innocent (non-fraudulent) false statement of fact, made without intent to deceive, that induces the other party to contract." },
+      { term:"Fraud (S.17)", def:"A false statement made knowingly, without belief in its truth, or recklessly, with intent to deceive." },
+      { term:"Opinion vs Statement of Fact", def:"An honestly held opinion (Bisset v. Wilkinson) is not actionable misrepresentation, but where the speaker has superior knowledge of facts contradicting their 'opinion' (Smith v. Land), it can be treated as a misrepresentation of fact." }
+    ]
+  },
+  "s3-contract:u3:4": {
+    items: [
+      { term:"Free Consent (S.14)", def:"Consent not caused by coercion, undue influence, fraud, misrepresentation, or mistake." },
+      { term:"Undue Influence (S.16)", def:"Where one party, in a position to dominate the will of the other due to their relationship, uses that position to obtain an unfair advantage — can be presumed from certain relationships of trust (Allcard v. Skinner)." }
+    ]
+  },
+  "s3-contract:u4:2": {
+    items: [
+      { term:"Entire Contract", def:"A contract requiring complete performance as a condition precedent to any payment — partial performance, however substantial, earns nothing (Cutter v. Powell)." },
+      { term:"Substantial Performance", def:"A doctrine allowing recovery (minus the cost of defects) where performance is essentially complete with only minor defects — but not where defects go to the very core of what was promised (Bolton v. Mahadeva)." },
+      { term:"Quantum Meruit", def:"'As much as earned' — a claim to recover the reasonable value of work actually done, typically where the original contract has been discharged." }
+    ]
+  },
+  "s3-crimes:u1:5": {
+    items: [
+      { term:"Insanity Defence (M'Naghten Rule)", def:"A general exception applying where, due to unsoundness of mind, the accused did not know the nature and quality of the act, or that it was wrong." },
+      { term:"Right of Private Defence", def:"The right to use reasonable force to protect oneself, another, or property from imminent unlawful harm — can extend even to causing death where there's reasonable apprehension of death or grievous hurt (Darshan Singh)." },
+      { term:"Mistake of Fact", def:"An honest and reasonable belief in a mistaken fact that, if true, would have made the act innocent — excuses liability (State of Orissa v. Ram Bahadur Thapa)." }
+    ]
+  },
+  "s3-crimes:u2:0": {
+    items: [
+      { term:"Criminal Conspiracy", def:"An agreement between two or more persons to commit an illegal act, or a legal act by illegal means — the agreement itself is the offence, regardless of whether the planned act is carried out." },
+      { term:"Circumstantial Evidence of Conspiracy", def:"Since conspiracies are typically hatched in secrecy, courts may infer the existence of an agreement from conduct and surrounding circumstances rather than requiring direct proof of an explicit pact." }
+    ]
+  },
+  "s3-crimes:u2:1": {
+    items: [
+      { term:"Sedition", def:"Speech or conduct inciting hatred, contempt, or disaffection toward government, narrowly construed (Kedar Nath Singh) to require actual incitement to violence or public disorder, not mere criticism." },
+      { term:"Public Order", def:"The absence of disturbance affecting the even flow of community life — restrictions on speech justified on this ground must show a real, proximate link to disorder, not just the content being provocative." }
+    ]
+  },
+  "s3-crimes:u3:1": {
+    items: [
+      { term:"Bigamy", def:"Contracting a second marriage while a valid first marriage subsists, without the first being lawfully dissolved — an offence under the BNS." },
+      { term:"Solemnization", def:"The actual performance of a marriage's essential ceremonies (e.g. saptapadi for Hindus) — a bigamy conviction requires proof the second 'marriage' was validly solemnized, not merely claimed (Bhaurao Shankar Lokhande)." }
+    ]
+  },
+  "s3-crimes:u3:3": {
+    items: [
+      { term:"Offences Against Children", def:"A category of offences (kidnapping, sexual offences, trafficking) attracting enhanced protection given children's vulnerability and inability to give valid legal consent." },
+      { term:"Age of Consent", def:"The age below which a person is legally deemed incapable of giving valid consent to sexual activity — currently 18 in India, applicable regardless of marital status (Independent Thought v. UOI)." }
+    ]
+  },
+  "s3-crimes:u3:4": {
+    items: [
+      { term:"Murder", def:"Culpable homicide committed with intention to cause death, or intention to cause a bodily injury objectively sufficient in the ordinary course of nature to cause death (Virsa Singh's four-fold test), or certain other aggravated states of mind." },
+      { term:"Culpable Homicide Not Amounting to Murder", def:"A lesser category where death is caused with intention/knowledge likely to cause death, but without the specific aggravating factors that elevate it to murder (Reg v. Govinda)." },
+      { term:"Grave and Sudden Provocation", def:"A partial defence reducing murder to culpable homicide where the accused acted in the heat of the moment after serious provocation — lost if there was a 'cooling-off' period before the act (Nanavati)." }
+    ]
+  },
+  "s3-crimes:u4:0": {
+    items: [
+      { term:"Theft", def:"Dishonestly taking movable property out of another's possession without consent — complete the moment the property is moved, regardless of whether it is later returned (Pyare Lal Bhargava, K.N. Mehra)." },
+      { term:"Dishonest Intention", def:"Intention to cause wrongful gain to oneself or wrongful loss to another — under Indian law, unlike English larceny, doesn't require an intention to permanently deprive the owner." },
+      { term:"Claim of Right", def:"A genuine, good-faith belief that one is legally entitled to take the property negates dishonest intention and defeats a theft charge (Ram Ratan v. State of Bihar)." }
+    ]
+  },
+  "s3-family:u2:1": {
+    items: [
+      { term:"Registration of Marriage", def:"Recording a marriage with the state registrar — evidentiary proof of the marriage, not a precondition for its validity under personal law (Seema v. Ashwani Kumar)." },
+      { term:"Solemnization", def:"The actual performance of a marriage's essential ceremonies — a marriage is only validly 'solemnized', and thus provable/registrable, if these were genuinely carried out (Bhaurao Shankar Lokhande)." }
+    ]
+  },
+  "s3-family:u3:1": {
+    items: [
+      { term:"Irretrievable Breakdown of Marriage", def:"A marriage that has broken down completely and permanently with no possibility of reconciliation — not yet a standalone statutory ground under the Hindu Marriage Act, but courts (and the SC via Article 142) increasingly grant divorce on facts amounting to this (Naveen Kohli)." },
+      { term:"Mental Cruelty (S.13(1)(ia))", def:"Sustained conduct causing mental pain and suffering such that the parties cannot reasonably be expected to live together — assessed cumulatively, not through isolated incidents (Samar Ghosh, V. Bhagat)." }
+    ]
+  },
+  "s3-family:u3:2": {
+    items: [
+      { term:"Talaq", def:"The general term for a Muslim husband's unilateral pronouncement of divorce." },
+      { term:"Talaq-e-Biddat (Triple Talaq)", def:"Instant, irrevocable divorce by pronouncing 'talaq' three times in one sitting, without reconciliation attempts — held unconstitutional in Shayara Bano (2017)." },
+      { term:"Valid Pronouncement Requirement", def:"Per Shamim Ara, a talaq must be actually, provably pronounced (not merely pleaded in court papers) and should follow reasonable cause and reconciliation attempts." }
+    ]
+  },
+  "s3-family:u3:3": {
+    items: [
+      { term:"Maintenance", def:"Financial support one spouse/family member is legally obligated to provide another who cannot support themselves." },
+      { term:"Iddat", def:"The waiting period (roughly three menstrual cycles or three lunar months) a Muslim woman observes after divorce or her husband's death, historically marking the limit of the husband's maintenance obligation under classical Muslim law." }
+    ]
+  },
+  "s3-family:u4:0": {
+    items: [
+      { term:"Reasonable and Fair Provision (S.3, 1986 Act)", def:"The Muslim Women (Protection of Rights on Divorce) Act, 1986's requirement that a husband provide for his divorced wife's future within the iddat period — interpreted (Danial Latifi) to mean provision sufficient for her whole remaining life if she doesn't remarry, not just three months." }
+    ]
+  },
+  "s3-family:u4:2": {
+    items: [
+      { term:"Natural Guardian", def:"A guardian recognised by law by virtue of their relationship to the minor (typically a parent) without needing court appointment." },
+      { term:"'After' Reinterpreted", def:"In Section 6(a), Hindu Minority and Guardianship Act, the word 'after' (the father) was reinterpreted by Githa Hariharan to mean 'in the absence of', allowing mothers to act as natural guardian even while the father is alive in appropriate circumstances." }
+    ]
+  },
   "s1-legal:u1:1": {
     items: [
       { term:"Social Engineering (Roscoe Pound)", def:"The theory that law's function is to balance competing individual and social interests, actively shaping society rather than merely reflecting it." },

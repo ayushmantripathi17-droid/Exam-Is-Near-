@@ -14,6 +14,11 @@
  *   - Rate limiting on groqProxy per UID
  *   - Input sanitization on groqProxy messages
  *   - Model locked to allowlist
+ *
+ * AI provider: moved back to Groq (free tier) — Aug 2026, with Gemini
+ * Flash-Lite as an automatic fallback if Groq errors or rate-limits.
+ * Response shape stays OpenAI-style (`choices[0].message.content`) either
+ * way, so the frontend needs no changes.
  */
 
 const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
@@ -31,11 +36,8 @@ const db = admin.firestore();
 const RZP_KEY_ID          = defineSecret("RZP_KEY_ID");
 const RZP_KEY_SECRET      = defineSecret("RZP_KEY_SECRET");
 const GROQ_API_KEY        = defineSecret("GROQ_API_KEY");
+const GEMINI_API_KEY      = defineSecret("GEMINI_API_KEY");
 const GCP_BILLING_KEY     = defineSecret("GCP_BILLING_KEY");
-// Optional — only required if you want live legal news headlines (see refreshLegalUpdates below).
-// Get a free key at https://gnews.io or https://newsapi.org, then:
-//   firebase functions:secrets:set NEWS_API_KEY
-const NEWS_API_KEY        = defineSecret("NEWS_API_KEY");
 
 const ALLOWED_ORIGINS = [
   "https://exam-is-near.web.app",
@@ -51,7 +53,7 @@ const PLAN_DURATION_MS = {
   annual:  366 * 24 * 60 * 60 * 1000,
 };
 
-// ── Groq rate limiter (in-memory, resets on instance restart) ─────────────────
+// ── AI proxy rate limiter (in-memory, resets on instance restart) ─────────────
 const _groqRateLimiter = new Map();
 const GROQ_RATE_LIMIT  = 60;
 const GROQ_RATE_WINDOW = 60 * 1000;
@@ -593,16 +595,20 @@ exports.activateTrial = onRequest(
 );
 
 // ══════════════════════════════════════════════════════════════════════════════
-// groqProxy — Secure AI proxy
+// groqProxy — Secure AI proxy. Groq (free tier) is primary; Gemini
+// Flash-Lite is an automatic fallback if Groq errors, rate-limits, or the
+// key is missing. Kept the export name + OpenAI-style response shape so
+// the existing frontend (which reads data.choices[0].message.content)
+// needs no changes either way.
 // ══════════════════════════════════════════════════════════════════════════════
 const ALLOWED_GROQ_MODELS = new Set([
-  "llama-3.3-70b-versatile",
-  "llama-3.1-8b-instant",
-  "mixtral-8x7b-32768",
+  "openai/gpt-oss-20b",   // default — fastest, cheapest, free-tier
+  "openai/gpt-oss-120b",  // higher quality, still free-tier
 ]);
+const GEMINI_FALLBACK_MODEL = "gemini-flash-lite-latest"; // Google-maintained alias — won't go stale
 
 exports.groqProxy = onRequest(
-  { secrets: [GROQ_API_KEY], region: "asia-south1", cors: false, timeoutSeconds: 60 },
+  { secrets: [GROQ_API_KEY, GEMINI_API_KEY], region: "asia-south1", cors: false, timeoutSeconds: 60, invoker: "public" },
   async (req, res) => {
     if (handleCORS(req, res)) return;
     if (req.method !== "POST")
@@ -632,38 +638,97 @@ exports.groqProxy = onRequest(
 
     const model = ALLOWED_GROQ_MODELS.has(body.model)
       ? body.model
-      : "llama-3.3-70b-versatile";
+      : "openai/gpt-oss-20b";
 
     const maxTokens = Math.min(
       typeof body.max_tokens === "number" ? body.max_tokens : 800,
       6000
     );
+    const temperature = typeof body.temperature === "number"
+      ? Math.min(Math.max(body.temperature, 0), 1)
+      : 0.7;
 
-    const key = GROQ_API_KEY.value();
-    if (!key) {
-      console.error("[groqProxy] GROQ_API_KEY secret is empty");
+    // ── Primary: Groq. Already OpenAI-shaped — passed straight through. ──
+    const groqKey = GROQ_API_KEY.value();
+    if (groqKey) {
+      try {
+        const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${groqKey}`,
+          },
+          body: JSON.stringify({ model, max_tokens: maxTokens, messages: sanitizedMessages, temperature }),
+        });
+        if (groqRes.ok) {
+          const data = await groqRes.json();
+          return res.status(200).json(data);
+        }
+        console.warn("[groqProxy] Groq error, falling back to Gemini:", groqRes.status);
+      } catch (err) {
+        console.warn("[groqProxy] Groq fetch error, falling back to Gemini:", err.message);
+      }
+    } else {
+      console.warn("[groqProxy] GROQ_API_KEY empty, going straight to Gemini");
+    }
+
+    // ── Fallback: Gemini. Needs reshaping into the OpenAI-style contract. ──
+    const geminiKey = GEMINI_API_KEY.value();
+    if (!geminiKey) {
+      console.error("[groqProxy] Groq unavailable and GEMINI_API_KEY empty");
       return res.status(500).json({ error: "AI service not configured" });
     }
 
     try {
-      const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${key}` },
-        body: JSON.stringify({
-          model, max_tokens: maxTokens, messages: sanitizedMessages,
-          temperature: typeof body.temperature === "number"
-            ? Math.min(Math.max(body.temperature, 0), 1)
-            : 0.7,
-        }),
-      });
-      const data = await groqRes.json();
-      if (!groqRes.ok) {
-        console.warn("[groqProxy] Groq error:", groqRes.status, data?.error?.message);
-        return res.status(groqRes.status).json({ error: data?.error?.message || "Groq error" });
+      const systemText = sanitizedMessages
+        .filter(m => m.role === "system")
+        .map(m => m.content)
+        .join("\n\n");
+      const contents = sanitizedMessages
+        .filter(m => m.role !== "system")
+        .map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
+
+      if (!contents.length)
+        return res.status(400).json({ error: "No valid messages after sanitization" });
+
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_FALLBACK_MODEL}:generateContent?key=${geminiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents,
+            ...(systemText ? { systemInstruction: { parts: [{ text: systemText }] } } : {}),
+            generationConfig: { maxOutputTokens: maxTokens, temperature },
+          }),
+        }
+      );
+      const data = await geminiRes.json();
+      if (!geminiRes.ok) {
+        console.error("[groqProxy] Gemini error:", geminiRes.status, data?.error?.message);
+        return res.status(geminiRes.status).json({ error: data?.error?.message || "Gemini error" });
       }
-      return res.status(200).json(data);
+
+      const text = (data.candidates?.[0]?.content?.parts || [])
+        .map(p => p.text || "")
+        .join("");
+
+      return res.status(200).json({
+        id: data.responseId || ("gemini-" + Date.now()),
+        model: GEMINI_FALLBACK_MODEL,
+        choices: [{
+          index: 0,
+          message: { role: "assistant", content: text },
+          finish_reason: data.candidates?.[0]?.finishReason === "MAX_TOKENS" ? "length" : "stop",
+        }],
+        usage: {
+          prompt_tokens: data.usageMetadata?.promptTokenCount,
+          completion_tokens: data.usageMetadata?.candidatesTokenCount,
+          total_tokens: data.usageMetadata?.totalTokenCount,
+        },
+      });
     } catch (err) {
-      console.error("[groqProxy] Fetch error:", err.message);
+      console.error("[groqProxy] Gemini fetch error:", err.message);
       return res.status(500).json({ error: "Proxy network error" });
     }
   }
@@ -672,9 +737,9 @@ exports.groqProxy = onRequest(
 // refreshLegalUpdates — Keeps /legal-updates/nfsu fresh for the NFSU AI tutor
 //   • Bare-act notes: static list of the biggest recent codification changes
 //     (IPC → BNS, CrPC → BNSS, Evidence Act → BSA) plus any hand-edited notes.
-//   • News items: latest Indian legal-affairs headlines, if NEWS_API_KEY is set.
-//     Without a key, the function still runs and just keeps bareActNotes fresh —
-//     it never fails the whole doc write because news fetch failed.
+//   • News items: REMOVED (Aug 2026) — used to fetch live legal-affairs
+//     headlines via NEWS_API_KEY / gnews.io. Dropped to remove the
+//     NEWS_API_KEY secret dependency; newsItems is now always [].
 // groq.js reads this doc directly (Firestore read is public per firestore.rules)
 // and folds it into the system prompt for nfsu1 / nfsu3 students.
 // ══════════════════════════════════════════════════════════════════════════════
@@ -688,28 +753,8 @@ const BARE_ACT_NOTES = [
   "For Sem III syllabus (Law of Crimes I), answer using IPC section numbers as the syllabus prescribes, but always add a one-line note on the corresponding BNS section so the student knows both.",
 ];
 
-async function buildLegalNewsItems() {
-  const key = NEWS_API_KEY.value();
-  if (!key) return []; // no key configured — skip silently, bareActNotes still gets written
-  try {
-    const url = `https://gnews.io/api/v4/search?q=%22Indian%20law%22%20OR%20%22Supreme%20Court%22%20OR%20%22Bharatiya%20Nyaya%20Sanhita%22&lang=en&country=in&max=6&apikey=${key}`;
-    const r = await fetch(url);
-    if (!r.ok) return [];
-    const data = await r.json();
-    return (data.articles || []).slice(0, 6).map(a => ({
-      title: String(a.title || "").slice(0, 160),
-      source: a.source?.name || "",
-      publishedAt: a.publishedAt || "",
-      url: a.url || "",
-    }));
-  } catch (err) {
-    console.warn("[refreshLegalUpdates] news fetch failed:", err.message);
-    return [];
-  }
-}
-
 async function runLegalUpdatesRefresh() {
-  const newsItems = await buildLegalNewsItems();
+  const newsItems = []; // news-fetch feature removed — no NEWS_API_KEY dependency
   await db.collection("legal-updates").doc("nfsu").set({
     bareActNotes: BARE_ACT_NOTES,
     newsItems,
@@ -720,13 +765,13 @@ async function runLegalUpdatesRefresh() {
 
 // Runs automatically every day at 06:00 IST
 exports.refreshLegalUpdatesScheduled = onSchedule(
-  { schedule: "0 6 * * *", timeZone: "Asia/Kolkata", region: "asia-south1", secrets: [NEWS_API_KEY] },
+  { schedule: "0 6 * * *", timeZone: "Asia/Kolkata", region: "asia-south1" },
   async () => { await runLegalUpdatesRefresh(); }
 );
 
 // Manual trigger — call from the admin panel for an on-demand refresh
 exports.refreshLegalUpdates = onCall(
-  { region: "asia-south1", secrets: [NEWS_API_KEY] },
+  { region: "asia-south1" },
   async (req) => {
     if (!req.auth || req.auth.token.email !== "ayushmantripathi17@gmail.com") {
       throw new HttpsError("permission-denied", "Admin only");

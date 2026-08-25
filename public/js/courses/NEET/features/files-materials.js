@@ -43,6 +43,20 @@ async function loadAdminMaterials(){
     const q=query(collection(db,"study-materials"),orderBy("createdAt","desc"));
     const snap=await getDocs(q);
     const adminMats=[];
+    // The admin "Study Material" publish form saves the subject as a plain
+    // display name (e.g. "Operating System Concepts"), but the student-side
+    // filter pills are built from getSubjects(), whose .id is a slug
+    // (e.g. "s3-os"). Resolve name -> id here so the two actually match —
+    // otherwise every subject filter except "All" silently shows nothing.
+    const knownSubs=(typeof getSubjects==="function")?getSubjects():[];
+    const resolveSubjectId=(rawSubject,fallback)=>{
+      const raw=(rawSubject||"").trim();
+      if(!raw) return fallback;
+      const match=knownSubs.find(s=>
+        s.id===raw || (s.name||"").trim().toLowerCase()===raw.toLowerCase()
+      );
+      return match?match.id:raw; // fall back to raw value if no match found
+    };
     snap.forEach(d=>{
       const m=d.data();
       const docCourse=(m.course||"").toLowerCase();
@@ -56,7 +70,7 @@ async function loadAdminMaterials(){
         size:0,
         created:m.createdAt?new Date(m.createdAt).toLocaleDateString():"",
         downloadURL:m.url||null,
-        subjectId:m.subject||m.course||"general",
+        subjectId:resolveSubjectId(m.subject,m.course||"general"),
         course:m.course||"",
         note:m.description||"",
         proOnly:!!m.proOnly,

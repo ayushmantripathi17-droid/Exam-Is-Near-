@@ -1,11 +1,13 @@
-// ══════════════════════════════════════════════════════════════
 // GEMINI AI STUDY ASSISTANT
 // ══════════════════════════════════════════════════════════════
 // SECURITY: API key removed from frontend. All AI calls go through
 // the Firebase Cloud Function proxy (functions/index.js → groqProxy).
 // The key lives only in Firebase Secret Manager.
 const GROQ_PROXY_URL = "https://asia-south1-exam-is-near.cloudfunctions.net/groqProxy";
-const GROQ_MODEL = "openai/gpt-oss-20b"; // fast/cheap tier — free: 30 RPM, 1K RPD, 200K TPD
+// Model IDs must match ALLOWED_GROQ_MODELS in functions/index.js exactly,
+// or the proxy silently falls back to claude-sonnet-4-6 for everyone.
+const GROQ_MODEL_PRO  = "claude-sonnet-4-6";         // Pro users — best quality
+const GROQ_MODEL_FREE = "claude-haiku-4-5-20251001"; // Free users — fast/cheap
 let aiHistory = [];
 
 // ── Free tier limits ──
@@ -97,7 +99,7 @@ async function askAI(prompt, isJson = false, systemOverride = null) {
       method: "POST",
       headers: authHeaders,
       body: JSON.stringify({
-        model: GROQ_MODEL,
+        model: pro ? GROQ_MODEL_PRO : GROQ_MODEL_FREE,
         max_tokens: maxTokens,
         messages: [
           { role: "system", content: sysContent },
@@ -154,11 +156,9 @@ async function sendAIMessage(){
 
   input.value="";
   input.style.height="auto";
-  // Auto-create session if none active
-  if(!_aiActiveSession){ const id='sess_'+Date.now(); _aiActiveSession=id; _aiLoadSessions(); _aiSessions.unshift({id,title:'New chat',ts:Date.now(),messages:[]}); _aiSaveSessions(); }
   aiTyping=true;
-  aiHistory.push({role:"user",text:msg,ts:Date.now()});
-  aiHistory.push({role:"ai",text:"⏳ Thinking…",ts:Date.now()});
+  aiHistory.push({role:"user",text:msg});
+  aiHistory.push({role:"ai",text:"⏳ Thinking…"});
   renderAIChat();
   const box=document.getElementById("ai-chat-box");
   if(box) box.scrollTop=box.scrollHeight;
@@ -169,17 +169,15 @@ async function sendAIMessage(){
   const ctxSubName=ctxSub==="all"?"all subjects":(getSubjects().find(s=>s.id===ctxSub)?.name||ctxSub);
   const subjects=getSubjects().map(s=>s.name).join(", ");
   const subProgress=getSubjects().map(s=>s.name+":"+getSubjectPct(s.id)+"%").join(", ");
-  const courseLabel = activeCourse==='neet'?'NEET UG aspirant':activeCourse==='jee'?'JEE (Mains & Advanced) aspirant':activeCourse==='nfsu'?'B.Sc. LL.B. student at NFSU':activeCourse==='nfsu1'?'B.Sc. LL.B. (Hons.) Sem I student at NFSU':activeCourse==='nfsu3'?'B.Sc. LL.B. Sem III student at NFSU':activeCourse==='cbse10'?'CBSE Class 10 student':activeCourse==='cbse11'?('CBSE Class 11 '+( CBSE11_STREAMS[cbse11Stream]?.label?.split('—')[1]?.trim()||'student') +' student'):activeCourse==='cbse12'?('CBSE Class 12 '+( CBSE12_STREAMS[cbse12Stream]?.label?.split('—')[1]?.trim()||'student') +' student'):'student';
-  const courseExtra = activeCourse==='neet'?' Focus on Biology, Physics, Chemistry NCERT concepts.':activeCourse==='jee'?' Focus on Maths, Physics, Chemistry problem solving and formulas.':activeCourse==='nfsu'?' Focus on law, technology, and forensic science subjects.':activeCourse==='nfsu1'?' Focus on NFSU Sem I subjects: Legal Methods, Law of Tort and Consumer Protection Laws, Law and Literature, Fundamentals of Computer Organization & Embedded Systems, Basic Programming Concepts Using C, and Discrete Mathematics.':activeCourse==='nfsu3'?' Focus on NFSU Sem III subjects: Law of Crimes I (IPC), Constitutional Law I, Law of Contract I, Family Law I, Web Programming (HTML, JS, PHP, MySQL), and Operating System Concepts (Linux, memory, processes).':activeCourse==='cbse10'?' Focus on CBSE Class 10 curriculum — Maths, Science, English, Social Science.':activeCourse==='cbse11'?(' Focus on CBSE Class 11 curriculum for '+(CBSE11_STREAMS[cbse11Stream]?.desc||'the selected stream')+'. Give NCERT-focused answers.'):activeCourse==='cbse12'?(' Focus on CBSE Class 12 board exam for '+(CBSE12_STREAMS[cbse12Stream]?.desc||'the selected stream')+'. Give NCERT-focused answers.'):'';
+  const courseLabel = activeCourse==='neet'?'NEET UG aspirant':activeCourse==='jee'?'JEE (Mains & Advanced) aspirant':activeCourse==='nfsu'?'B.Sc. LL.B. student at NFSU':activeCourse==='nfsu1'?'B.Sc. LL.B. (Hons.) Sem I student at NFSU':activeCourse==='nfsu3'?'B.Sc. LL.B. Sem III student at NFSU':activeCourse==='cbse10'?'CBSE Class 10 student':activeCourse==='cbse12'?('CBSE Class 12 '+( CBSE12_STREAMS[cbse12Stream]?.label?.split('—')[1]?.trim()||'student') +' student'):'student';
+  const courseExtra = activeCourse==='neet'?' Focus on Biology, Physics, Chemistry NCERT concepts.':activeCourse==='jee'?' Focus on Maths, Physics, Chemistry problem solving and formulas.':activeCourse==='nfsu'?' Focus on law, technology, and forensic science subjects.':activeCourse==='nfsu1'?' Focus on NFSU Sem I subjects: Legal Methods, Law of Tort and Consumer Protection Laws, Law and Literature, Fundamentals of Computer Organization & Embedded Systems, Basic Programming Concepts Using C, and Discrete Mathematics.':activeCourse==='nfsu3'?' Focus on NFSU Sem III subjects: Law of Crimes I (IPC), Constitutional Law I, Law of Contract I, Family Law I, Web Programming (HTML, JS, PHP, MySQL), and Operating System Concepts (Linux, memory, processes).':activeCourse==='cbse10'?' Focus on CBSE Class 10 curriculum — Maths, Science, English, Social Science.':activeCourse==='cbse12'?(' Focus on CBSE Class 12 board exam for '+(CBSE12_STREAMS[cbse12Stream]?.desc||'the selected stream')+'. Give NCERT-focused answers.'):'';
   const sysPrompt=`You are an expert AI study tutor for a ${courseLabel}. Subjects: ${subjects}. Exams start in ${getDaysLeft(getExamDate(getSubjects()[0]?.id)||'')||'a few'} days. Student progress: ${subProgress}. Hours studied: ${getTotalHours()}h. Current focus: ${ctxSubName}.${courseExtra}\nRules: Be concise yet thorough. Use **bold** for key terms. Use bullet points for lists. Use \`code\` for code snippets. Use numbered steps for procedures. Always end with a 1-line encouragement.`;
 
   const reply = await askAI(msg, false, sysPrompt);
   aiTyping=false;
   aiHistory[aiHistory.length-1]={role:"ai",text:reply};
-  aiHistory[aiHistory.length-1].ts = Date.now();
   renderAIChat();
-  _aiPersistCurrentSession(); // persist to session store
-  saveAIChatHistory(); // PRO: also persist to old key for compatibility
+  saveAIChatHistory(); // PRO: persist history
   if(box) box.scrollTop=box.scrollHeight;
 }
 
@@ -195,10 +193,9 @@ function renderAIChat(){
   // Update send button state
   const btn = document.getElementById("ai-send-btn");
   if(btn) btn.disabled = aiTyping;
-  // Update status dots (sidebar model dot + any legacy ai-dot)
-  document.querySelectorAll(".ai-dot,.ai-model-dot").forEach(d=>{ d.className=(d.classList.contains("ai-model-dot")?"ai-model-dot":"ai-dot")+(aiTyping?" thinking":""); });
-  const topTitle=document.querySelector(".ai-topbar-title");
-  if(topTitle && aiHistory.length>0) topTitle.textContent=_aiSessionTitle(aiHistory);
+  // Update dot
+  const dot = document.querySelector(".ai-dot");
+  if(dot){dot.className="ai-dot"+(aiTyping?" thinking":"");}
 }
 
 async function generateQuizFromAI(subject, count){
@@ -287,4 +284,3 @@ Output all ${n} questions. Do not truncate.`;
 }
 
 // ══════════════════════════════════════════════════════════════
-// POMODORO TIMER — Enhanced by ArkSetu v2
