@@ -642,6 +642,8 @@ body{transition:background .35s ease,color .35s ease}
         <div>
           <div class="card">
             <div class="card-title"><span>➕</span>Upload New Material</div>
+
+            <div style="font-size:10px;font-weight:700;color:var(--gold);letter-spacing:1px;margin:4px 0 10px">STEP 1 — WHERE DOES THIS BELONG?</div>
             <div class="form-group">
               <label class="form-label">Course</label>
               <select class="form-input" id="mat-course" onchange="updateSubjectOptions()">
@@ -659,15 +661,18 @@ body{transition:background .35s ease,color .35s ease}
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Title</label>
-              <input class="form-input" id="mat-title" placeholder="e.g. Physics Formula Sheet — Electrostatics"/>
-            </div>
-            <div class="form-group">
               <label class="form-label">Subject</label>
               <select class="form-input" id="mat-subject" onchange="onSubjectChange()">
                 <option value="">— Select Course First —</option>
               </select>
               <input class="form-input" id="mat-subject-other" placeholder="Enter subject name…" style="display:none;margin-top:8px"/>
+              <div style="font-size:10px;color:var(--muted);margin-top:5px">Pick the course above first — this list updates to match it.</div>
+            </div>
+
+            <div style="font-size:10px;font-weight:700;color:var(--gold);letter-spacing:1px;margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border2)">STEP 2 — WHAT IS IT?</div>
+            <div class="form-group">
+              <label class="form-label">Title</label>
+              <input class="form-input" id="mat-title" placeholder="e.g. Physics Formula Sheet — Electrostatics"/>
             </div>
             <div class="form-group">
               <label class="form-label">Type</label>
@@ -680,11 +685,13 @@ body{transition:background .35s ease,color .35s ease}
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">URL / Link</label>
-              <input class="form-input" id="mat-url" placeholder="https://… (leave blank if uploading a file)"/>
+              <label class="form-label">Description (optional)</label>
+              <textarea class="form-input" id="mat-desc" rows="2" placeholder="Short description of this material…"></textarea>
             </div>
+
+            <div style="font-size:10px;font-weight:700;color:var(--gold);letter-spacing:1px;margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border2)">STEP 3 — THE FILE ITSELF</div>
             <div class="form-group">
-              <label class="form-label">— OR — Upload File (PDF / Image / Doc)</label>
+              <label class="form-label">Upload a file</label>
               <input type="file" id="mat-file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.mp4,.zip" style="width:100%;background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;font-family:Syne,sans-serif;font-size:12px;color:var(--text);cursor:pointer"/>
               <div id="mat-upload-progress" style="display:none;margin-top:8px">
                 <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden">
@@ -693,14 +700,25 @@ body{transition:background .35s ease,color .35s ease}
                 <div id="mat-progress-text" style="font-size:10px;color:var(--muted);margin-top:4px;font-family:'Space Mono',monospace">Uploading…</div>
               </div>
             </div>
+            <div style="text-align:center;font-size:10px;color:var(--muted);margin:6px 0">— OR, instead of a file —</div>
             <div class="form-group">
-              <label class="form-label">Description (optional)</label>
-              <textarea class="form-input" id="mat-desc" rows="2" placeholder="Short description of this material…"></textarea>
+              <label class="form-label">Paste a URL / Link</label>
+              <input class="form-input" id="mat-url" placeholder="https://… (leave blank if uploading a file above)"/>
             </div>
-            <div class="form-group" style="display:flex;align-items:center;gap:10px">
-              <input type="checkbox" id="mat-pro-only" style="width:auto"/>
-              <label for="mat-pro-only" class="form-label" style="margin:0;cursor:pointer">Pro subscribers only 🔒</label>
+
+            <div style="font-size:10px;font-weight:700;color:var(--gold);letter-spacing:1px;margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border2)">STEP 4 — LABELS</div>
+            <div style="display:flex;flex-direction:column;gap:10px;background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:12px 14px;margin-bottom:16px">
+              <label for="mat-question-paper" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0">
+                <input type="checkbox" id="mat-question-paper" style="width:auto;flex-shrink:0"/>
+                <span style="font-size:12px;color:var(--text)">📋 This is a Question Paper</span>
+              </label>
+              <div style="font-size:10px;color:var(--muted);margin-left:24px;margin-top:-6px">Shows a "Question Paper" badge and a dedicated filter on the student-facing Study Material page.</div>
+              <label for="mat-pro-only" style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0;padding-top:8px;border-top:1px solid var(--border)">
+                <input type="checkbox" id="mat-pro-only" style="width:auto;flex-shrink:0"/>
+                <span style="font-size:12px;color:var(--text)">🔒 Pro subscribers only</span>
+              </label>
             </div>
+
             <button class="btn btn-gold" style="width:100%" onclick="uploadMaterial()">📂 Publish Material</button>
           </div>
         </div>
@@ -836,11 +854,11 @@ const ADMIN_EMAIL = ["ayushmantripathi17","gmail.com"].join("@");
 const PRO_MONTHLY = 149;
 const PRO_ANNUAL  = 999;
 
-// Shared pure helpers — single source of truth, see /js/utils/helpers.js.
+// Shared pure helpers — single source of truth, see /src/utils/helpers.js.
 // Note: esc() here now also escapes single quotes (was already the case
 // in admin.html; index.html's copy was the outlier and has been aligned
 // to match — see AUDIT.md).
-import { today, genId, esc } from "/js/utils/helpers.js";
+import { today, genId, esc } from "/src/utils/helpers.js";
 
 let db, auth, currentAdmin;
 let _allUsers = [], _allPayments = [], _allCoupons = [], _userFilter = 'all', _currentModalUid = null;
@@ -1116,7 +1134,7 @@ function getStreak(studyLog) {
   }
   return streak;
 }
-// today, genId, esc now imported from /js/utils/helpers.js — see top of module. See AUDIT.md.
+// today, genId, esc now imported from /src/utils/helpers.js — see top of module. See AUDIT.md.
 
 // ── Load All (Overview) ───────────────────────────────────────────
 async function loadAllData(btn) {
@@ -1917,6 +1935,7 @@ function renderMaterials() {
           <span class="badge badge-pro" style="font-size:9px">${esc(m.course||'—')}</span>
           ${m.subject ? `<span class="badge badge-free" style="font-size:9px">${esc(m.subject)}</span>` : ''}
           ${m.proOnly ? `<span class="badge badge-annual" style="font-size:9px">🔒 PRO</span>` : ''}
+          ${m.isQuestionPaper ? `<span class="badge" style="font-size:9px;background:#FF6B3522;color:#FF6B35;border:1px solid #FF6B3555">📋 QUESTION PAPER</span>` : ''}
         </div>
         ${m.description ? `<div style="font-size:10px;color:var(--muted);margin-top:4px">${esc(m.description)}</div>` : ''}
         ${m.url ? `<a href="${esc(m.url)}" target="_blank" style="font-size:10px;color:var(--blue);word-break:break-all">${m.fileName ? '📎 '+esc(m.fileName) : esc(m.url.slice(0,60))+(m.url.length>60?'…':'')}</a>` : ''}
@@ -1927,17 +1946,98 @@ function renderMaterials() {
     : '<div class="empty"><div class="empty-icon">📂</div><div class="empty-text">No materials published yet</div></div>';
 }
 
+// Subject id/name pairs, matching the real ids getSubjects() returns at
+// runtime for each course (extracted directly from the Syllabus data
+// files - see MIGRATION_NOTES.md). Previously this stored display names
+// only, which silently never matched the student-facing subject filter
+// (files-materials.js compares against subject IDs) - a pre-existing bug,
+// not introduced by the src/ migration, just never exercised until now.
+// 'upsc' and 'general' have no backing course/subject data in the app, so
+// id === name for those (harmless - nothing filters materials tagged with
+// them by subject anyway).
 const SUBJECTS_BY_COURSE = {
-  nfsu:   ['C++','RDBMS','Legal Language','Statistics','Law & Society','Jurisprudence'],
-  nfsu1:  ['Legal Methods','Law of Tort and Consumer Protection Laws','Law and Literature','Fundamentals of Computer Organization & Embedded Systems','Basic Programming Concepts Using C','Discrete Mathematics'],
-  nfsu3:  ['Law of Crimes I','Constitutional Law I','Law of Contract I','Family Law I','Web Programming','Operating System Concepts'],
-  jee:    ['Physics','Chemistry','Mathematics'],
-  neet:   ['Physics','Chemistry','Botany','Zoology'],
-  upsc:   ['General Studies','CSAT','Essay','Optional Subject','Current Affairs'],
-  cbse12: ['Physics','Chemistry','Mathematics','Biology','English Core','Accountancy','Business Studies','Economics','History','Political Science','Geography','Psychology','Sociology'],
-  cbse11: ['Physics','Chemistry','Mathematics','Biology','English Core','Accountancy','Business Studies','Economics','History','Political Science','Geography','Psychology','Sociology'],
-  cbse10: ['Mathematics','Science','Social Science','English','Hindi'],
-  general:['General']
+  nfsu: [
+    { id: 'cpp', name: 'C++' },
+    { id: 'rdbms', name: 'RDBMS' },
+    { id: 'legal', name: 'Legal Language' },
+    { id: 'stats', name: 'Statistics' },
+    { id: 'laws', name: 'Law & Society' },
+    { id: 'juris', name: 'Jurisprudence' },
+  ],
+  nfsu1: [
+    { id: 's1-legal', name: 'Legal Methods' },
+    { id: 's1-tort', name: 'Law of Tort and Consumer Protection Laws' },
+    { id: 's1-literature', name: 'Law and Literature' },
+    { id: 's1-compcore', name: 'Fundamentals of Computer Organization & Embedded Systems' },
+    { id: 's1-c', name: 'Basic Programming Concepts Using C' },
+    { id: 's1-discmath', name: 'Discrete Mathematics' },
+  ],
+  nfsu3: [
+    { id: 's3-crimes', name: 'Law of Crimes I' },
+    { id: 's3-const', name: 'Constitutional Law I' },
+    { id: 's3-contract', name: 'Law of Contract I' },
+    { id: 's3-family', name: 'Family Law I' },
+    { id: 's3-web', name: 'Web Programming' },
+    { id: 's3-os', name: 'Operating System Concepts' },
+  ],
+  jee: [
+    { id: 'jee-phy', name: 'Physics' },
+    { id: 'jee-chem', name: 'Chemistry' },
+    { id: 'jee-math', name: 'Mathematics' },
+  ],
+  neet: [
+    { id: 'neet-phy', name: 'Physics' },
+    { id: 'neet-chem', name: 'Chemistry' },
+    { id: 'neet-bot', name: 'Botany' },
+    { id: 'neet-zoo', name: 'Zoology' },
+  ],
+  upsc: [
+    { id: 'General Studies', name: 'General Studies' },
+    { id: 'CSAT', name: 'CSAT' },
+    { id: 'Essay', name: 'Essay' },
+    { id: 'Optional Subject', name: 'Optional Subject' },
+    { id: 'Current Affairs', name: 'Current Affairs' },
+  ],
+  cbse12: [
+    { id: 'c12-phy', name: 'Physics' },
+    { id: 'c12-chem', name: 'Chemistry' },
+    { id: 'c12-math', name: 'Mathematics' },
+    { id: 'c12-bio', name: 'Biology' },
+    { id: 'c12-eng', name: 'English Core' },
+    { id: 'c12-acc', name: 'Accountancy' },
+    { id: 'c12-bs', name: 'Business Studies' },
+    { id: 'c12-eco', name: 'Economics' },
+    { id: 'c12-hist', name: 'History' },
+    { id: 'c12-pol', name: 'Political Science' },
+    { id: 'c12-geo', name: 'Geography' },
+    { id: 'c12-psyc', name: 'Psychology' },
+    { id: 'c12-socio', name: 'Sociology' },
+  ],
+  cbse11: [
+    { id: 'c11-phy', name: 'Physics' },
+    { id: 'c11-chem', name: 'Chemistry' },
+    { id: 'c11-math', name: 'Mathematics' },
+    { id: 'c11-bio', name: 'Biology' },
+    { id: 'c11-eng', name: 'English Core' },
+    { id: 'c11-acc', name: 'Accountancy' },
+    { id: 'c11-bs', name: 'Business Studies' },
+    { id: 'c11-eco', name: 'Economics' },
+    { id: 'c11-hist', name: 'History' },
+    { id: 'c11-pol', name: 'Political Science' },
+    { id: 'c11-geo', name: 'Geography' },
+    { id: 'c11-psyc', name: 'Psychology' },
+    { id: 'c11-socio', name: 'Sociology' },
+  ],
+  cbse10: [
+    { id: 'c10-math', name: 'Mathematics' },
+    { id: 'c10-sci', name: 'Science' },
+    { id: 'c10-sst', name: 'Social Science' },
+    { id: 'c10-eng', name: 'English' },
+    { id: 'c10-hindi', name: 'Hindi' },
+  ],
+  general: [
+    { id: 'general', name: 'General' },
+  ],
 };
 
 function updateSubjectOptions() {
@@ -1951,7 +2051,7 @@ function updateSubjectOptions() {
   } else {
     const subjects = SUBJECTS_BY_COURSE[course] || [];
     subjectSel.innerHTML = '<option value="">— Select Subject —</option>'
-      + subjects.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('')
+      + subjects.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('')
       + '<option value="Other">Other (specify)…</option>';
   }
   if (otherInput) { otherInput.style.display = 'none'; otherInput.value = ''; }
@@ -2058,6 +2158,7 @@ async function uploadMaterial() {
   const urlInput = document.getElementById('mat-url')?.value.trim();
   const desc     = document.getElementById('mat-desc')?.value.trim();
   const proOnly  = document.getElementById('mat-pro-only')?.checked;
+  const isQuestionPaper = document.getElementById('mat-question-paper')?.checked;
   const fileInput= document.getElementById('mat-file');
   const file     = fileInput?.files?.[0];
 
@@ -2118,7 +2219,7 @@ async function uploadMaterial() {
       id, course, title, subject, type, url: finalUrl || null,
       fileName: fileName || null,
       description: desc || null,
-      proOnly: !!proOnly, createdAt: Date.now(), createdBy: currentAdmin.email
+      proOnly: !!proOnly, isQuestionPaper: !!isQuestionPaper, createdAt: Date.now(), createdBy: currentAdmin.email
     });
     toast('✅ Material published!', 'success');
     // reset form

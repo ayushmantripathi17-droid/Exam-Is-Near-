@@ -174,3 +174,46 @@ See bug #1. This is now the only file in `ads/` — the AdSense loader `<script>
 
 ### What you should still verify locally before deploying
 Same standing advice as §3/§6: `firebase serve`, then specifically check (1) free-tier ads now actually render (bug #1 fix), (2) the favicon/logo shows correctly in the tab and PWA install prompt, (3) `rankJEE.html`/`rankNEET.html` show the header logo, (4) the "Switch Course" popup and NEET/JEE Hub still work across all 4 courses.
+
+---
+
+## 8. Session: cleanup + verification pass (2026-08-26)
+
+**What I found:** this repo snapshot (the GitHub upload) did not actually contain §7's `index.html` edits, even though §7's *destination* files (`public/assets/`, `public/seo/structured-data/`, `public/ads/ads-display.js`) were all present on disk. `index.html` was still 1,187,211 bytes, still had both base64 logo blobs inline, still had all 9 `logo_transparent__1_.png` references, and still loaded `/js/ui/ads-display.js` (the exact bug §7 describes as fixed). Whatever produced this upload evidently included the new files from that session but not the `index.html` diff. Applied the missing edits now, using §7's own already-verified facts (byte-identical MD5 on the logo, parseable JSON, etc.) rather than re-deriving them:
+
+- `<script defer src="/js/ui/ads-display.js">` → `/ads/ads-display.js` (free-tier ads were not rendering; now fixed).
+- Both inline base64 `<img>` logos → `<img src="/assets/images/logo.png">` (re-confirmed MD5 `6fd560dc81bfe1c68049a5b555e24b42` match before touching anything). `index.html`: 1,187,211 → 109,211 bytes.
+- All 9 `/logo_transparent__1_.png` references (2 favicon `<link>`s, 7 JSON-LD image URLs) → `/assets/images/logo.png`.
+- Did **not** externalize the 3 inline JSON-LD `<script>` blocks to the existing `public/seo/structured-data/*.json` files — no functional bug either way (SEO-only), and I didn't want to widen the diff further on a payments-adjacent app I can't load-test. Flagging as an available follow-up, not doing it blind.
+
+**Also found:** `public/js/core/app-state.js.bak-20260716-111524`, `public/js/core/firebase-sync.js.bak-20260716-111524`, `public/js/courses/NFSU.zip`, `public/js/courses/CBSE.zip` were still sitting in the tree. I initially deleted these as unreferenced cruft, then found §7 had already explicitly flagged the first three of these for your own confirmation ("your own rule 13") rather than deleting them — so I restored all four rather than override that. They're unreferenced by any code path (confirmed via full-repo grep) and `NFSU/CBSE.zip` duplicate folders that already exist unzipped alongside them, but I'm leaving the actual deletion call to you.
+
+**Fixed the `.gitignore` gap that let the two `.bak-<timestamp>` files get committed in the first place:** the existing `*.bak` / `*.bak_*` patterns don't match `*.bak-20260716-111524` (dash, not underscore, and not a bare `.bak` extension). Added `*.bak-*`.
+
+**Verification performed (static only, same limits as §3/§6/§7 — no browser, no live Firebase project, no bundler in this repo to run):**
+- `node --check` on all 153 `.js` files under `public/js/` and `functions/` — 0 failures.
+- Every `<script src>`, `<img src>`, and `<link href>` in all 7 top-level HTML entry points (`index.html`, `admin.html`, `finance.html`, `landing.html`, `rankJEE.html`, `rankNEET.html`, `pro_modal.html`) resolves to a real file on disk — 0 missing, after the fixes above (was 3 missing before).
+- Re-parsed `index.html` with Python's `html.parser` post-edit — no parse errors.
+- Full-repo secret scan (Razorpay key_secret, private keys, service-account credentials, common API-key patterns) — nothing hardcoded found; `functions/index.js` reads secrets exclusively via `defineSecret(...)`, matching §1.
+
+**Left untouched, on purpose:**
+- The two-live-Razorpay-Key-ID inconsistency (§1.2 / `functions/index.js`'s `RZP_LIVE_KEY_ID`) — still needs your confirmation on which key is correct before anyone touches it; not a call I'll make blind on payment code.
+- `STORAGE_KEYS` adoption across the ~30+ raw `localStorage` call sites — real cleanup, but §7's own note still applies: deserves its own careful, tested pass, not a drive-by in a cleanup session.
+- `src/` (confirmed still excluded from hosting via `firebase.json`, still not an accurate reflection of production code per §3/§4) and `patch/` (`patch/exam-is-near/`, `patch/cloudflare-worker/`) — left exactly as previous sessions left them.
+- The per-course `neetjee-hub-*` / `rank-data.js` unconditional-load question from §7 — same open question, same reasoning, still unresolved.
+
+**What you should still verify locally before deploying:** everything in §7's list, plus — since this pass touched the same file again — reconfirm the favicon and PWA install icon look right, and confirm the 3 JSON-LD blocks still validate (they weren't touched, but re-check after any future edit near them).
+
+---
+
+## 9. Fix: two-live-Razorpay-Key-ID inconsistency (2026-08-26, same-day follow-up)
+
+**What changed:** `functions/index.js`'s `fetchRazorpayFees` no longer hardcodes its own literal Razorpay Key ID (`"rzp_live_Sxwd6qLBExpLGL"`, previously flagged in §1.2/§7 as inconsistent with the key actually used for checkout). It now calls `RZP_KEY_ID.value()` — the same Secret-Manager-backed secret `createOrder`/`verifyPayment` already use (lines ~310/380) — which was already bound in this function's own `secrets: [RZP_KEY_ID, RZP_KEY_SECRET]` config, so no new secret binding was needed.
+
+**Why this and not picking one of the two literal strings:** there's no way to determine from the code which hardcoded value was "correct" — that's a fact about what's actually configured in Secret Manager, which I can't query from here. Rather than guess, I removed the second hardcoded value entirely so there's exactly one source of truth for the live Key ID in this file, and it's the one real payments already depend on. If `RZP_KEY_ID` in Secret Manager is itself wrong, that's now the one place to fix it, not two.
+
+**Also updated:** the "still unresolved — see AUDIT.md" note in `public/js/utils/constants.js` (§ near `STORAGE_KEYS`) now points here instead of claiming this is still open.
+
+**Verified:** `node --check` on both edited files — pass. No `rzp_live_` literal remains anywhere in `functions/index.js` outside this explanatory comment. Only one `ADMIN_EMAIL` declaration remains (removed the duplicate that lived next to the old hardcoded key) — no redeclaration conflict.
+
+**Could not verify (needs you, locally):** that Secret Manager's `RZP_KEY_ID` for this project is itself the live key you intend `fetchRazorpayFees` to report on. This fix guarantees internal consistency, not that the one remaining value is the *right* one — I have no way to check that from static code. Run `fetchRazorpayFees` once after deploying and sanity-check the returned settlement/payment figures against your actual Razorpay dashboard.

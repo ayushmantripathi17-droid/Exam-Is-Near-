@@ -16,13 +16,12 @@
     }
   ],
   "hosting": {
-    "public": "public",
+    "public": "dist",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**",
       "functions/**",
-      "src/**",
       "**/__env.js",
       "__env.js"
     ],

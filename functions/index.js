@@ -783,8 +783,18 @@ exports.refreshLegalUpdates = onCall(
 // ══════════════════════════════════════════════════════════════════════════════
 // fetchRazorpayFees — Auto-fetch this month's Razorpay gateway fees
 // ══════════════════════════════════════════════════════════════════════════════
-const RZP_LIVE_KEY_ID = "rzp_live_Sxwd6qLBExpLGL";
-const ADMIN_EMAIL     = "ayushmantripathi17@gmail.com";
+// FIX (2026-08-26): this used to hardcode its own literal Razorpay Key ID
+// ("rzp_live_Sxwd6qLBExpLGL"), separate from — and inconsistent with — the
+// RZP_KEY_ID secret that createOrder/verifyPayment actually use for live
+// checkout (see below). There is no way to know from the code alone which
+// literal was "correct"; the one actually correct value is whatever is
+// stored in Secret Manager under RZP_KEY_ID, since that's the one real
+// payments are already flowing through. So instead of guessing between two
+// hardcoded strings, this now reuses that same secret — already bound via
+// this function's own `secrets: [RZP_KEY_ID, RZP_KEY_SECRET]` below — so
+// there's only one source of truth for the live Key ID anywhere in this
+// file, and it can't drift out of sync with itself again.
+const ADMIN_EMAIL = "ayushmantripathi17@gmail.com";
 
 exports.fetchRazorpayFees = onCall(
   { secrets: [RZP_KEY_ID, RZP_KEY_SECRET], region: "asia-south1" },
@@ -792,8 +802,9 @@ exports.fetchRazorpayFees = onCall(
     if (!request.auth || request.auth.token.email !== ADMIN_EMAIL)
       throw new HttpsError("permission-denied", "Admins only.");
 
+    const keyId       = RZP_KEY_ID.value();
     const secret      = RZP_KEY_SECRET.value();
-    const credentials = Buffer.from(`${RZP_LIVE_KEY_ID}:${secret}`).toString("base64");
+    const credentials = Buffer.from(`${keyId}:${secret}`).toString("base64");
 
     const now  = new Date();
     const from = Math.floor(new Date(now.getFullYear(), now.getMonth(), 1).getTime() / 1000);
