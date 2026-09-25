@@ -1,256 +1,113 @@
-# Exam Is Near — Codebase Guide
-**by ArkSetu** · [exam-is-near.web.app](https://exam-is-near.web.app)
+# Exam Is Near — no-Blaze backend
 
-> **⚠️ Out of date as of the src/ migration — read [`MIGRATION_NOTES.md`](./MIGRATION_NOTES.md) first.**
-> `public/js/` has been replaced by real ES modules in `public/src/`, built
-> with Vite (`npm run build`), deployed from `dist/` instead of `public/`
-> directly. Everything below describing `public/js/`'s `<script defer>`
-> tags and the old `src/` scaffold is historical context for *how the code
-> used to be organized*, not how it works now.
+Every route from `functions/index.js` (Gen 2 Cloud Functions) ported to Vercel
+serverless functions, so nothing needs the Firebase Blaze plan. Firestore,
+Auth, and Hosting stay on Firebase (free Spark plan, no billing account).
+File storage is Google Drive links (no Storage bucket, no Cloudinary).
 
----
+## ⚠️ Layout — read before extracting
 
-## Project Structure
+`api/`, `package.json`, and `vercel.json` live inside **`vercel-backend/`**,
+not at this zip's top level. That's deliberate: your frontend project
+already has its own root `package.json` (React/Vite/Tailwind/Zustand deps,
+with a matching `package-lock.json`). If you extract a second `package.json`
+straight into that same root, it silently overwrites yours — Vercel's build
+would then `npm install` from a file that only lists `firebase-admin` and
+`razorpay`, and your local `npm run dev` would start failing too, since none
+of your frontend deps are declared anymore.
 
-```
-exam-is-near/
-│
-├── public/                          ← Firebase Hosting root (the ONLY deployed folder)
-│   ├── index.html                   ← App shell — HTML + a small amount of inline
-│   │                                   bootstrapping JS. Business logic lives in
-│   │                                   public/js/ (see below), loaded via ordered
-│   │                                   <script defer src="..."> tags, not inline.
-│   ├── admin.html                   ← Admin panel (Google auth gated)
-│   ├── finance.html                 ← Finance portal (Google auth + salted PIN gated)
-│   ├── landing.html                 ← Public marketing page
-│   ├── rankJEE.html                 ← JEE rank predictor (served at /jee/rank)
-│   ├── rankNEET.html                ← NEET rank predictor (served at /neet/rank)
-│   ├── pro_modal.html               ← Pro upgrade modal (reference copy)
-│   ├── privacy.html / terms.html
-│   ├── manifest.json                ← PWA manifest
-│   ├── sw.js                        ← Service worker (bump CACHE_NAME/CACHE_STATIC
-│   │                                   after structural changes — see current values
-│   │                                   in the file itself)
-│   ├── robots.txt / sitemap.xml / ads.txt / BingSiteAuth.xml / favicon.ico
-│   │                                   ← kept at web root; search engines & ad
-│   │                                   networks expect exact top-level URLs
-│   │
-│   ├── assets/
-│   │   ├── icons/                   ← PWA icons (192/512, maskable variants, apple-touch)
-│   │   └── images/                  ← logo.png, og-image.png
-│   │
-│   ├── ads/
-│   │   └── ads-display.js           ← Free-tier AdSense display logic
-│   │
-│   ├── seo/
-│   │   └── structured-data/         ← JSON-LD schema files (WebApplication,
-│   │                                   Organization, SoftwareApplication) — currently
-│   │                                   NOT wired into index.html yet; the 3 inline
-│   │                                   <script type="application/ld+json"> blocks in
-│   │                                   index.html are still the live ones
-│   │
-│   └── js/                          ← The real, live application code (~150 files)
-│       ├── core/                    ← app-state.js, firebase-sync.js, course-selector.js
-│       ├── shared/                  ← app-constants.js, pro-footer-bar.js, exam-hub-state.js
-│       ├── utils/                   ← constants.js (ADMIN_EMAIL, STORAGE_KEYS, etc.), helpers.js
-│       └── courses/
-│           ├── JEE/ NEET/ CBSE/ NFSU/   ← per-course syllabi, formulas, and (mostly
-│           │                              byte-identical, not yet trimmed) copies of
-│           │                              features/ and ui/ — only the ACTIVE course's
-│           │                              copy is injected at runtime (see
-│           │                              index.html's course-family logic)
-│           └── subjects-bridge.js   ← rebuilds legacy SUBJECTS_* globals from the
-│                                       per-course tree
-│
-├── src/                             ← ⚠️ NOT used in production. Explicitly excluded
-│   │                                   from Firebase Hosting (firebase.json →
-│   │                                   hosting.ignore: "src/**"). This was a drafted
-│   │                                   target design for a possible future Vite
-│   │                                   rewrite that drifted from what's actually
-│   │                                   deployed — its helpers don't match the real
-│   │                                   ones in public/js/. Kept as a reference
-│   │                                   scaffold for a future rewrite; don't treat
-│   │                                   anything in here as describing current behavior.
-│   └── (utils/ core/ features/ ui/ app.js)
-│
-├── patch/                           ← Old patch bundles (exam-is-near/, cloudflare-worker/).
-│                                       Not part of the deployed public/ tree either way.
-│
-├── functions/                       ← Firebase Cloud Functions (Node 22)
-│   ├── index.js                     ← createOrder, verifyPayment, checkProStatus,
-│   │                                   activateTrial, fetchRazorpayFees, groqProxy, etc.
-│   ├── welcome-email.js             ← Resend email on Pro activation
-│   └── package.json
-│
-├── AUDIT.md                         ← Running log of security/structure audit passes —
-│                                       read this for the history of what's been found,
-│                                       fixed, and deliberately left open
-├── RESTRUCTURING_NOTES.md           ← Log of the public/js/courses/ split (phase 1)
-├── firebase.json                    ← Hosting config (public: "public"), CSP, COOP headers
-├── firestore.rules                  ← Security rules
-└── package.json                     ← Root scripts: dev, deploy, deploy:all
-```
+**If you already extracted an earlier version flat into your project root
+and see a `package.json` dated today sitting next to a much older
+`package-lock.json`:** that's this collision. Recover the original with
+`git status` then `git checkout -- package.json` (or `git restore
+package.json`) if it was tracked — Git still has it even though the file on
+disk was replaced.
 
----
+Going forward, `vercel-backend/` is its own deploy unit: copy that whole
+folder in wherever you like (sibling to `public/`, `src/`, `functions/` is
+fine) and when you create the Vercel project, set **Root Directory** to
+`vercel-backend` in Project Settings. Vercel will then only ever read
+`vercel-backend/package.json`, never touching your frontend's.
 
-## Deploy Commands
+`functions/` and `src/config/backend.js` don't have this problem — neither
+one shares a filename with anything you already have.
 
-```bash
-# Hosting only (most common)
-firebase deploy --only hosting
+## Endpoint map
 
-# Functions only
-firebase deploy --only functions
+| Old (Cloud Function)         | New (Vercel)                          |
+|-------------------------------|----------------------------------------|
+| `createOrder`                 | `POST /api/create-order`              |
+| `verifyPayment`                | `POST /api/verify-payment`            |
+| `checkProStatus`               | `GET  /api/check-pro-status`          |
+| `activateTrial`                | `POST /api/activate-trial`            |
+| `groqProxy`                    | `POST /api/groq-proxy`                |
+| `fetchRazorpayFees`            | `GET  /api/fetch-razorpay-fees`       |
+| `refreshLegalUpdates` (manual) | `POST /api/refresh-legal-updates`     |
+| `refreshLegalUpdatesScheduled` | `GET  /api/cron/refresh-legal-updates` (Vercel Cron, see `vercel.json`) |
+| `fetchGCPBilling`              | **not ported** — it reads your GCP billing export via BigQuery, which only exists once Blaze + billing export are already on. Meaningless pre-Blaze; re-add as a Firebase function later if you want it. |
 
-# Rules only
-firebase deploy --only firestore:rules
+Request/response shapes are unchanged — same `Authorization: Bearer <idToken>`
+header, same `{ result: ... }` / `{ error: { message } }` bodies, same
+`body.data ?? body` unwrapping. So the frontend only needs its request URLs
+updated — point them at `src/config/backend.js`'s `get*Url()` functions
+instead of hardcoded Cloud Functions URLs, and nothing else about how you
+call them changes.
 
-# Everything
-firebase deploy
+## Deploy
 
-# Local dev server
-firebase serve --only hosting
-```
+1. `cd vercel-backend && npm install`, then deploy to Vercel (`vercel --prod`
+   from inside `vercel-backend/`, or connect the repo in the Vercel
+   dashboard with **Root Directory set to `vercel-backend`** — Hobby plan,
+   no card).
+2. Set every env var from `.env.example`'s Vercel section in the Vercel
+   project settings.
+3. In `functions/index.js`'s old world, `RZP_KEY_ID`/`RZP_KEY_SECRET`/
+   `GROQ_API_KEY`/`GEMINI_API_KEY` were Secret Manager values — here they're
+   plain Vercel env vars (Vercel encrypts them at rest; same practical
+   security for a project this size).
+4. Generate a Firebase service account key (Project Settings → Service
+   Accounts) and set it as `FIREBASE_SERVICE_ACCOUNT`.
+5. Point Razorpay's webhook (Dashboard → Webhooks, `payment.captured` event)
+   at `https://<your-vercel-domain>/api/razorpay-webhook`, and set
+   `RAZORPAY_WEBHOOK_SECRET` to match.
+6. In your Vite app, set `VITE_VERCEL_API_BASE` to your deployed Vercel
+   domain, and update the frontend's fetch calls to use the `get*Url()`
+   helpers from `src/config/backend.js` instead of hardcoded
+   `https://asia-south1-....cloudfunctions.net/...` URLs.
 
-There is no build step — `public/` is served as-is (classic `<script>` tags, no bundler). There is currently no automated test suite or lint config in this repo; verification is manual (`firebase serve` + click through the app) plus the static checks logged in `AUDIT.md`.
+## Resource links (replaces Firebase Storage / Cloudinary)
 
----
+Admin panel: paste a normal Drive "Share" link into whatever field used to
+trigger a file upload, and store that string directly on the Firestore doc
+(e.g. `courses/{id}/resources`). `src/config/backend.js` exports
+`toDrivePreviewUrl()` (embed in an `<iframe>` for in-app viewing) and
+`toDriveDownloadUrl()` (force download). The Drive file's sharing setting
+must be "Anyone with the link" or students signed in as themselves won't be
+able to open it.
 
-## Key Architecture Decisions
+## `functions/` — kept, dormant, not deployed
 
-### `index.html` is a shell, not a monolith
+`functions/index.js` is your original Cloud Functions file, copied in
+unchanged. It stays in the repo but is **not deployed** — don't run
+`firebase deploy --only functions` while you're avoiding Blaze, since a
+Gen 2 function (`onRequest`/`onCall`/`onSchedule` from `firebase-functions/v2`)
+requires the Blaze plan to deploy at all, even at zero usage. Don't delete
+this folder; it's the fallback, not dead code.
 
-The original single ~10,300-line `index.html` (one big inline `<script>`, 268 functions) was split into ~150 real files under `public/js/`, loaded via ordered `<script defer src="...">` tags in the exact original sequence. Classic (non-module) `<script>` tags on one page share a single global lexical environment, so this required zero logic changes — behavior is the same as before, just physically split across files. **Load order matters and is deliberate** — see the `MODULE MIGRATION` comments directly in `index.html` before reordering anything.
+`functions/package.json` is included so it's deployable exactly as-is —
+nothing to rewrite — once you flip Blaze on.
 
-### Per-course code: shared tree + injected active-course copy
+## Moving a feature back to Firebase later
 
-`public/js/courses/{JEE,NEET,CBSE,NFSU}/` holds syllabus/manifest files (uniquely named — all 4 load together, needed for the "Switch Course" popup) and feature/UI files (currently byte-identical across all 4 courses — only the active course's copy is injected via `document.write`, keyed off `localStorage.activeCourse`, because loading more than one course's copy on the same page would double-declare the same top-level `const`/`let` names). See `RESTRUCTURING_NOTES.md` for the full split rationale.
+Once Blaze is on at 10k users:
+1. `firebase deploy --only functions` from the `functions/` folder above —
+   no edits needed, it was never touched.
+2. Bind its secrets in Secret Manager (`RZP_KEY_ID`, `RZP_KEY_SECRET`,
+   `GROQ_API_KEY`, `GEMINI_API_KEY`, `GCP_BILLING_KEY`) the way it already
+   expects via `defineSecret`.
+3. Flip the matching env var (`VITE_AI_PROVIDER=firebase` or
+   `VITE_PAYMENT_PROVIDER=firebase`) — no other code changes, since
+   `backend.js` is the only place that knows which backend is live.
 
-### Storage keys — never hardcode
-
-Centralized in `public/js/utils/constants.js → STORAGE_KEYS`. Study log keys are per-course (`studyLog_jee`, `studyLog_neet`, etc.) to prevent cross-course data bleed. **~30+ call sites still use raw string literals instead of `STORAGE_KEYS`** — known cleanup item, deliberately not done in a drive-by pass since it touches a lot of call sites in a payments-adjacent app (see `AUDIT.md`).
-
-### Pro verification — server-only writes
-
-- Client can **read** `/proUsers/{uid}` (owns doc)
-- Client **cannot write** — only Cloud Functions with Admin SDK write Pro status
-- `isProUser()` caches the server response for 5 minutes
-
-### COOP header for Google Sign-in
-
-`firebase.json` sets `Cross-Origin-Opener-Policy: same-origin-allow-popups`. Required for `signInWithPopup`. **Do not remove.**
-
-### Admin check
-
-Admin email in `public/js/utils/constants.js → ADMIN_EMAIL`. Firestore rule `isAdmin()` uses the Firebase Auth token — cannot be spoofed from the client.
-
-### Service worker — standalone pages passthrough
-
-`sw.js` never intercepts `admin.html`, `finance.html`, `rankNEET.html`, `rankJEE.html` — these are always fetched fresh from network. Always bump `CACHE_NAME`/`CACHE_STATIC` after structural changes.
-
----
-
-## Security
-
-### Finance portal (`finance.html`)
-
-- **Layer 1** — Google Sign-in: `user.email === ADMIN_EMAIL` hardcoded check
-- **Layer 2** — PIN gate: salted SHA-256 hash (`SHA-256(PIN + SALT)`)
-- `noindex` meta prevents Google indexing
-- Firebase config hardcoded inline — `__env.js` deleted and blocked in `firebase.json`'s ignore list
-
-### To change the finance PIN
-
-1. Go to [emn178.github.io/online-tools/sha256.html](https://emn178.github.io/online-tools/sha256.html)
-2. Type: `yourNewPIN` + `ArkSetu@ExamIsNear#Finance2026$` (no space between them)
-3. Copy the hash
-4. In `finance.html` replace the `FINANCE_PIN_HASH` value
-5. Deploy
-
-### Coupon security
-
-`/coupons/` collection: `allow read: if isAdmin()` — regular users cannot enumerate coupon codes. Cloud Functions validate coupons via Admin SDK (bypasses rules).
-
-### Razorpay
-
-- Public key is **never** hardcoded client-side — `index.html`'s checkout flow reads it from the server response (sourced from Cloud Functions' Secret Manager). Same pattern as a Stripe publishable key, just fetched rather than inlined.
-- Secret key lives in Firebase Secret Manager only, read via `defineSecret(...)` in `functions/index.js`.
-- Order amount is computed server-side — client sends `plan`, server computes price.
-- Payment signature is verified server-side with HMAC-SHA256.
-- `fetchRazorpayFees` (admin stats endpoint) previously hardcoded its own separate Razorpay Key ID, inconsistent with the one used for actual checkout — fixed in `AUDIT.md` §9 by having it reuse the same `RZP_KEY_ID` Secret Manager value as checkout. Worth a one-time sanity check that the reported fee figures match your Razorpay dashboard after deploying.
-
----
-
-## PWA Icons
-
-| File | Use | Size |
-|------|-----|------|
-| `assets/icons/icon-192.png` | PWA install, Android | 192×192 |
-| `assets/icons/icon-192-maskable.png` | Android adaptive icon | 192×192 |
-| `assets/icons/icon-512.png` | PWA splash | 512×512 |
-| `assets/icons/icon-512-maskable.png` | Android adaptive icon | 512×512 |
-| `assets/icons/apple-touch-icon.png` | iOS home screen | 180×180 |
-| `favicon.ico` | Browser tab | 16+32px |
-| `favicon-32.png` | Google search result | 32×32 |
-| `assets/images/og-image.png` | WhatsApp/Twitter/LinkedIn share | 1200×630 |
-
-To update icons: replace the PNG files and deploy. On mobile, uninstall the PWA and reinstall via "Add to Home Screen" to pick up new icons.
-
----
-
-## Splash Screen
-
-Full-screen animated splash on app load:
-- Light `#f5f7ff` background
-- Logo animates in with bounce scale
-- "ArkSetu" in navy, "Exam Is Near" in orange
-- 8 feature pills in solid bright colours
-- Shows for a minimum of **2 seconds** then fades out
-- Controlled by `window._splashStart` timestamp in `index.html`
-
----
-
-## Environment Secrets
-
-**Never in frontend code. Never in a `.env` committed to git.**
-
-| Secret | Where |
-|--------|-------|
-| `RZP_KEY_ID` / `RZP_KEY_SECRET` | Firebase Secret Manager (`defineSecret`) |
-| `GROQ_API_KEY` | Firebase Secret Manager |
-| `GEMINI_API_KEY` | Firebase Secret Manager |
-| `GCP_BILLING_KEY` | Firebase Secret Manager |
-| `FINANCE_PIN_SALT` | Hardcoded in `finance.html` only |
-
----
-
-## Feature Map
-
-| Feature | Source | View name |
-|---------|--------|-----------|
-| Home / Syllabus | `public/js/courses/<course>/ui/render-core.js` | `dashboard` |
-| Pomodoro Timer | `public/js/courses/<course>/features/pomodoro-full.js` | `pomodoro` |
-| Flashcards | `public/js/courses/<course>/features/flashcards.js` | `flashcards` |
-| Quiz Mode | `public/js/courses/<course>/features/quiz.js` | `quiz` |
-| AI Tutor | `public/js/courses/<course>/features/ai-assistant-*.js` | `ai` |
-| Analytics | `public/js/courses/<course>/features/analytics.js` | `analytics` |
-| Study Materials | `public/js/courses/<course>/features/files-materials.js` | `files` |
-| NEET/JEE Hub | `public/js/courses/JEE/features/neetjee-*.js` (canonical copy) | `neetjee` |
-| Pro Upgrade | `public/js/courses/<course>/features/payments-pro.js` | modal |
-| Admin Panel | `public/admin.html` | standalone |
-| Finance Portal | `public/finance.html` | standalone |
-| JEE Rank | `public/rankJEE.html` | `/jee/rank` |
-| NEET Rank | `public/rankNEET.html` | `/neet/rank` |
-
-`<course>` is whichever of `JEE/NEET/CBSE/NFSU` is active — the actual file loaded depends on `localStorage.activeCourse` at runtime (see `index.html`'s course-family injection block).
-
----
-
-## Known Issues / Watchlist
-
-See `AUDIT.md` for the full, dated history. Current open items:
-
-- ~30+ raw `localStorage` call sites not yet migrated to the centralized `STORAGE_KEYS` constant.
-- The 3 inline JSON-LD blocks in `index.html` could be externalized to the already-created `public/seo/structured-data/*.json` files (SEO-only, not a functional bug).
-- `src/` is a drifted, not-live reference scaffold for a possible future Vite rewrite — don't cite it as describing current behavior.
-- Always bump `CACHE_NAME`/`CACHE_STATIC` in `sw.js` after major `index.html`/`public/js/` structural changes.
+You can flip AI and payments independently, and back and forth, at any
+time — both backends stay valid, so this isn't a one-way migration.

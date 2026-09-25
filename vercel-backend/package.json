@@ -1,0 +1,10 @@
+{
+  "name": "exam-is-near-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Serverless API for Exam Is Near — no Firebase Blaze plan required",
+  "dependencies": {
+    "firebase-admin": "^12.6.0",
+    "razorpay": "^2.9.4"
+  }
+}
