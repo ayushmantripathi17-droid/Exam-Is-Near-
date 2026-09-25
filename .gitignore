@@ -18,6 +18,7 @@ public/__env.js
 # Backup files from patch scripts
 *.bak_*
 *.bak
+*.bak-*
 
 # Throwaway patch/migration scripts (already applied)
 patch_exam_is_near.py

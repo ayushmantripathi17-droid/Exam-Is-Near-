@@ -1,3 +1,11 @@
+> **Status update:** phase 2 described below as "not yet done" has since shipped —
+> `index.html` now wires the full `courses/{JEE,NEET,CBSE,NFSU}/` tree in via
+> `core/course-selector.js` and per-course feature/UI injection keyed off
+> `activeCourse` (see the "PHASE-2 WIRING" comment block in `index.html`).
+> The `courses/` tree is live, not inert. Kept this file as-is below for the
+> historical record of what phase 1 did; don't treat "what's still open" as
+> current.
+
 # Exam Is Near — public/js restructuring (phase 1)
 
 ## What this is

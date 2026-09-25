@@ -37,13 +37,13 @@
 <meta property="og:type" content="website"/>
 <meta property="og:locale" content="en_IN"/>
 <meta property="og:site_name" content="ArkSetu"/>
-<meta property="og:image" content="https://exam-is-near.web.app/assets/images/og-image.png"/>
+<meta property="og:image" content="https://exam-is-near.web.app/og-image.png"/>
 <meta property="og:image:width" content="512"/>
 <meta property="og:image:height" content="512"/>
 <meta property="og:image:type" content="image/png"/>
 <meta property="og:image:alt" content="ArkSetu — Exam Is Near logo"/>
 <!-- Fallback wide og:image for link previews on WhatsApp / LinkedIn -->
-<meta property="og:image" content="https://exam-is-near.web.app/assets/images/og-image.png"/>
+<meta property="og:image" content="https://exam-is-near.web.app/og-image.png"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
 <meta property="og:image:alt" content="ArkSetu — Exam Is Near logo"/>
@@ -52,14 +52,14 @@
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="Exam Is Near — Free AI Study App for JEE, NEET, CBSE &amp; UPSC"/>
 <meta name="twitter:description" content="India's free AI-powered study app. AI tutor, flashcards, mock tests, rank predictor &amp; Pomodoro timer for JEE, NEET, CBSE &amp; UPSC. Study smart, crack the exam!"/>
-<meta name="twitter:image" content="https://exam-is-near.web.app/assets/images/og-image.png"/>
+<meta name="twitter:image" content="https://exam-is-near.web.app/og-image.png"/>
 <meta name="twitter:site" content="@ExamIsNear"/>
 <meta name="twitter:creator" content="@ExamIsNear"/>
 
 <!-- Preload critical resources for faster LCP (Core Web Vitals) -->
 <link rel="dns-prefetch" href="https://fonts.googleapis.com"/>
 <link rel="dns-prefetch" href="https://apis.google.com"/>
-<link rel="dns-prefetch" href="https://api.groq.com"/>
+<link rel="dns-prefetch" href="https://api.anthropic.com"/>
 
 <meta name="theme-color" content="#08080f"/>
 <meta name="mobile-web-app-capable" content="yes"/>
@@ -73,9 +73,9 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/logo.png"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/logo.png"/>
 <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png"/>
-<link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png"/>
-<link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
 <!-- Brand: ArkSetu -->
 <meta name="application-name" content="ArkSetu — Exam Is Near"/>
 <meta name="publisher" content="ArkSetu"/>
@@ -90,73 +90,158 @@
 
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7615978175642990" crossorigin="anonymous"></script>
 
-<!-- MODULE MIGRATION (2026-07-08): pure helpers now live in public/js/utils/helpers.js
-     as real ES module exports — NOT the top-level /src/ folder, since
-     firebase.json's hosting.public is "public" and hosting.ignore explicitly
-     excludes "src/**". public/js/ is the real, deployed, incrementally-growing
-     module layer; top-level /src/ remains the separate aspirational Vite-rewrite
-     scaffold (not wired to this app). Exposed on window because 248+
-     inline onclick="..." handlers in this file depend on global scope; a full
-     handler rewrite is future work, not done here.
+<!-- The pure-helpers module-script + its old timing workaround are gone -
+     genId/today/esc/showToast/isCrawlerUA/sanitizeForFirestore are exposed
+     on window by main.js now (see /src/main.js), same as every other
+     function needed by onclick="..." handlers in the HTML below. -->
 
-     BUGFIX (2026-08-09): the original comment here claimed this module
-     "always finishes before the classic script below calls any of these."
-     That's true only of the one classic script immediately below (SW
-     registration, which never calls these helpers anyway) — it does NOT
-     hold for the ~20 classic <script src="/js/..."> feature files further
-     down (subjects.js, app-state.js, render-core.js, etc). Those are plain
-     classic scripts: the browser runs each one synchronously the instant
-     the parser reaches it, mid-parse. This module tag, being type="module",
-     is implicitly deferred — its body (including the Object.assign below)
-     does not run until the ENTIRE document has finished parsing, which is
-     AFTER every classic script below it has already run. So every one of
-     those feature scripts was calling window.esc / window.today / etc.
-     while they were still undefined, throwing on first use and aborting
-     the rest of that script's top-level execution — e.g. the Overview
-     dashboard render bailing out mid-way and leaving streak/hours/subject
-     stats stuck at their zero defaults.
-     Fix: every <script src="/js/..."> tag below now has the `defer`
-     attribute. Deferred classic scripts and deferred module scripts share
-     ONE execution queue, ordered by document position — so this module
-     (declared first) is now guaranteed to run its Object.assign before any
-     deferred /js/*.js file runs. Order among the /js/*.js files themselves
-     is preserved (defer keeps relative document order), so the "Order
-     below MUST be preserved exactly" contract in the migration comments
-     still holds. See AUDIT.md — this timing claim needs re-verifying there. -->
-<script type="module">
-  import { genId, today, esc, showToast, isCrawlerUA, sanitizeForFirestore }
-    from "/js/utils/helpers.js";
-  Object.assign(window, { genId, today, esc, showToast, isCrawlerUA, sanitizeForFirestore });
-</script>
-
-<script>
-// Register Service Worker for PWA
-if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js').then(r=>{
-    }).catch(e=>{});
-  });
-}
-// PWA Install prompt
-let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',(e)=>{
-  e.preventDefault();
-  deferredPrompt=e;
-  setTimeout(()=>{
-    const btn=document.getElementById('pwa-install-btn');
-    if(btn) btn.style.display='block';
-  },2000);
-});
-</script>
+<!-- SW registration + PWA install-prompt handling moved to /src/main.js -->
 
 <!-- Structured Data (Schema.org) — enables rich results in Google -->
-<script type="application/ld+json" src="/seo/structured-data/webapplication.json"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "ArkSetu — Exam Is Near",
+  "alternateName": ["Exam Is Near", "Exam Is Near by ArkSetu", "ArkSetu", "ArkSetu Study App"],
+  "url": "https://exam-is-near.web.app",
+  "description": "India's free AI-powered study app for JEE Main, JEE Advanced, NEET UG, CBSE Class 10 & 12, UPSC, CLAT, and CUET. AI tutor, Pomodoro timer, flashcards, mock tests, syllabus tracker, rank predictor, and study analytics — all in one installable PWA.",
+  "applicationCategory": "EducationApplication",
+  "applicationSubCategory": "Exam Preparation",
+  "operatingSystem": "Web, Android, iOS",
+  "browserRequirements": "Requires JavaScript. Works on Chrome, Firefox, Safari.",
+  "inLanguage": "en",
+  "isAccessibleForFree": true,
+  "countryOfOrigin": {"@type": "Country", "name": "India"},
+  "audience": {
+    "@type": "EducationalAudience",
+    "educationalRole": "student",
+    "geographicArea": {"@type": "Country", "name": "India"}
+  },
+  "about": [
+    {"@type": "Thing", "name": "JEE Main Preparation"},
+    {"@type": "Thing", "name": "JEE Advanced Preparation"},
+    {"@type": "Thing", "name": "NEET UG Preparation"},
+    {"@type": "Thing", "name": "UPSC Civil Services Preparation"},
+    {"@type": "Thing", "name": "CBSE Class 10 Board Exams"},
+    {"@type": "Thing", "name": "CBSE Class 12 Board Exams"},
+    {"@type": "Thing", "name": "CLAT Preparation"},
+    {"@type": "Thing", "name": "CUET Preparation"}
+  ],
+  "featureList": [
+    "Pomodoro Timer for Students",
+    "AI Tutor (Claude-powered)",
+    "Flashcards with Spaced Repetition",
+    "Mock Tests and Quiz Mode",
+    "Syllabus Tracker",
+    "JEE Rank Predictor",
+    "NEET Rank Predictor",
+    "Study Analytics and Progress Tracking",
+    "Cloud Sync",
+    "Offline PWA Support",
+    "Study Alarm",
+    "PDF Notes Upload"
+  ],
+  "author": {
+    "@type": "Organization",
+    "name": "ArkSetu",
+    "alternateName": "Exam Is Near",
+    "url": "https://exam-is-near.web.app",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://exam-is-near.web.app/assets/images/logo.png",
+      "width": 192,
+      "height": 192
+    },
+    "contactPoint": {"@type": "ContactPoint", "email": "arksetu.help@gmail.com", "contactType": "customer support"},
+    "sameAs": ["https://x.com/ExamIsNear", "https://www.instagram.com/exam_is_near_by_arksetu", "https://exam-is-near.web.app"]
+  },
+  "image": "https://exam-is-near.web.app/assets/images/logo.png",
+  "thumbnailUrl": "https://exam-is-near.web.app/assets/images/logo.png",
+  "publisher": {
+    "@type": "Organization",
+    "name": "ArkSetu",
+    "logo": {"@type": "ImageObject", "url": "https://exam-is-near.web.app/assets/images/logo.png"}
+  },
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Free Plan",
+      "price": "0",
+      "priceCurrency": "INR",
+      "availability": "https://schema.org/InStock"
+    },
+    {
+      "@type": "Offer",
+      "name": "Pro Monthly",
+      "price": "149",
+      "priceCurrency": "INR",
+      "availability": "https://schema.org/InStock"
+    },
+    {
+      "@type": "Offer",
+      "name": "Pro Yearly",
+      "price": "999",
+      "priceCurrency": "INR",
+      "availability": "https://schema.org/InStock"
+    }
+  ],
+  "keywords": "JEE preparation app, NEET study app, CBSE Class 10 app, CBSE Class 12 app, UPSC free app, CLAT prep, CUET preparation, free AI tutor India, JEE Main mock test, NEET mock test, flashcards JEE NEET, Pomodoro timer students, JEE rank predictor, NEET rank predictor, syllabus tracker India, study analytics, exam preparation India, ArkSetu, Exam Is Near"
+}
+</script>
 
 <!-- ArkSetu brand entity — helps Google associate "ArkSetu" with this site -->
-<script type="application/ld+json" src="/seo/structured-data/organization.json"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "ArkSetu",
+  "alternateName": ["Exam Is Near", "ArkSetu Exam Is Near"],
+  "url": "https://exam-is-near.web.app",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://exam-is-near.web.app/assets/images/logo.png",
+    "width": 192,
+    "height": 192
+  },
+  "description": "ArkSetu builds Exam Is Near, India's free AI-powered study app for JEE, NEET, CBSE and UPSC aspirants.",
+  "foundingDate": "2024",
+  "areaServed": {"@type": "Country", "name": "India"},
+  "email": "arksetu.help@gmail.com",
+  "sameAs": ["https://x.com/ExamIsNear", "https://www.instagram.com/exam_is_near_by_arksetu", "https://exam-is-near.web.app"]
+}
+</script>
 
 <!-- SoftwareApplication schema — enables Google Play-style rich result with logo/rating -->
-<script type="application/ld+json" src="/seo/structured-data/softwareapplication.json"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Exam Is Near by ArkSetu",
+  "operatingSystem": "Web, Android, iOS",
+  "applicationCategory": "EducationApplication",
+  "url": "https://exam-is-near.web.app",
+  "image": "https://exam-is-near.web.app/assets/images/logo.png",
+  "screenshot": "https://exam-is-near.web.app/assets/images/logo.png",
+  "description": "ArkSetu's free AI study app for JEE, NEET, CBSE & UPSC. Includes AI tutor, rank predictor, flashcards, Pomodoro timer, mock tests and analytics.",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "INR"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "ArkSetu",
+    "url": "https://exam-is-near.web.app"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "ratingCount": "120",
+    "bestRating": "5"
+  }
+}
+</script>
 
 <style>
 /* ============================================================
@@ -1012,7 +1097,7 @@ body.has-pro-bar footer.site-footer{padding-bottom:80px}
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,#FF620012,transparent),radial-gradient(ellipse 60% 50% at 80% 100%,#1B3D8810,transparent);pointer-events:none"></div>
 
   <!-- logo -->
-  <img id="splash-logo" src="/assets/icons/icon-512.png" alt="Exam Is Near" onerror="this.src='/assets/icons/icon-192.png'"/>
+  <img id="splash-logo" src="/icon-512.png" alt="Exam Is Near" onerror="this.src='/icon-192.png'"/>
 
   <!-- brand -->
   <div id="splash-brand">
@@ -1051,7 +1136,7 @@ body.has-pro-bar footer.site-footer{padding-bottom:80px}
   <h2>Features</h2>
   <ul>
     <li>Pomodoro study timer with session tracking and custom alarms</li>
-    <li>AI Tutor powered by Groq AI for instant doubt solving</li>
+    <li>AI Tutor powered by Claude AI for instant doubt solving</li>
     <li>Flashcards with spaced repetition (SRS) for long-term retention</li>
     <li>Quiz mode for self-testing with instant feedback</li>
     <li>Syllabus tracker with chapter-wise progress analytics</li>
@@ -1222,391 +1307,10 @@ body.has-pro-bar footer.site-footer{padding-bottom:80px}
      files are injected for ONLY the active course, keyed off
      localStorage.activeCourse, written via document.write so they still
      land in the correct position in the single shared defer queue. -->
-<script defer src="/js/shared/app-constants.js"></script>
-<script>
-(function(){
-  function U(p){ return encodeURI(p).replace(/&/g, '%26'); }
-  function tag(src){ document.write('<script defer src="'+U(src)+'"></scr'+'ipt>'); }
-
-  // Syllabus/manifest/core files for ALL 4 courses — uniquely-named globals,
-  // no collision risk, and needed regardless of which course is active so
-  // the "Switch Course" popup works for every course, not just the current one.
-  var allCourseFiles = [
-    '/js/courses/NFSU/NFSU.js',
-    '/js/courses/NFSU/Semester 1/Syllabus/Legal Methods.js',
-    '/js/courses/NFSU/Semester 1/Syllabus/Law of Tort and Consumer Protection Laws.js',
-    '/js/courses/NFSU/Semester 1/Syllabus/Fundamentals of Computer Organization & Embedded Systems.js',
-    '/js/courses/NFSU/Semester 1/Syllabus/Basic Programming Concepts Using C.js',
-    '/js/courses/NFSU/Semester 1/Syllabus/Discrete Mathematics.js',
-    '/js/courses/NFSU/Semester 1/Syllabus/Law and Literature.js',
-    '/js/courses/NFSU/Semester 2/Syllabus/C++.js',
-    '/js/courses/NFSU/Semester 2/Syllabus/RDBMS.js',
-    '/js/courses/NFSU/Semester 2/Syllabus/Statistics.js',
-    '/js/courses/NFSU/Semester 2/Syllabus/Legal Language.js',
-    '/js/courses/NFSU/Semester 2/Syllabus/Law & Society.js',
-    '/js/courses/NFSU/Semester 2/Syllabus/Jurisprudence.js',
-    '/js/courses/NFSU/Semester 3/Syllabus/Constitutional Law I.js',
-    '/js/courses/NFSU/Semester 3/Syllabus/Law of Crimes I.js',
-    '/js/courses/NFSU/Semester 3/Syllabus/Law of Contract I.js',
-    '/js/courses/NFSU/Semester 3/Syllabus/Family Law I.js',
-    '/js/courses/NFSU/Semester 3/Syllabus/Operating System Concepts.js',
-    '/js/courses/NFSU/Semester 3/Syllabus/Web Programming.js',
-    '/js/courses/JEE/JEE.js',
-    '/js/courses/JEE/core/formulas.js',
-    '/js/courses/JEE/Syllabus/Physics.js',
-    '/js/courses/JEE/Syllabus/Chemistry.js',
-    '/js/courses/JEE/Syllabus/Mathematics.js',
-    '/js/courses/NEET/NEET.js',
-    '/js/courses/NEET/core/ncert-lines.js',
-    '/js/courses/NEET/Syllabus/Physics.js',
-    '/js/courses/NEET/Syllabus/Chemistry.js',
-    '/js/courses/NEET/Syllabus/Botany.js',
-    '/js/courses/NEET/Syllabus/Zoology.js',
-    '/js/courses/CBSE/CBSE.js',
-    '/js/courses/CBSE/Class 10/Syllabus/Mathematics.js',
-    '/js/courses/CBSE/Class 10/Syllabus/Science.js',
-    '/js/courses/CBSE/Class 10/Syllabus/English.js',
-    '/js/courses/CBSE/Class 10/Syllabus/Social Science.js',
-    '/js/courses/CBSE/Class 10/Syllabus/Hindi.js',
-    '/js/courses/CBSE/Class 11/streams.js',
-    '/js/courses/CBSE/Class 11/Syllabus/Physics.js',
-    '/js/courses/CBSE/Class 11/Syllabus/Chemistry.js',
-    '/js/courses/CBSE/Class 11/Syllabus/Mathematics.js',
-    '/js/courses/CBSE/Class 11/Syllabus/Biology.js',
-    '/js/courses/CBSE/Class 11/Syllabus/English Core.js',
-    '/js/courses/CBSE/Class 11/Syllabus/Accountancy.js',
-    '/js/courses/CBSE/Class 11/Syllabus/Business Studies.js',
-    '/js/courses/CBSE/Class 11/Syllabus/Economics.js',
-    '/js/courses/CBSE/Class 11/Syllabus/History.js',
-    '/js/courses/CBSE/Class 11/Syllabus/Political Science.js',
-    '/js/courses/CBSE/Class 11/Syllabus/Geography.js',
-    '/js/courses/CBSE/Class 11/Syllabus/Psychology.js',
-    '/js/courses/CBSE/Class 11/Syllabus/Sociology.js',
-    '/js/courses/CBSE/Class 12/streams.js',
-    '/js/courses/CBSE/Class 12/Syllabus/Physics.js',
-    '/js/courses/CBSE/Class 12/Syllabus/Chemistry.js',
-    '/js/courses/CBSE/Class 12/Syllabus/Mathematics.js',
-    '/js/courses/CBSE/Class 12/Syllabus/Biology.js',
-    '/js/courses/CBSE/Class 12/Syllabus/English Core.js',
-    '/js/courses/CBSE/Class 12/Syllabus/Accountancy.js',
-    '/js/courses/CBSE/Class 12/Syllabus/Business Studies.js',
-    '/js/courses/CBSE/Class 12/Syllabus/Economics.js',
-    '/js/courses/CBSE/Class 12/Syllabus/History.js',
-    '/js/courses/CBSE/Class 12/Syllabus/Political Science.js',
-    '/js/courses/CBSE/Class 12/Syllabus/Geography.js',
-    '/js/courses/CBSE/Class 12/Syllabus/Psychology.js',
-    '/js/courses/CBSE/Class 12/Syllabus/Sociology.js'
-  ];
-  for (var i=0;i<allCourseFiles.length;i++) tag(allCourseFiles[i]);
-  tag('/js/courses/subjects-bridge.js');
-  tag('/js/core/course-selector.js');
-
-  // Compute + stash the active course's family for the feature/ui injector
-  // block further down (after app-state.js/firebase-sync.js). Default
-  // (unset/'nfsu') matches getSubjects()'s own default fallback.
-  var ac = localStorage.getItem('activeCourse');
-  window.__EIN_COURSE_FAMILY =
-    (ac === 'jee') ? 'JEE' :
-    (ac === 'neet') ? 'NEET' :
-    (ac === 'cbse10' || ac === 'cbse11' || ac === 'cbse12') ? 'CBSE' :
-    'NFSU';
-})();
-</script>
-<script defer src="/js/core/app-state.js"></script>
-<script defer src="/js/core/firebase-sync.js"></script>
-<script>
-(function(){
-  function tag(src){ document.write('<script defer src="'+src+'"></scr'+'ipt>'); }
-  var fam = window.__EIN_COURSE_FAMILY || 'NFSU';
-  var files = [
-    'features/clock-alarms-timer.js',
-    'features/exam-dates-actions.js',
-    'ui/render-core.js',
-    'features/files-materials.js',
-    'features/subjects-profile.js',
-    'features/ai-assistant-setup.js',
-    'features/pomodoro-full.js',
-    'features/flashcards.js',
-    'features/quiz.js',
-    'features/analytics.js',
-    'features/ai-assistant-view.js',
-    'ui/nav-shortcuts-export.js',
-    'ui/render-about.js',
-    'features/payments-pro.js'
-  ];
-  for (var i=0;i<files.length;i++) tag('/js/courses/'+fam+'/'+files[i]);
-})();
-</script>
-
-<!-- ══════════════════════════════════════════
-     PRO UPGRADE MODAL (Upgraded Premium Design)
-══════════════════════════════════════════ -->
-<div class="pro-upgrade-modal" id="pro-upgrade-modal" role="dialog" aria-modal="true" aria-label="Upgrade to Pro">
-  <div class="pro-modal-box">
-    <button class="pro-close-btn" onclick="closeProModal()" aria-label="Close">✕</button>
-
-    <!-- Header -->
-    <div class="pm-header">
-      <div class="pm-wordmark">Exam Is Near Pro</div>
-      <div class="pm-title">Unlock <span>everything.</span></div>
-      <div class="pm-subtitle">No limits on AI, no ads, cloud backup — everything a serious exam aspirant needs.</div>
-
-      <!-- Free trial banner -->
-      <div class="pm-trial" onclick="initiateTrialPayment()">
-        <div class="pm-trial-icon">🎁</div>
-        <div>
-          <div class="pm-trial-label">Try Pro FREE for 7 days</div>
-          <div class="pm-trial-sub">No payment needed · Cancel anytime</div>
-        </div>
-        <button class="pm-trial-cta" onclick="event.stopPropagation();initiateTrialPayment()">Start free →</button>
-      </div>
-
-      <!-- Plan cards -->
-      <div class="pm-plans">
-        <div class="pm-plan">
-          <div class="pm-plan-badge free">Free</div>
-          <div class="pm-price free-color">₹0<span>/mo</span></div>
-          <div class="pm-price-sub">Basic access</div>
-        </div>
-        <div class="pm-plan featured" onclick="initiateProPayment()">
-          <div class="pm-popular">POPULAR</div>
-          <div class="pm-plan-badge pro">Pro ✦</div>
-          <div class="pm-price pro-color">₹149<span>/mo</span></div>
-          <div class="pm-price-sub">≈ ₹5/day</div>
-        </div>
-        <div class="pm-plan" onclick="initiateYearlyPayment()">
-          <div class="pm-save">SAVE 44%</div>
-          <div class="pm-plan-badge annual">Annual ✦</div>
-          <div class="pm-price annual-color">₹999<span>/yr</span></div>
-          <div class="pm-price-sub">≈ ₹83/mo</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Features -->
-    <div class="pm-body">
-      <div class="pm-features-title">What you unlock</div>
-
-      <div class="pm-feature">
-        <div class="pm-check">✦</div>
-        <div class="pm-feature-text">
-          <div class="pm-feature-name">Unlimited AI Flashcards &amp; Quizzes</div>
-          <div class="pm-feature-desc">Generate unlimited cards and quiz sets from any topic</div>
-        </div>
-        <div class="pm-feature-badges"><div class="pm-feature-tag">Unlimited</div><div class="pm-feature-free">Free: max 50</div></div>
-      </div>
-
-      <div class="pm-feature">
-        <div class="pm-check">✦</div>
-        <div class="pm-feature-text">
-          <div class="pm-feature-name">Priority AI Tutor</div>
-          <div class="pm-feature-desc">Faster responses, longer context, deeper explanations</div>
-        </div>
-        <div class="pm-feature-badges"><div class="pm-feature-tag">Priority</div><div class="pm-feature-free">Free: standard</div></div>
-      </div>
-
-      <div class="pm-feature">
-        <div class="pm-check">✦</div>
-        <div class="pm-feature-text">
-          <div class="pm-feature-name">Ad-Free Experience</div>
-          <div class="pm-feature-desc">Zero interruptions — pure focus, always</div>
-        </div>
-        <div class="pm-feature-badges"><div class="pm-feature-tag">No ads</div><div class="pm-feature-free">Free: ads shown</div></div>
-      </div>
-
-      <div class="pm-feature">
-        <div class="pm-check">✦</div>
-        <div class="pm-feature-text">
-          <div class="pm-feature-name">Cloud Backup &amp; Sync</div>
-          <div class="pm-feature-desc">Notes and PDFs auto-backed up with 25 GB storage</div>
-        </div>
-        <div class="pm-feature-badges"><div class="pm-feature-tag">25 GB</div><div class="pm-feature-free">Free: local only</div></div>
-      </div>
-
-      <div class="pm-feature">
-        <div class="pm-check">✦</div>
-        <div class="pm-feature-text">
-          <div class="pm-feature-name">Export Progress as PDF</div>
-          <div class="pm-feature-desc">Download your full study report any time</div>
-        </div>
-        <div class="pm-feature-badges"><div class="pm-feature-tag">Available</div><div class="pm-feature-free">Free: ✕</div></div>
-      </div>
-
-      <div class="pm-feature">
-        <div class="pm-check">✦</div>
-        <div class="pm-feature-text">
-          <div class="pm-feature-name">Advanced Analytics</div>
-          <div class="pm-feature-desc">Weekly reports, streak awards, subject-level insights</div>
-        </div>
-        <div class="pm-feature-badges"><div class="pm-feature-tag">Full access</div><div class="pm-feature-free">Free: basic</div></div>
-      </div>
-
-      <div class="pm-feature">
-        <div class="pm-check">✦</div>
-        <div class="pm-feature-text">
-          <div class="pm-feature-name">Early Feature Access</div>
-          <div class="pm-feature-desc">New features before anyone else — shape the roadmap</div>
-        </div>
-        <div class="pm-feature-badges"><div class="pm-feature-tag">Included</div><div class="pm-feature-free">Free: ✕</div></div>
-      </div>
-
-      <div class="pm-divider"></div>
-
-      <!-- Testimonial -->
-      <div class="pm-testimonial">
-        <div class="pm-testimonial-text">"Exam Is Near Pro helped me track my UPSC prep properly. The AI flashcards alone are worth it — I cleared mains this year!"</div>
-        <div class="pm-testimonial-author">
-          <div class="pm-testimonial-avatar">R</div>
-          <div class="pm-testimonial-name">Rahul S. · UPSC 2024 qualifier</div>
-        </div>
-      </div>
-
-      <!-- Coupon Code -->
-      <div id="pm-coupon-section" style="margin-bottom:14px">
-        <div style="display:flex;gap:8px;align-items:center">
-          <input
-            id="pm-coupon-input"
-            type="text"
-            placeholder="Have a coupon code?"
-            maxlength="30"
-            autocomplete="off"
-            oninput="this.value=this.value.toUpperCase();_resetCouponState()"
-            style="flex:1;background:#0d0d1a;border:1px solid #2a2a40;border-radius:10px;padding:10px 14px;color:#e8e8f0;font-size:13px;font-family:'JetBrains Mono',monospace;letter-spacing:1px;outline:none;transition:border 0.2s"
-            onfocus="this.style.borderColor='#FFE66D66'"
-            onblur="this.style.borderColor='#2a2a40'"
-          />
-          <button
-            onclick="applyCouponCode()"
-            id="pm-coupon-btn"
-            style="background:linear-gradient(135deg,#1a1200,#120e00);border:1px solid #FFE66D55;border-radius:10px;color:#FFE66D;padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Inter',inherit;transition:all 0.2s"
-            onmouseover="this.style.borderColor='#FFE66D99'"
-            onmouseout="this.style.borderColor='#FFE66D55'"
-          >Apply</button>
-        </div>
-        <div id="pm-coupon-msg" style="font-size:11px;margin-top:6px;min-height:16px;padding-left:2px"></div>
-      </div>
-
-      <!-- CTAs -->
-      <button onclick="initiateProPayment()" class="pm-cta-primary" id="pm-monthly-btn"><span id="pm-monthly-label">⭐ Get Pro — ₹149/month →</span></button>
-      <button onclick="initiateYearlyPayment()" class="pm-cta-secondary" id="pm-annual-btn"><span id="pm-annual-label">🏆 Annual Plan — ₹999/year &nbsp;·&nbsp; Save ₹792</span></button>
-
-      <!-- Trust signals -->
-      <div class="pm-trust">
-        <div class="pm-trust-item">🔒 Secure via Razorpay</div>
-        <div class="pm-trust-item">💳 UPI · Cards · NetBanking</div>
-        <div class="pm-trust-item">↩ Cancel anytime</div>
-      </div>
-
-      <!-- Security note — explains server-side verification -->
-      <div class="pm-security-note">
-        <span class="icon">🛡️</span>
-        <div class="text"><strong>Verified server-side.</strong> Pro status is authenticated by our backend on every session — not just stored locally. Tamper-proof via Firebase + Razorpay signature verification.</div>
-      </div>
-
-      <button onclick="closeProModal()" style="display:block;width:100%;background:none;border:none;color:#181828;font-size:12px;cursor:pointer;padding:14px 0 2px;font-family:'Inter',inherit;transition:color 0.2s;font-weight:600;text-align:center" onmouseover="this.style.color='#333'" onmouseout="this.style.color='#181828'">Maybe later — keep Free plan</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════
-     PROFESSIONAL FOOTER
-══════════════════════════════════════════ -->
-<footer class="site-footer">
-  <div class="site-footer-links">
-    <a href="https://exam-is-near.web.app" target="_blank" rel="noopener" class="site-footer-link">🌐 Website</a>
-    <a href="#" onclick="switchView('about');return false" class="site-footer-link">About</a>
-    <a href="privacy.html" target="_blank" rel="noopener" class="site-footer-link">Privacy Policy</a>
-    <a href="terms.html" target="_blank" rel="noopener" class="site-footer-link">Terms</a>
-    <a href="https://adssettings.google.com" target="_blank" rel="noopener" class="site-footer-link">Ad Settings</a>
-    <a href="#" onclick="switchView('about');return false" class="site-footer-link">Contact</a>
-  </div>
-  <div class="site-footer-copy">© 2025–2026 ArkSetu. All rights reserved. · Exam Is Near · Study Smart · exam-is-near.web.app</div>
-  <div style="font-size:9px;color:#131320;margin-top:3px">Unauthorized copying or redistribution is prohibited.</div>
-</footer>
-
-<!-- ══════════════════════════════════════════
-     ADSENSE AD UNITS (injected by JS for Pro users)
-══════════════════════════════════════════ -->
-<div id="ad-unit-bottom" style="max-width:880px;margin:0 auto 10px;padding:0 16px;display:none">
-  <ins class="adsbygoogle"
-       style="display:block"
-       data-ad-client="ca-pub-7615978175642990"
-       data-ad-slot="AUTO"
-       data-ad-format="auto"
-       data-full-width-responsive="true"></ins>
-</div>
-
-<!-- MODULE MIGRATION (2026-07-08): split from one 8700-line inline script into
-     ordered classic <script src> files. These share the SAME global scope as
-     one big inline script would (classic scripts on one page share a global
-     lexical environment), so behavior is byte-for-byte identical to before —
-     verified via reconstruction diff at split time. Order below MUST be
-     preserved exactly; see AUDIT.md. -->
-<script defer src="/ads/ads-display.js"></script>
-
-<!-- ══════════════════════════════════════════
-     PERMANENT PRO FOOTER BAR (free users only)
-══════════════════════════════════════════ -->
-<div id="pro-footer-bar" class="hidden" role="complementary" aria-label="Upgrade to Pro">
-  <div class="pfb-left">
-    <div class="pfb-icon">⭐</div>
-    <div class="pfb-text">
-      <div class="pfb-title">Upgrade to Pro</div>
-      <div class="pfb-perks">Unlimited AI · 25 GB cloud · No ads · PDF export · Priority tutor</div>
-    </div>
-  </div>
-  <div class="pfb-right">
-    <div class="pfb-price">
-      <div class="pfb-amount">₹149<sub>/mo</sub></div>
-      <div class="pfb-annual">or ₹999/year · save 44%</div>
-    </div>
-    <button class="pfb-cta" onclick="openProModal()">Get Pro →</button>
-    <button class="pfb-dismiss" onclick="_dismissProBar()" title="Dismiss" aria-label="Dismiss">✕</button>
-  </div>
-</div>
-
-<!-- MODULE MIGRATION (2026-07-08): split from one 8700-line inline script into
-     ordered classic <script src> files. These share the SAME global scope as
-     one big inline script would (classic scripts on one page share a global
-     lexical environment), so behavior is byte-for-byte identical to before —
-     verified via reconstruction diff at split time. Order below MUST be
-     preserved exactly; see AUDIT.md. -->
-<script defer src="/js/shared/pro-footer-bar.js"></script>
-<script defer src="/js/courses/JEE/rank-data.js"></script>
-<script defer src="/js/courses/NEET/rank-data.js"></script>
-<script defer src="/js/shared/exam-hub-state.js"></script>
-<!-- PHASE-2 WIRING (2026-08-12): now loaded from the split tree. Content is
-     byte-identical between courses/JEE/ and courses/NEET/ copies per
-     RESTRUCTURING_NOTES.md, so either works; JEE/ picked as the single
-     canonical source to avoid loading both (same top-level-const collision
-     risk as the main feature block above). rank-data.js / exam-hub-state.js
-     above have no equivalent in the restructuring zip, left untouched. -->
-<script defer src="/js/courses/JEE/features/neetjee-features-1to4.js"></script>
-<script defer src="/js/courses/JEE/features/neetjee-features-5to8.js"></script>
-<script defer src="/js/courses/JEE/features/neetjee-hub-renderer.js"></script>
-
-<div class="ai-sidebar-overlay" id="ai-sidebar-overlay" onclick="_closeAISidebarMobile()"></div>
-<script>
-(function(){
-  var METACOLOR = { dark:'#08080f', light:'#f2f3fa' };
-  function paintIcon(){
-    var btn = document.getElementById('theme-toggle-btn');
-    if(!btn) return;
-    var t = document.documentElement.getAttribute('data-theme') || 'dark';
-    btn.textContent = t === 'dark' ? '🌙' : '☀️';
-  }
-  window.__toggleTheme = function(){
-    var cur = document.documentElement.getAttribute('data-theme') || 'dark';
-    var next = cur === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    try{ localStorage.setItem('eis_theme', next); }catch(e){}
-    var mc = document.querySelector('meta[name="theme-color"]');
-    if(mc) mc.setAttribute('content', METACOLOR[next]);
-    paintIcon();
-  };
-  document.addEventListener('DOMContentLoaded', paintIcon);
-  paintIcon();
-})();
-</script>
+<!-- All classic <script defer src="/js/..."> tags, the course-family
+     document.write() injector, the PWA-install-prompt inline script, and
+     the theme-toggle inline script have been replaced by the real ES
+     module build below. See MIGRATION_NOTES.md for the full mapping. -->
+<script type="module" src="/src/main.js"></script>
 </body>
 </html>
