@@ -1253,6 +1253,171 @@ body.has-pro-bar footer.site-footer{padding-bottom:80px}
   </div>
 </div>
 
+<!-- PRO UPGRADE MODAL -->
+<div class="pro-upgrade-modal" id="pro-upgrade-modal">
+  <div class="pro-modal-box">
+    <button class="pro-close-btn" onclick="closeProModal()" aria-label="Close">✕</button>
+
+    <div class="pm-header">
+      <div class="pm-wordmark">Exam Is Near Pro</div>
+      <div class="pm-title">Upgrade to <span>Pro</span></div>
+      <div class="pm-subtitle">Study smarter. Zero limits. Zero ads.</div>
+
+      <div class="pm-trial" onclick="initiateTrialPayment()">
+        <div class="pm-trial-icon">🎁</div>
+        <div>
+          <div class="pm-trial-label">Try Pro FREE for 7 days</div>
+          <div class="pm-trial-sub">No payment needed · Cancel anytime</div>
+        </div>
+        <button class="pm-trial-cta" onclick="event.stopPropagation();initiateTrialPayment()">Start free →</button>
+      </div>
+
+      <div class="pm-plans">
+        <div class="pm-plan">
+          <div class="pm-plan-badge free">Free</div>
+          <div class="pm-price free-color">₹0<span>/mo</span></div>
+          <div class="pm-price-sub">Basic access</div>
+        </div>
+        <div class="pm-plan featured" onclick="initiateProPayment()">
+          <div class="pm-popular">Popular</div>
+          <div class="pm-plan-badge pro">Pro ✦</div>
+          <div class="pm-price pro-color">₹149<span>/mo</span></div>
+          <div class="pm-price-sub">≈ ₹5/day</div>
+        </div>
+        <div class="pm-plan" onclick="initiateYearlyPayment()">
+          <div class="pm-save">Save 44%</div>
+          <div class="pm-plan-badge annual">Annual ✦</div>
+          <div class="pm-price annual-color">₹999<span>/yr</span></div>
+          <div class="pm-price-sub">≈ ₹83/mo</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pm-body">
+      <div class="pm-features-title">Everything in Pro</div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Unlimited AI Flashcards &amp; Quizzes</div>
+          <div class="pm-feature-desc">Generate unlimited cards and quiz sets from any topic</div>
+        </div>
+        <div class="pm-feature-badges">
+          <div class="pm-feature-tag">Unlimited</div>
+          <div class="pm-feature-free">Free: max 50</div>
+        </div>
+      </div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Priority AI Tutor</div>
+          <div class="pm-feature-desc">Faster responses, longer context, deeper explanations</div>
+        </div>
+        <div class="pm-feature-badges">
+          <div class="pm-feature-tag">Priority</div>
+          <div class="pm-feature-free">Free: standard</div>
+        </div>
+      </div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Ad-Free Experience</div>
+          <div class="pm-feature-desc">Zero interruptions — pure focus, always</div>
+        </div>
+        <div class="pm-feature-badges">
+          <div class="pm-feature-tag">No ads</div>
+          <div class="pm-feature-free">Free: ads shown</div>
+        </div>
+      </div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Cloud Backup &amp; Sync</div>
+          <div class="pm-feature-desc">Notes and PDFs auto-backed up with 500 MB storage</div>
+        </div>
+        <div class="pm-feature-badges">
+          <div class="pm-feature-tag">500 MB</div>
+          <div class="pm-feature-free">Free: local only</div>
+        </div>
+      </div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Export Progress as PDF</div>
+          <div class="pm-feature-desc">Download your full study report any time</div>
+        </div>
+        <div class="pm-feature-badges">
+          <div class="pm-feature-tag">Available</div>
+          <div class="pm-feature-free">Free: ✕</div>
+        </div>
+      </div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Advanced Analytics</div>
+          <div class="pm-feature-desc">Weekly reports, streak awards, subject-level insights</div>
+        </div>
+        <div class="pm-feature-badges">
+          <div class="pm-feature-tag">Full access</div>
+          <div class="pm-feature-free">Free: basic</div>
+        </div>
+      </div>
+
+      <div class="pm-feature">
+        <div class="pm-check">✦</div>
+        <div class="pm-feature-text">
+          <div class="pm-feature-name">Early Feature Access</div>
+          <div class="pm-feature-desc">New features before anyone else — shape the roadmap</div>
+        </div>
+        <div class="pm-feature-badges">
+          <div class="pm-feature-tag">Included</div>
+          <div class="pm-feature-free">Free: ✕</div>
+        </div>
+      </div>
+
+      <div class="pm-divider"></div>
+
+      <!-- Coupon code -->
+      <div style="display:flex;gap:8px;margin-bottom:6px">
+        <input id="pm-coupon-input" type="text" placeholder="Have a coupon code?" autocomplete="off"
+          style="flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--surface-3);border-radius:10px;padding:11px 14px;color:var(--text-3,#ccc);font-size:13px;font-family:'Inter',inherit;text-transform:uppercase;letter-spacing:0.5px"/>
+        <button id="pm-coupon-btn" onclick="applyCouponCode()"
+          style="flex-shrink:0;background:var(--surface-2);border:1px solid var(--surface-3);border-radius:10px;padding:0 18px;color:#FFE66D;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',inherit">Apply</button>
+      </div>
+      <div id="pm-coupon-msg" style="font-size:11px;min-height:16px;margin-bottom:16px"></div>
+
+      <div class="pm-testimonial">
+        <div class="pm-testimonial-text">"Exam Is Near Pro helped me track my prep properly. The AI flashcards alone are worth it!"</div>
+        <div class="pm-testimonial-author">
+          <div class="pm-testimonial-avatar">R</div>
+          <div class="pm-testimonial-name">Rahul S. · Pro member</div>
+        </div>
+      </div>
+
+      <button id="pm-monthly-btn" onclick="initiateProPayment()" class="pm-cta-primary"><span id="pm-monthly-label">⭐ Get Pro — ₹149/month →</span></button>
+      <button onclick="initiateYearlyPayment()" class="pm-cta-secondary"><span id="pm-annual-label">🏆 Annual Plan — ₹999/year &nbsp;·&nbsp; Save ₹792</span></button>
+
+      <div class="pm-trust">
+        <div class="pm-trust-item">🔒 Secure via Razorpay</div>
+        <div class="pm-trust-item">💳 UPI · Cards · NetBanking</div>
+        <div class="pm-trust-item">↩ Cancel anytime</div>
+      </div>
+
+      <div class="pm-security-note">
+        <div class="icon">🛡️</div>
+        <div class="text"><strong>Server-verified</strong> — your Pro status is checked securely and can't be tampered with locally.</div>
+      </div>
+
+      <button onclick="closeProModal()" style="display:block;width:100%;background:none;border:none;color:var(--surface-3);font-size:12px;cursor:pointer;padding:14px 0 2px;font-family:'Inter',inherit;text-align:center">Maybe later — keep Free plan</button>
+    </div>
+  </div>
+</div>
+
 <!-- Mobile Nav Drawer -->
 <div id="mobile-nav-drawer" class="nav-drawer">
   <div class="nav-drawer-header">
