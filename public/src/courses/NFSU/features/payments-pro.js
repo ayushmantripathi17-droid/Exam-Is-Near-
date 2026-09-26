@@ -142,13 +142,13 @@ async function applyCouponCode(){
 const PRO_KEY = "ein_pro_cache";
 // Cloud Function base URLs (2nd-gen Cloud Run endpoints)
 const CF_URLS = {
-  checkProStatus: "https://checkprostatus-pfdempligq-el.a.run.app",
-  createOrder:    "https://createorder-pfdempligq-el.a.run.app",
-  verifyPayment:  "https://verifypayment-pfdempligq-el.a.run.app",
-  activateTrial:  "https://activatetrial-pfdempligq-el.a.run.app",
+  checkProStatus: "https://exam-is-near.vercel.app/api/check-pro-status",
+  createOrder:    "https://exam-is-near.vercel.app/api/create-order",
+  verifyPayment:  "https://exam-is-near.vercel.app/api/verify-payment",
+  activateTrial:  "https://exam-is-near.vercel.app/api/activate-trial",
 };
 // Legacy alias kept for any references still using CF_BASE + "/endpoint"
-const CF_BASE = "https://asia-south1-exam-is-near.cloudfunctions.net";
+const CF_BASE = "https://exam-is-near.vercel.app/api"; // legacy alias, not used for building URLs anywhere
 
 // In-memory cache { isPro, expiresAt, checkedAt, planType }
 let _proCache = null;

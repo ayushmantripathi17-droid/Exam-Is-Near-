@@ -14,7 +14,7 @@ export const AiAssistantSetupShared = {};
 // SECURITY: API key removed from frontend. All AI calls go through
 // the Firebase Cloud Function proxy (functions/index.js → groqProxy).
 // The key lives only in Firebase Secret Manager.
-const GROQ_PROXY_URL = "https://asia-south1-exam-is-near.cloudfunctions.net/groqProxy";
+const GROQ_PROXY_URL = "https://exam-is-near.vercel.app/api/groq-proxy";
 const GROQ_MODEL = "llama-3.3-70b-versatile"; //
 AiAssistantSetupShared.aiHistory = [];
 

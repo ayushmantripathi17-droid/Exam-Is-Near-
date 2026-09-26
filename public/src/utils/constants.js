@@ -7,7 +7,7 @@
 export const ADMIN_EMAIL = "ayushmantripathi17@gmail.com";
 
 // ── Firebase Cloud Functions base URL ─────────────────────────
-export const CF_BASE = "https://asia-south1-exam-is-near.cloudfunctions.net";
+export const CF_BASE = "https://exam-is-near.vercel.app/api"; // legacy alias, not used for building URLs anywhere
 
 // ── Free-tier daily limits ─────────────────────────────────────
 export const FREE_LIMITS = {
