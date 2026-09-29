@@ -1,0 +1,50 @@
+diff --git a/dist/admin.html b/dist/admin.html
+index 2ecdd0c..ad4e78c 100644
+--- a/dist/admin.html
++++ b/dist/admin.html
+@@ -11,8 +11,12 @@
+ <title>ArkSetu Admin — Control Room</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com"/>
+ <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet"/>
++<script>
++/* Must be a classic script defined BEFORE Alpine starts: the module script below runs after Alpine and was too late. */
++window.shell = function () { return { page: 'overview', pending: [] }; };
++</script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js" defer></script>
+-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
++<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.js"></script>
+   <script type="module" crossorigin src="/assets/admin-B6jktrN0.js"></script>
+   <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-P2Xu9kJm.js">
+   <link rel="modulepreload" crossorigin href="/assets/preload-helper-CzmPsGiR.js">
+diff --git a/public/admin.html b/public/admin.html
+index 8bb166f..c011d42 100644
+--- a/public/admin.html
++++ b/public/admin.html
+@@ -12,8 +12,12 @@
+ <link rel="preconnect" href="https://fonts.googleapis.com"/>
+ <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+ <link rel="stylesheet" href="/src/admin-core/design-tokens.css"/>
++<script>
++/* Must be a classic script defined BEFORE Alpine starts: the module script below runs after Alpine and was too late. */
++window.shell = function () { return { page: 'overview', pending: [] }; };
++</script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js" defer></script>
+-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
++<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.js"></script>
+ </head>
+ <body>
+ 
+@@ -440,12 +444,7 @@ import { genId, today } from "/src/utils/helpers.js";
+ const { collection, getDocs, getDoc, doc, setDoc, deleteDoc, serverTimestamp } = fs;
+ const { storageRef, uploadBytesResumable, getDownloadURL, deleteObject } = storageFns;
+ 
+-window.shell = function () {
+-  return {
+-    page: 'overview',
+-    pending: [],
+-  };
+-};
++// window.shell is defined in <head> (before Alpine starts)
+ 
+ window.showPage = function (id) {
+   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
