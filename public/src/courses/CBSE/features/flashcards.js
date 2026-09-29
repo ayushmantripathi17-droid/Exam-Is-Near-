@@ -135,161 +135,164 @@ function deleteFlashcard(){
 
 function renderFlashcards(){
   const subs=getSubjects();
+  const css=`<style>
+.fc{--line:var(--border-2,#2a2a3a);--surf:var(--surface,#0f0f18);--mute:var(--text-5,#777);--txt:var(--text,#eee);--acc:var(--gold,#FFE66D);max-width:900px;margin:0 auto}
+.fc *{box-sizing:border-box}
+.fc-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.fc-h1{font-size:26px;font-weight:800;letter-spacing:-.5px;color:var(--txt);line-height:1.1}
+.fc-h2{font-size:13px;color:var(--mute);margin-top:6px}
+.fc-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:var(--surf);color:var(--text-2,#ccc);padding:10px 16px;border-radius:12px;font-weight:700;font-size:12.5px;font-family:inherit;cursor:pointer;transition:.2s}
+.fc-btn:hover{border-color:var(--acc);transform:translateY(-1px)}
+.fc-btn.p{background:linear-gradient(135deg,#FFE66D,#ffb700);color:#12100a;border-color:transparent;box-shadow:0 6px 18px -6px #FFB70088}
+.fc-btn.d:hover{color:#ff5c5c;border-color:#ff5c5c66;background:#ff5c5c14}
+.fc-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.fc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.fc-sub{--c:#7C6CF0;background:var(--glass-bg,var(--surf));border:1px solid var(--line);border-radius:18px;padding:16px;cursor:pointer;transition:transform .2s,border-color .2s,box-shadow .2s;animation:fcIn .35s ease both}
+.fc-sub:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--c) 60%,var(--line));box-shadow:0 14px 30px -14px color-mix(in srgb,var(--c) 60%,transparent)}
+@keyframes fcIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.fc-sub-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.fc-ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:22px;background:color-mix(in srgb,var(--c) 16%,transparent);flex-shrink:0}
+.fc-sub b{display:block;font-size:14px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-sub span{font-size:11.5px;color:var(--mute)}
+.fc-cnt{margin-left:auto;font-size:22px;font-weight:800;color:var(--c);letter-spacing:-1px}
+.fc-bar{height:5px;border-radius:99px;background:color-mix(in srgb,var(--txt) 8%,transparent);overflow:hidden}
+.fc-bar i{display:block;height:100%;border-radius:99px;background:var(--c);transition:width .5s}
+.fc-bar.big{height:6px;margin-bottom:18px}
+.fc-bar.big i{background:linear-gradient(90deg,color-mix(in srgb,var(--c) 55%,transparent),var(--c))}
+.fc-bar-t{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mute);margin-bottom:8px;font-weight:600}
+.fc-bar-t b{color:var(--txt)}
+.fc-back{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.fc-back .n{flex:1;min-width:120px}
+.fc-back .n b{display:block;font-size:17px;color:var(--txt);font-weight:800}
+.fc-back .n span{font-size:11.5px;color:var(--mute)}
+.fc-card{--c:#FFE66D;position:relative;min-height:280px;display:flex;align-items:center;justify-content:center;text-align:center;padding:36px 28px;border-radius:24px;cursor:pointer;margin-bottom:18px;
+  border:1.5px solid color-mix(in srgb,var(--c) 45%,var(--line));
+  background:radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--c) 14%,transparent),transparent 70%),var(--glass-bg,var(--surf));
+  box-shadow:0 20px 40px -24px color-mix(in srgb,var(--c) 50%,transparent);animation:fcFlip .35s ease both;transition:border-color .3s}
+.fc-card.a{--c:#06D6A0}
+@keyframes fcFlip{from{opacity:.4;transform:rotateX(-14deg) scale(.97)}to{opacity:1;transform:none}}
+.fc-tag{position:absolute;top:16px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;letter-spacing:2px;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);padding:4px 12px;border-radius:99px;white-space:nowrap}
+.fc-txt{font-size:20px;line-height:1.65;color:var(--txt);font-weight:600;margin-top:14px}
+.fc-nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.fc-nav .fc-btn{padding:12px 22px;font-size:13.5px}
+.fc-hint{text-align:center;margin-top:14px;font-size:11px;color:var(--mute)}
+.fc-empty{text-align:center;padding:52px 16px;border:1.5px dashed var(--line);border-radius:20px}
+.fc-empty .e{font-size:50px;margin-bottom:10px}
+.fc-empty b{display:block;font-size:16px;color:var(--txt);margin-bottom:6px}
+.fc-empty p{font-size:12.5px;color:var(--mute);margin:0 0 18px}
+.fc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}
+.fc-stat{background:var(--glass-bg,var(--surf));border:1px solid var(--line);border-radius:16px;padding:14px;text-align:center}
+.fc-stat b{display:block;font-size:24px;font-weight:800;letter-spacing:-.5px}
+.fc-stat span{font-size:10.5px;color:var(--mute);letter-spacing:.5px}
+.fc-grp{font-size:11px;font-weight:800;color:var(--acc);letter-spacing:1.4px;text-transform:uppercase;margin:0 0 10px 2px}
+.fc-log{display:flex;align-items:center;gap:13px;padding:13px 15px;background:var(--glass-bg,var(--surf));border:1px solid var(--line);border-radius:16px;margin-bottom:8px}
+.fc-log-ic{width:46px;height:46px;border-radius:13px;background:color-mix(in srgb,var(--acc) 14%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.fc-log-ic small{font-size:9.5px;color:var(--acc);font-weight:800}
+.fc-log b{display:block;font-size:13.5px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-log span{font-size:11.5px;color:var(--mute)}
+@media(max-width:520px){.fc-txt{font-size:17px}.fc-card{min-height:240px;padding:34px 18px}}
+</style>`;
 
-  // ── Flashcard History: chapter-wise grouped ──
+  // ── History ──
   if(flashState.showHistory){
-    // Group by subject
     const fGrouped = {};
     CourseRuntime.flashLog.forEach(entry=>{
       const key = entry.subjectName||entry.subject||"Unknown";
       if(!fGrouped[key]) fGrouped[key]={subject:key,entries:[]};
       fGrouped[key].entries.push(entry);
     });
-
-    return `<div class="fade-in">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <button class="btn-ghost" onclick="flashState.showHistory=false;render()" style="font-size:12px;padding:6px 12px">← Back</button>
-          <div style="font-size:18px;font-weight:bold">📋 Flashcard Logs</div>
+    return `${css}<div class="fc fade-in">
+      <div class="fc-head">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="fc-btn" onclick="flashState.showHistory=false;render()">← Back</button>
+          <div class="fc-h1" style="font-size:22px">📋 Flashcard Logs</div>
         </div>
-        ${CourseRuntime.flashLog.length>0?`<button onclick="if(confirm('Clear flashcard logs?')){flashLog=[];saveFlashLog();render();}" style="background:none;border:none;font-size:11px;color:#FF6B3588;cursor:pointer;font-family:inherit">🗑️ Clear</button>`:''}
+        ${CourseRuntime.flashLog.length>0?`<button class="fc-btn d" onclick="if(confirm('Clear flashcard logs?')){flashLog=[];saveFlashLog();render();}">🗑️ Clear</button>`:''}
       </div>
-
-      ${CourseRuntime.flashLog.length===0?`<div class="empty-state">
-        <div style="font-size:48px;margin-bottom:12px">🃏</div>
-        <div style="font-size:14px;margin-bottom:6px">No flashcard logs yet</div>
-        <div style="font-size:12px;color:#444">Generate flashcards and your sessions will appear here</div>
-      </div>`:`
-
-      <!-- Stats strip -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px">
-        <div style="background:#0f0f18;border:1px solid #1e1e2e;border-radius:10px;padding:12px;text-align:center">
-          <div style="font-size:20px;font-weight:800;color:#FFE66D">${CourseRuntime.flashLog.length}</div>
-          <div style="font-size:10px;color:#555;margin-top:2px">Sessions</div>
-        </div>
-        <div style="background:#0f0f18;border:1px solid #1e1e2e;border-radius:10px;padding:12px;text-align:center">
-          <div style="font-size:20px;font-weight:800;color:#06D6A0">${CourseRuntime.flashLog.reduce((s,e)=>s+(e.cards||0),0)}</div>
-          <div style="font-size:10px;color:#555;margin-top:2px">Total Cards</div>
-        </div>
-        <div style="background:#0f0f18;border:1px solid #1e1e2e;border-radius:10px;padding:12px;text-align:center">
-          <div style="font-size:20px;font-weight:800;color:#A78BFA">${Object.keys(fGrouped).length}</div>
-          <div style="font-size:10px;color:#555;margin-top:2px">Subjects</div>
-        </div>
+      ${CourseRuntime.flashLog.length===0?`<div class="fc-empty"><div class="e">🃏</div><b>No flashcard logs yet</b><p>Generate flashcards and your sessions will appear here</p></div>`:`
+      <div class="fc-stats">
+        <div class="fc-stat"><b style="color:#FFE66D">${CourseRuntime.flashLog.length}</b><span>SESSIONS</span></div>
+        <div class="fc-stat"><b style="color:#06D6A0">${CourseRuntime.flashLog.reduce((s,e)=>s+(e.cards||0),0)}</b><span>TOTAL CARDS</span></div>
+        <div class="fc-stat"><b style="color:#A78BFA">${Object.keys(fGrouped).length}</b><span>SUBJECTS</span></div>
       </div>
-
-      <!-- Chapter-wise grouped -->
       ${Object.values(fGrouped).map(group=>`
         <div style="margin-bottom:20px">
-          <div style="font-size:12px;font-weight:700;color:#FFE66D;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;padding-left:2px">${esc(group.subject)}</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            ${group.entries.map(entry=>`
-              <div style="background:#0f0f18;border:1px solid #1e1e2e;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px">
-                <div style="flex-shrink:0;width:44px;height:44px;border-radius:10px;background:#1a1200;border:1px solid #FFE66D33;display:flex;flex-direction:column;align-items:center;justify-content:center">
-                  <span style="font-size:14px">🃏</span>
-                  <span style="font-size:9px;color:#FFE66D;font-weight:700">${entry.cards}</span>
-                </div>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:13px;font-weight:600;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(entry.chapter)}</div>
-                  <div style="font-size:11px;color:#555;margin-top:2px">
-                    ${entry.cards} cards generated ·
-                    ${new Date(entry.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
-                    <span style="color:#444"> · ${new Date(entry.date).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</span>
-                  </div>
-                </div>
-                <button onclick="flashSelectSubject('${entry.subject}');flashState.showHistory=false;" style="flex-shrink:0;background:#FFE66D11;border:1px solid #FFE66D33;color:#FFE66D;font-size:11px;padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit">Study →</button>
+          <div class="fc-grp">${esc(group.subject)}</div>
+          ${group.entries.map(entry=>`
+            <div class="fc-log">
+              <div class="fc-log-ic">🃏<small>${entry.cards}</small></div>
+              <div style="flex:1;min-width:0">
+                <b>${esc(entry.chapter)}</b>
+                <span>${entry.cards} cards · ${new Date(entry.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})} · ${new Date(entry.date).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</span>
               </div>
-            `).join('')}
-          </div>
-        </div>
-      `).join('')}
+              <button class="fc-btn p" style="padding:8px 14px;font-size:12px" onclick="flashSelectSubject('${entry.subject}');flashState.showHistory=false;">Study →</button>
+            </div>`).join('')}
+        </div>`).join('')}
       `}
     </div>`;
   }
 
+  // ── Subject select ──
   if(flashState.mode==="select"||!flashState.activeSub){
-    return `<div class="fade-in">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div style="font-size:18px;font-weight:bold">🃏 Flashcards</div>
-        ${CourseRuntime._proStatusCache?`<button class="btn-ghost" onclick="flashState.showHistory=true;render()" style="font-size:11px;padding:5px 12px">📋 Logs (${CourseRuntime.flashLog.length})</button>`:''}
+    return `${css}<div class="fc fade-in">
+      <div class="fc-head">
+        <div>
+          <div class="fc-h1">🃏 Flashcards</div>
+          <div class="fc-h2">Pick a subject to review or generate AI cards.</div>
+        </div>
+        ${CourseRuntime._proStatusCache?`<button class="fc-btn" onclick="flashState.showHistory=true;render()">📋 Logs (${CourseRuntime.flashLog.length})</button>`:''}
       </div>
-      <div style="font-size:12px;color:#555;margin-bottom:20px">Select a subject to view or generate cards</div>
-      <div class="grid-2">
-        ${subs.map(s=>{
+      <div class="fc-grid">
+        ${subs.map((s,i)=>{
           const count=(flashDecks[s.id]||[]).length;
-          return `<div class="card" style="cursor:pointer;border-color:${s.color}33;transition:border-color 0.2s"
-            onclick="flashSelectSubject('${s.id}')"
-            onmouseover="this.style.borderColor='${s.color}99'"
-            onmouseout="this.style.borderColor='${s.color}33'">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-              <span style="font-size:26px">${s.icon}</span>
-              <div>
-                <div style="font-size:13px;font-weight:bold;color:#ccc">${esc(s.name)}</div>
-                <div style="font-size:11px;color:#555">${count>0?count+" cards":"No cards yet"}</div>
-              </div>
+          return `<div class="fc-sub" style="--c:${s.color};animation-delay:${Math.min(i,12)*0.04}s" onclick="flashSelectSubject('${s.id}')">
+            <div class="fc-sub-top">
+              <div class="fc-ic">${s.icon}</div>
+              <div style="min-width:0;flex:1"><b>${esc(s.name)}</b><span>${count>0?count+" cards":"No cards yet"}</span></div>
+              ${count>0?`<div class="fc-cnt">${count}</div>`:""}
             </div>
-            <div style="height:3px;background:#111;border-radius:2px;overflow:hidden">
-              <div style="height:100%;background:${s.color};width:${count>0?Math.min(100,count*8)+"%" :"0%"};border-radius:2px"></div>
-            </div>
+            <div class="fc-bar"><i style="width:${count>0?Math.min(100,count*8):0}%"></i></div>
           </div>`;
         }).join("")}
       </div>
     </div>`;
   }
 
+  // ── Deck view ──
   const sub=subs.find(s=>s.id===flashState.activeSub);
   const deck=getActiveDeck();
   const card=deck[flashState.current];
   const pct=deck.length?Math.round(((flashState.current+1)/deck.length)*100):0;
+  const col=sub?.color||"#FFE66D";
 
-  return `<div class="fade-in">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
-      <button class="btn-ghost" onclick="flashBack()" style="font-size:12px;padding:6px 12px">← All</button>
-      <span style="font-size:18px">${sub?.icon||"🃏"}</span>
-      <div style="flex:1;min-width:80px">
-        <div style="font-size:15px;font-weight:bold;color:#ccc">${esc(sub?.name||"")}</div>
-        <div style="font-size:11px;color:#555">${deck.length} cards total</div>
-      </div>
-      <button class="btn-gold" onclick="openChapterPicker()" ${flashState.generating?"disabled":""} style="font-size:11px;padding:7px 14px">
-        ${flashState.generating?"⏳ Generating…":"✨ Choose Chapter"}
-      </button>
-      ${deck.length>0?`<button class="btn-ghost" onclick="clearSubjectDeck()" style="font-size:11px;color:#FF6B35;padding:7px 10px">🗑️ Clear</button>`:""}
+  return `${css}<div class="fc fade-in" style="--c:${col}">
+    <div class="fc-back">
+      <button class="fc-btn" onclick="flashBack()">← All</button>
+      <div class="fc-ic" style="--c:${col}">${sub?.icon||"🃏"}</div>
+      <div class="n"><b>${esc(sub?.name||"")}</b><span>${deck.length} cards total</span></div>
+      <button class="fc-btn p" onclick="openChapterPicker()" ${flashState.generating?"disabled":""}>${flashState.generating?"⏳ Generating…":"✨ Choose Chapter"}</button>
+      ${deck.length>0?`<button class="fc-btn d" onclick="clearSubjectDeck()">🗑️ Clear</button>`:""}
     </div>
 
     ${deck.length===0?`
-      <div class="empty-state">
-        <div style="font-size:48px;margin-bottom:12px">🃏</div>
-        <div style="font-size:14px;margin-bottom:6px">No cards for ${esc(sub?.name||"")} yet</div>
-        <div style="font-size:12px;color:#444;margin-bottom:16px">Generate 12 AI flashcards instantly — all chapters or chapter-wise</div>
-        <button class="btn-gold" onclick="openChapterPicker()" ${flashState.generating?"disabled":""} style="font-size:13px;padding:12px 24px">
-          ${flashState.generating?"⏳ Generating…":"✨ Choose Chapter to Generate"}
-        </button>
+      <div class="fc-empty">
+        <div class="e">🃏</div>
+        <b>No cards for ${esc(sub?.name||"")} yet</b>
+        <p>Generate 12 AI flashcards instantly — all chapters or chapter-wise</p>
+        <button class="fc-btn p" onclick="openChapterPicker()" ${flashState.generating?"disabled":""} style="padding:12px 24px;font-size:13.5px">${flashState.generating?"⏳ Generating…":"✨ Choose Chapter to Generate"}</button>
       </div>`:`
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:11px;color:#444">
-        <span>Card ${flashState.current+1} / ${deck.length}</span>
-        <span>${pct}% through deck</span>
+      <div class="fc-bar-t"><span>Card <b>${flashState.current+1}</b> / ${deck.length}</span><span>${pct}% through deck</span></div>
+      <div class="fc-bar big" style="--c:${col}"><i style="width:${pct}%"></i></div>
+      <div class="fc-card ${flashState.flipped?"a":""}" style="${flashState.flipped?"--c:"+col:""}" onclick="flipCard()">
+        <div class="fc-tag">${flashState.flipped?"✅ ANSWER":"❓ QUESTION · TAP TO FLIP"}</div>
+        <div class="fc-txt">${esc(card?(flashState.flipped?card.back:card.front):"")}</div>
       </div>
-      <div style="height:3px;background:#111;border-radius:2px;margin-bottom:16px;overflow:hidden">
-        <div style="height:100%;background:${sub?.color||"#FFE66D"};width:${pct}%;transition:width 0.3s;border-radius:2px"></div>
+      <div class="fc-nav">
+        <button class="fc-btn" onclick="prevCard()">← Prev</button>
+        <button class="fc-btn d" onclick="deleteFlashcard()" title="Delete card">🗑️</button>
+        <button class="fc-btn p" onclick="nextCard()">Next →</button>
       </div>
-      <div onclick="flipCard()" style="cursor:pointer;min-height:220px;display:flex;align-items:center;justify-content:center;
-        background:${flashState.flipped?"#0d1a0d":"#13131f"};
-        border:2px solid ${flashState.flipped?sub?.color||"#06D6A0":"#FFE66D44"};
-        border-radius:16px;padding:32px;margin-bottom:20px;transition:all 0.3s;text-align:center">
-        <div>
-          <div style="font-size:10px;letter-spacing:2px;margin-bottom:14px;color:${flashState.flipped?sub?.color||"#06D6A0":"#555"}">
-            ${flashState.flipped?"✅ ANSWER":"❓ QUESTION — tap to flip"}
-          </div>
-          <div style="font-size:17px;color:${flashState.flipped?sub?.color||"#06D6A0":"#FFE66D"};line-height:1.7">
-            ${esc(card?(flashState.flipped?card.back:card.front):"")}
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;justify-content:center">
-        <button class="btn-ghost" onclick="prevCard()" style="padding:10px 22px">← Prev</button>
-        <button class="btn-ghost" onclick="deleteFlashcard()" style="color:#FF6B35;padding:10px 14px" title="Delete card">🗑️</button>
-        <button class="btn-gold" onclick="nextCard()" style="padding:10px 22px">Next →</button>
-      </div>
-      <div style="text-align:center;margin-top:12px;font-size:10px;color:#222">tap card to flip · swipe or use buttons · delete removes this card</div>
+      <div class="fc-hint">Tap the card to flip · delete removes this card</div>
     `}
   </div>`;
 }

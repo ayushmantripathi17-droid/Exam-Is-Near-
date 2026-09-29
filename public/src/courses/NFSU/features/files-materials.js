@@ -652,6 +652,7 @@ async function renderPDFPreview(fileURL, fileName){
 // ── RENDER FILES ─────────────────────────────────────────────
 async function renderFiles(){
   const pro = await isProUser();
+  const subs = getSubjects();
   const filtered=state.files.filter(f=>{
     if(state.fileSubFilter!=="all"&&f.subjectId!==state.fileSubFilter) return false;
     if(state.fileQPOnly&&!f.isQuestionPaper) return false;
@@ -659,176 +660,243 @@ async function renderFiles(){
     return true;
   });
 
-  // Estimate storage used
   const filesSizeBytes=state.files.reduce((s,f)=>s+(f.size||0),0);
   const usedMB=(filesSizeBytes/(1024*1024)).toFixed(1);
-  const limitMB=pro?25*1024:200; // Pro: 25GB; Free: ~200MB local limit
-  const usedPct=Math.min(100,Math.round((filesSizeBytes/(1024*1024*limitMB))*100));
-  const storageColor=usedPct>80?"#FF6B35":usedPct>60?"#FFE66D":"#06D6A0";
+  const limitMB=pro?25*1024:200;
+  const usedPct=pro
+    ? Math.min(100,Math.round((filesSizeBytes/(1024*1024*limitMB))*100))
+    : Math.min(100,Math.round((state.files.filter(f=>!f.adminMaterial).length/5)*100));
+  const barColor=usedPct>80?"#FF6B35":usedPct>60?"#FFE66D":"#06D6A0";
+  const myCount=state.files.filter(f=>!f.adminMaterial).length;
+  const qpCount=state.files.filter(f=>f.isQuestionPaper).length;
 
-  // Pro cloud storage banner vs Free local banner
-  const storageBanner = pro
-    ? `<div style="background:#061208;border:1px solid #06D6A022;border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
-        <span style="font-size:18px">☁️</span>
-        <div style="flex:1">
-          <div style="font-size:11px;font-weight:700;color:#06D6A0">25 GB Cloud Storage — PRO ⭐</div>
-          <div style="font-size:10px;color:#444">Files synced to cloud · ${usedMB} MB used</div>
-          <div class="storage-bar" style="margin-top:6px"><div class="storage-fill" style="width:${usedPct}%;background:${storageColor}"></div></div>
-        </div>
-      </div>`
-    : `<div onclick="openProModal()" style="background:#120f00;border:1px solid #FFE66D22;border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;cursor:pointer" onmouseover="this.style.borderColor='#FFE66D44'" onmouseout="this.style.borderColor='#FFE66D22'">
-        <span style="font-size:18px">📁</span>
-        <div style="flex:1">
-          <div style="font-size:11px;font-weight:700;color:#FFE66D">Local Storage Only <span style="font-size:9px;background:#1a1a2a;color:#555;border-radius:6px;padding:1px 7px;margin-left:4px">FREE</span></div>
-          <div style="font-size:10px;color:#444">Up to 5 files · ${usedMB} MB used · <span style="color:#FFE66D">Upgrade for 25 GB cloud ☁️</span></div>
-          <div class="storage-bar" style="margin-top:6px"><div class="storage-fill" style="width:${Math.min(100,(state.files.length/5)*100)}%;background:#FFE66D"></div></div>
-          <div style="font-size:9px;color:#444;margin-top:3px">${state.files.length}/5 files used</div>
-        </div>
-        <div style="font-size:11px;font-weight:700;color:#FFE66D;flex-shrink:0">Get Pro →</div>
-      </div>`;
+  const svg=(d)=>`<svg class="fm-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const I={
+    up:svg('<path d="M12 16V4m0 0-4 4m4-4 4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>'),
+    folder:svg('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
+    search:svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),
+    link:svg('<path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>'),
+    eye:svg('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
+    ext:svg('<path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'),
+    trash:svg('<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12"/><path d="M9 7V4h6v3"/>'),
+    cloud:svg('<path d="M7 18a4 4 0 0 1-.6-7.96A6 6 0 0 1 18 9.5a4.5 4.5 0 0 1-.5 8.5z"/>'),
+    chev:svg('<path d="m6 9 6 6 6-6"/>')
+  };
 
+  const statusOf=(f)=>{
+    if(f.isDriveLink||f.type==="drive-folder") return {c:"#4ECDC4",t:"Google Drive"};
+    if(f.shared&&f.downloadURL) return {c:"#06D6A0",t:"Shared"};
+    if(f.downloadURL&&f.synced) return {c:"#06D6A0",t:"Synced"};
+    if(f.downloadURL) return {c:"#06D6A0",t:"Cloud"};
+    if(f.data) return {c:"#FF6B35",t:"This device only"};
+    return {c:"var(--text-7,#666)",t:"—"};
+  };
 
-  const subFilterBtns=`<div class="flex-wrap" style="margin-bottom:16px">
-    <button class="pill-btn" onclick="state.fileSubFilter='all';render()" style="background:${state.fileSubFilter==="all"?"#FFE66D":"#0f0f18"};color:${state.fileSubFilter==="all"?"#08080f":"#666"};border-color:${state.fileSubFilter==="all"?"#FFE66D":"#222"}">📁 All</button>
-    <button class="pill-btn" onclick="state.fileQPOnly=!state.fileQPOnly;render()" style="background:${state.fileQPOnly?"#FF6B35":"#0f0f18"};color:${state.fileQPOnly?"#08080f":"#666"};border-color:${state.fileQPOnly?"#FF6B35":"#222"}">📋 Question Papers${state.fileQPOnly?" ✓":""}</button>
-    ${getSubjects().map(s=>`<button class="pill-btn" onclick="state.fileSubFilter='${s.id}';render()" style="background:${s.id===state.fileSubFilter?s.color:"#0f0f18"};color:${s.id===state.fileSubFilter?"#08080f":"#666"};border-color:${s.id===state.fileSubFilter?s.color:"#222"}">${s.icon} ${esc(s.name)}</button>`).join("")}
-  </div>`;
+  const chips=`
+    <button class="fm-chip ${state.fileSubFilter==="all"?"on":""}" onclick="state.fileSubFilter='all';render()">All <b>${state.files.length}</b></button>
+    ${subs.map(s=>{
+      const n=state.files.filter(f=>f.subjectId===s.id).length;
+      const on=s.id===state.fileSubFilter;
+      return`<button class="fm-chip ${on?"on":""}" style="--c:${s.color}" onclick="state.fileSubFilter='${s.id}';render()"><span class="fm-dot"></span>${s.icon} ${esc(s.name)}${n?` <b>${n}</b>`:""}</button>`;
+    }).join("")}`;
 
-  const fileCards=filtered.length===0?`
-    <div class="empty-state">
-      <div style="font-size:48px;margin-bottom:14px">📂</div>
-      <div style="font-size:14px;margin-bottom:6px">No files here yet</div>
-      <div style="font-size:12px;color:#444">Upload PDFs, images, notes or spreadsheets above</div>
+  const cards=filtered.length===0?`
+    <div class="fm-empty">
+      <div class="fm-empty-ic">📂</div>
+      <div class="fm-empty-t">${state.files.length?"No matching files":"Your library is empty"}</div>
+      <div class="fm-empty-s">${state.files.length?"Try a different search or filter.":"Upload PDFs, notes, images or add a Google Drive link."}</div>
+      ${state.files.length?"":`<button class="fm-btn fm-primary" onclick="document.getElementById('file-input').click()">${I.up} Upload your first file</button>`}
     </div>`:
-    `<div class="file-grid">${filtered.map((f,i)=>{
+    `<div class="fm-grid">${filtered.map((f,i)=>{
       const icon=getFileIcon(f.type,f.name);
-      const sub=getSubjects().find(s=>s.id===f.subjectId);
+      const sub=subs.find(s=>s.id===f.subjectId);
+      const col=sub?.color||"#7C6CF0";
       const isImg=f.type&&f.type.includes("image")&&f.data;
-      return`<div class="file-card" style="animation:fadeInUp 0.3s ease ${i*0.04}s both">
-        <div onclick="openPreview('${f.id}')">
-          ${isImg
-            ?`<img src="${f.data}" class="file-thumb" alt="${esc(f.name)}"/>`
-            :`<div class="file-thumb-placeholder" style="background:linear-gradient(135deg,${sub?.color||"#222"}22,#0a0a18)">${icon}</div>`}
+      const isDrive=(f.isDriveLink||f.type==="drive-folder");
+      const st=statusOf(f);
+      const ext=(f.name||"").split(".").pop().toUpperCase();
+      const extLabel=isDrive?(f.type==="drive-folder"?"FOLDER":"DRIVE"):(ext&&ext.length<=5&&ext!==(f.name||"").toUpperCase()?ext:"FILE");
+      const href=esc(f.driveLink||f.downloadURL||f.url||"");
+      return`<div class="fm-card" style="--c:${col};animation-delay:${Math.min(i,12)*0.03}s">
+        <div class="fm-thumb" onclick="${isDrive?`window.open('${href}','_blank')`:`openPreview('${f.id}')`}">
+          ${isImg?`<img src="${f.data}" alt="${esc(f.name)}"/>`:`<span class="fm-thumb-ic">${icon}</span>`}
+          <span class="fm-ext">${extLabel}</span>
+          ${f.isQuestionPaper?`<span class="fm-qp">Question Paper</span>`:""}
+          ${f.proOnly?`<span class="fm-pro">PRO</span>`:""}
         </div>
-        <div class="file-info">
-          ${f.isQuestionPaper?`<div style="display:inline-block;font-size:9px;font-weight:700;color:#FF6B35;background:#FF6B3522;border:1px solid #FF6B3555;border-radius:5px;padding:2px 6px;margin-bottom:4px">📋 QUESTION PAPER</div>`:""}
-          <div class="file-name" title="${esc(f.name)}">${esc(f.name)}</div>
-          <div class="file-meta">${formatSize(f.size)} · <span style="color:${sub?.color||"#444"}">${sub?.icon||""} ${esc(sub?.name||"")}</span></div>
-          <div class="file-meta" style="margin-top:2px">${f.created}</div>
-          <div style="margin-top:4px;font-size:10px">
-            ${(f.isDriveLink||f.type==="drive-folder")
-              ?`<a href="${esc(f.driveLink||f.downloadURL||f.url||"")}" target="_blank" onclick="event.stopPropagation()" style="color:#4ECDC4;text-decoration:none;display:inline-flex;align-items:center;gap:4px;background:#0a1a1a;border:1px solid #4ECDC433;padding:3px 8px;border-radius:6px">📁 Open Drive Folder ↗</a>`
-              :f.shared&&f.downloadURL
-                ?`<span style="color:#06D6A0">☁️ Shared</span> <a href="${esc(f.downloadURL)}" target="_blank" onclick="event.stopPropagation()" style="color:#4ECDC4;text-decoration:none">↗ Open</a>`
-              :f.downloadURL&&f.synced
-                ?`<span style="color:#06D6A0">🔄 Synced</span> <a href="${esc(f.downloadURL)}" target="_blank" onclick="event.stopPropagation()" style="color:#4ECDC4;text-decoration:none">↗ Open</a>`
-              :f.downloadURL
-                ?`<span style="color:#06D6A0">☁️ Cloud</span> <a href="${esc(f.downloadURL)}" target="_blank" onclick="event.stopPropagation()" style="color:#4ECDC4;text-decoration:none">↗ Open</a>`
-              :f.data
-                ?`<span style="color:#FF6B35">⚠️ Browser only</span>`
-                :`<span style="color:#333">—</span>`}
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-            ${(f.isDriveLink||f.type==="drive-folder")
-              ?`<a href="${esc(f.driveLink||f.downloadURL||"")}" target="_blank" onclick="event.stopPropagation()" style="background:none;border:1px solid #4ECDC433;color:#4ECDC4;padding:4px 10px;border-radius:6px;font-size:10px;text-decoration:none">↗ Open</a>`
-              :`<button onclick="openPreview('${f.id}')" style="background:none;border:1px solid #2a2a3a;color:#888;padding:4px 10px;border-radius:6px;font-family:inherit;font-size:10px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#555'" onmouseout="this.style.borderColor='#2a2a3a'">👁 View</button>`}
-            ${f.adminMaterial?"":`<button onclick="deleteFile('${f.id}')" style="background:none;border:none;color:#553333;cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px;transition:all 0.2s" onmouseover="this.style.color='#cc5555'" onmouseout="this.style.color='#553333'">🗑️</button>`}
+        <div class="fm-body">
+          <div class="fm-name" title="${esc(f.name)}">${esc(f.name)}</div>
+          <div class="fm-sub"><span class="fm-dot"></span>${esc(sub?.name||"General")}</div>
+          <div class="fm-meta">${f.size?formatSize(f.size)+" · ":""}${f.created||""}</div>
+          <div class="fm-status" style="color:${st.c}"><span class="fm-pulse" style="background:${st.c}"></span>${st.t}</div>
+          <div class="fm-actions">
+            ${isDrive
+              ?`<a class="fm-btn fm-sm fm-primary" href="${href}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${I.ext} Open</a>`
+              :`<button class="fm-btn fm-sm fm-primary" onclick="openPreview('${f.id}')">${I.eye} View</button>`}
+            ${!isDrive&&f.downloadURL?`<a class="fm-btn fm-sm fm-icon" href="${esc(f.downloadURL)}" target="_blank" rel="noopener" title="Open in new tab" onclick="event.stopPropagation()">${I.ext}</a>`:""}
+            ${f.adminMaterial?"":`<button class="fm-btn fm-sm fm-icon fm-danger" title="Delete" onclick="deleteFile('${f.id}')">${I.trash}</button>`}
           </div>
         </div>
       </div>`;
     }).join("")}</div>`;
 
-  return`<div class="fade-in">
-    <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+  const css=`<style>
+.fm{--fm-r:16px;--fm-line:var(--border-2,#2a2a3a);--fm-surf:var(--surface,#0f0f18);--fm-txt:var(--text-2,#ccc);--fm-mute:var(--text-5,#777);--fm-acc:var(--gold,#FFE66D);max-width:1100px;margin:0 auto}
+.fm *{box-sizing:border-box}
+.fm-i{width:16px;height:16px;flex-shrink:0}
+.fm-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.fm-title{font-size:26px;font-weight:800;letter-spacing:-.5px;color:var(--text,#eee);line-height:1.1}
+.fm-sub-h{font-size:13px;color:var(--fm-mute);margin-top:6px}
+.fm-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--fm-line);background:var(--fm-surf);color:var(--fm-txt);padding:10px 16px;border-radius:12px;font-weight:600;font-size:13px;line-height:1;font-family:inherit;cursor:pointer;text-decoration:none;transition:transform .15s,border-color .2s,background .2s,box-shadow .2s}
+.fm-btn:hover{border-color:var(--fm-acc);transform:translateY(-1px)}
+.fm-primary{background:linear-gradient(135deg,#FFE66D,#ffb700);color:#12100a;border-color:transparent;box-shadow:0 6px 18px -6px #FFB70088}
+.fm-primary:hover{box-shadow:0 10px 24px -6px #FFB700aa;border-color:transparent}
+.fm-sm{padding:8px 12px;font-size:12px;border-radius:10px}
+.fm-icon{padding:8px;width:34px;flex:0 0 34px}
+.fm-danger:hover{color:#ff5c5c;border-color:#ff5c5c66;background:#ff5c5c14}
+.fm-row{display:flex;gap:8px;flex-wrap:wrap}
+.fm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.fm-stat{background:var(--glass-bg,var(--fm-surf));border:1px solid var(--fm-line);border-radius:var(--fm-r);padding:14px 16px}
+.fm-stat b{display:block;font-size:22px;font-weight:800;color:var(--text,#eee);letter-spacing:-.5px}
+.fm-stat span{font-size:11px;color:var(--fm-mute);letter-spacing:.4px}
+.fm-store{grid-column:span 2}
+@media(max-width:520px){.fm-store{grid-column:span 1}}
+.fm-bar{height:6px;border-radius:99px;background:var(--surface-3,#1c1c28);overflow:hidden;margin-top:10px}
+.fm-bar i{display:block;height:100%;border-radius:99px;transition:width .6s ease}
+.fm-store a{color:var(--fm-acc);cursor:pointer;font-weight:700}
+.fm-drop{border:1.5px dashed var(--fm-line);border-radius:var(--fm-r);padding:22px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--bg-alt,transparent);cursor:pointer;transition:.25s;margin-bottom:12px}
+.fm-drop:hover,.fm-drop.drag-over{border-color:var(--fm-acc);background:color-mix(in srgb,var(--fm-acc) 8%,var(--fm-surf));box-shadow:0 0 0 4px color-mix(in srgb,var(--fm-acc) 10%,transparent)}
+.fm-drop-ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--fm-acc) 16%,transparent);color:var(--fm-acc)}
+.fm-drop-ic .fm-i{width:22px;height:22px}
+.fm-drop-t{font-weight:700;color:var(--text,#eee);font-size:14px}
+.fm-drop-s{font-size:12px;color:var(--fm-mute);margin-top:3px}
+.fm-drop-r{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fm select,.fm input{background:var(--fm-surf);color:var(--fm-txt);border:1px solid var(--fm-line);border-radius:10px;padding:9px 12px;font:inherit;font-size:12.5px;outline:none;margin:0;width:auto;transition:border-color .2s}
+.fm select:focus,.fm input:focus{border-color:var(--fm-acc)}
+.fm details{border:1px solid var(--fm-line);border-radius:var(--fm-r);background:var(--glass-bg,var(--fm-surf));margin-bottom:18px;overflow:hidden}
+.fm summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:13px 16px;font-weight:700;font-size:13px;color:var(--fm-txt)}
+.fm summary::-webkit-details-marker{display:none}
+.fm summary .fm-i:last-child{margin-left:auto;transition:transform .2s}
+.fm details[open] summary .fm-i:last-child{transform:rotate(180deg)}
+.fm-drive{padding:0 16px 16px;display:grid;gap:8px}
+.fm-drive .fm-r2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fm-drive .fm-r3{display:flex;gap:8px}
+.fm-drive input,.fm-drive select{width:100%}
+@media(max-width:520px){.fm-drive .fm-r2{grid-template-columns:1fr}.fm-drive .fm-r3{flex-direction:column}}
+.fm-tools{padding:8px 0 10px;display:grid;gap:10px}
+.fm-search{position:relative}
+.fm-search .fm-i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--fm-mute)}
+.fm-search input{width:100%;padding:12px 14px 12px 38px;border-radius:14px;font-size:13.5px}
+.fm-chips{display:flex;flex-wrap:wrap;gap:8px}
+.fm-chip{--c:var(--fm-acc);flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--fm-line);background:var(--fm-surf);color:var(--fm-mute);padding:8px 13px;border-radius:99px;font-weight:600;font-size:12px;line-height:1;font-family:inherit;cursor:pointer;transition:.2s;white-space:nowrap}
+.fm-chip b{font-size:10px;opacity:.7;background:color-mix(in srgb,currentColor 14%,transparent);padding:2px 6px;border-radius:99px}
+.fm-chip:hover{color:var(--fm-txt);border-color:var(--c)}
+.fm-chip.on{background:color-mix(in srgb,var(--c) 18%,var(--fm-surf));color:var(--c);border-color:var(--c)}
+.fm-chip .fm-dot{display:none}
+.fm-qp-btn.on{--c:#FF6B35}
+.fm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-top:6px}
+@media(max-width:520px){.fm-grid{grid-template-columns:1fr 1fr;gap:10px}}
+.fm-card{--c:#7C6CF0;background:var(--glass-bg,var(--fm-surf));border:1px solid var(--fm-line);border-radius:var(--fm-r);overflow:hidden;display:flex;flex-direction:column;transition:transform .2s,border-color .2s,box-shadow .2s;animation:fmIn .35s ease both}
+.fm-card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--c) 60%,var(--fm-line));box-shadow:0 14px 30px -14px color-mix(in srgb,var(--c) 55%,transparent)}
+@keyframes fmIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.fm-thumb{position:relative;height:118px;display:grid;place-items:center;cursor:pointer;overflow:hidden;background:radial-gradient(circle at 30% 20%,color-mix(in srgb,var(--c) 28%,transparent),transparent 70%),linear-gradient(160deg,color-mix(in srgb,var(--c) 10%,var(--fm-surf)),var(--fm-surf))}
+.fm-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.fm-thumb-ic{font-size:46px;filter:drop-shadow(0 6px 10px #0006);transition:transform .25s}
+.fm-card:hover .fm-thumb-ic{transform:scale(1.08) rotate(-3deg)}
+.fm-ext{position:absolute;left:10px;bottom:10px;font-size:9.5px;font-weight:800;letter-spacing:.8px;padding:3px 7px;border-radius:6px;background:#000a;color:#fff;backdrop-filter:blur(6px)}
+.fm-qp,.fm-pro{position:absolute;top:10px;right:10px;font-size:9px;font-weight:800;letter-spacing:.5px;padding:3px 8px;border-radius:99px;text-transform:uppercase}
+.fm-qp{background:#FF6B35;color:#fff}
+.fm-pro{background:linear-gradient(135deg,#FFE66D,#ffb700);color:#1a1300;top:auto;bottom:10px;right:10px}
+.fm-body{padding:12px 13px 13px;display:flex;flex-direction:column;gap:5px;flex:1}
+.fm-name{font-size:13px;font-weight:700;color:var(--text,#eee);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.3;min-height:2.6em}
+.fm-sub{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--c);font-weight:600}
+.fm-dot{width:7px;height:7px;border-radius:50%;background:var(--c,currentColor);display:inline-block}
+.fm-meta{font-size:10.5px;color:var(--fm-mute)}
+.fm-status{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600}
+.fm-pulse{width:6px;height:6px;border-radius:50%}
+.fm-actions{display:flex;gap:6px;margin-top:auto;padding-top:8px}
+.fm-actions .fm-primary{flex:1}
+.fm-empty{text-align:center;padding:56px 16px;border:1.5px dashed var(--fm-line);border-radius:var(--fm-r);margin-top:8px}
+.fm-empty-ic{font-size:52px;margin-bottom:10px}
+.fm-empty-t{font-size:16px;font-weight:700;color:var(--text,#eee)}
+.fm-empty-s{font-size:12.5px;color:var(--fm-mute);margin:6px 0 16px}
+.fm-sync{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:22px;padding:14px 16px;border:1px solid var(--fm-line);border-radius:var(--fm-r);background:var(--glass-bg,var(--fm-surf));font-size:12px;color:var(--fm-mute);line-height:1.6}
+.fm-sync .fm-i{width:20px;height:20px}
+.fm-sync button{margin-left:auto;background:linear-gradient(135deg,#4285F4,#34A853);border:none;color:#fff;padding:9px 16px;border-radius:10px;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer}
+</style>`;
+
+  return`${css}<div class="fm fade-in">
+    <div class="fm-hero">
       <div>
-        <div style="font-size:18px;font-weight:bold">📁 Study Material</div>
-        <div style="font-size:11px;color:#444;margin-top:2px">${state.files.length} file${state.files.length!==1?"s":""} · ${usedMB} MB used · ${pro?"☁️ Cloud storage":"📁 Local · max 5 files"}</div>
+        <div class="fm-title">Study Material</div>
+        <div class="fm-sub-h">Notes, PDFs and question papers — all in one place.</div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn-gold" onclick="document.getElementById('file-input').click()">⬆ Upload Files</button>
-        <button class="btn-ghost" onclick="document.getElementById('folder-input').click()" style="font-size:12px">📁 Upload Folder</button>
-        ${state.files.filter(f=>!f.adminMaterial).length>0?`<button onclick="deleteAllUserFiles()" style="background:none;border:1px solid #553333;color:#cc5555;padding:8px 14px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#cc5555';this.style.background='#1a0808'" onmouseout="this.style.borderColor='#553333';this.style.background='none'">🗑️ Delete All</button>`:""}
-      </div>
-    </div>
-
-    <!-- Storage meter -->
-    ${storageBanner}
-
-    <!-- Drive link import -->
-    <div class="card" style="margin-bottom:14px;border-color:#4ECDC433">
-      <div style="font-size:13px;font-weight:bold;color:#4ECDC4;margin-bottom:10px">📎 Import from Google Drive</div>
-      <div style="font-size:12px;color:#555;margin-bottom:12px">Paste a Google Drive share link — accessible on any device.</div>
-      <div style="display:grid;gap:8px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <input id="drive-link-name" placeholder="File name (e.g. C++ Notes.pdf)" style="margin:0;font-size:12px"/>
-          <select id="drive-link-sub" style="margin:0;font-size:12px">${getSubjects().map(s=>`<option value="${s.id}">${s.icon} ${esc(s.name)}</option>`).join("")}</select>
-        </div>
-        <div style="display:flex;gap:8px">
-          <input id="drive-link-input" placeholder="https://drive.google.com/file/d/..." style="flex:1;margin:0;font-size:12px"/>
-          <button class="btn-gold" onclick="addDriveLink()" style="padding:10px 16px;white-space:nowrap;font-size:12px">+ Add</button>
-        </div>
+      <div class="fm-row">
+        <button class="fm-btn fm-primary" onclick="document.getElementById('file-input').click()">${I.up} Upload</button>
+        <button class="fm-btn" onclick="document.getElementById('folder-input').click()">${I.folder} Folder</button>
+        ${myCount>0?`<button class="fm-btn fm-danger" onclick="deleteAllUserFiles()">${I.trash} Delete all</button>`:""}
       </div>
     </div>
 
-    <!-- Drop zone -->
-    <div class="drop-zone" id="drop-zone"
+    <div class="fm-stats">
+      <div class="fm-stat"><b>${state.files.length}</b><span>TOTAL FILES</span></div>
+      <div class="fm-stat"><b>${qpCount}</b><span>QUESTION PAPERS</span></div>
+      <div class="fm-stat fm-store" ${pro?"":`onclick="openProModal()" style="cursor:pointer"`}>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+          <b style="font-size:15px">${pro?"☁️ 25 GB Cloud · PRO":"📁 Free · local storage"}</b>
+          <span>${pro?`${usedMB} MB used`:`${myCount}/5 files`}</span>
+        </div>
+        <div class="fm-bar"><i style="width:${Math.max(usedPct,2)}%;background:${barColor}"></i></div>
+        ${pro?"":`<span style="display:block;margin-top:8px"><a>Upgrade for 25 GB cloud sync →</a></span>`}
+      </div>
+    </div>
+
+    <div class="fm-drop" id="drop-zone"
+      onclick="document.getElementById('file-input').click()"
       ondragover="event.preventDefault();this.classList.add('drag-over')"
       ondragleave="this.classList.remove('drag-over')"
       ondrop="event.preventDefault();this.classList.remove('drag-over');handleFileSelect(event.dataTransfer.files)">
-      <div style="font-size:42px;margin-bottom:12px">📂</div>
-      <div style="font-size:15px;font-weight:bold;color:#ccc;margin-bottom:6px">Drop files here or click to browse</div>
-      <div style="font-size:12px;color:#444;margin-bottom:14px">PDF, Images, Excel, Word, CSV, TXT · ${pro?"Uploaded to cloud · Synced across all devices ☁️":"Saved locally · Upgrade to Pro for cloud backup ☁️"}</div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px">
-        <button class="btn-gold" onclick="event.stopPropagation();document.getElementById('file-input').click()" style="padding:9px 18px;font-size:12px">📄 Upload Files</button>
-        <button class="btn-ghost" onclick="event.stopPropagation();document.getElementById('folder-input').click()" style="padding:9px 18px;font-size:12px">📁 Upload Folder</button>
+      <div class="fm-drop-ic">${I.up}</div>
+      <div>
+        <div class="fm-drop-t">Drop files here or click to browse</div>
+        <div class="fm-drop-s">PDF, images, Word, Excel, PPT, TXT · ${pro?"Synced to cloud ☁️":"Saved on this device"}</div>
       </div>
-      <div style="margin-top:4px;display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap">
-        <div style="font-size:11px;color:#333">Assign to subject:</div>
-        <select id="file-sub-select" onclick="event.stopPropagation()" style="width:auto;padding:6px 10px;font-size:12px">
-          ${getSubjects().map(s=>`<option value="${s.id}">${s.icon} ${esc(s.name)}</option>`).join("")}
-        </select>
+      <div class="fm-drop-r" onclick="event.stopPropagation()">
+        <span style="font-size:11.5px;color:var(--fm-mute)">Add to</span>
+        <select id="file-sub-select">${subs.map(s=>`<option value="${s.id}">${s.icon} ${esc(s.name)}</option>`).join("")}</select>
       </div>
     </div>
 
-    <!-- Filters + Search -->
-    <div style="margin:18px 0 10px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <input placeholder="🔍 Search files..." oninput="state.fileSearch=this.value;render()" value="${esc(state.fileSearch)}" style="max-width:220px;padding:8px 12px;font-size:12px"/>
+    <details>
+      <summary><span style="color:#4ECDC4;display:flex">${I.link}</span> Import from Google Drive ${I.chev}</summary>
+      <div class="fm-drive">
+        <div style="font-size:12px;color:var(--fm-mute)">Paste a Drive share link — works on any device.</div>
+        <div class="fm-r2">
+          <input id="drive-link-name" placeholder="File name (e.g. C++ Notes.pdf)"/>
+          <select id="drive-link-sub">${subs.map(s=>`<option value="${s.id}">${s.icon} ${esc(s.name)}</option>`).join("")}</select>
+        </div>
+        <div class="fm-r3">
+          <input id="drive-link-input" placeholder="https://drive.google.com/file/d/..." style="flex:1"/>
+          <button class="fm-btn fm-primary" onclick="addDriveLink()">+ Add link</button>
+        </div>
+      </div>
+    </details>
+
+    <div class="fm-tools">
+      <div class="fm-search">${I.search}<input id="file-search" placeholder="Search files and notes…" value="${esc(state.fileSearch||"")}"
+        oninput="state.fileSearch=this.value;render();setTimeout(()=>{const e=document.getElementById('file-search');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}},60)"/></div>
+      <div class="fm-chips">
+        <button class="fm-chip fm-qp-btn ${state.fileQPOnly?"on":""}" onclick="state.fileQPOnly=!state.fileQPOnly;render()">📋 Question Papers</button>
+        ${chips}
+      </div>
     </div>
-    ${subFilterBtns}
 
-    <!-- Supported formats info -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-      ${[["📕","PDF"],["🖼️","Images"],["📊","Excel/CSV"],["📘","Word"],["📙","PPT"],["📄","Text"]].map(([ic,lb])=>`
-        <div style="background:#111;border:1px solid #1e1e2e;border-radius:8px;padding:5px 10px;font-size:11px;color:#555">${ic} ${lb}</div>`).join("")}
-    </div>
+    ${cards}
 
-    <!-- File cards -->
-    ${fileCards}
-
-    <!-- Sync status info -->
-    <div style="background:#0f0f18;border:1px solid #1e1e2e;border-radius:12px;padding:16px;margin-top:16px">
-      <div style="font-size:11px;color:#444;letter-spacing:1px;margin-bottom:12px">☁️ FILE SYNC</div>
+    <div class="fm-sync">
       ${AppStateShared.currentUser
-        ? `<div style="display:flex;align-items:flex-start;gap:10px">
-            <span style="font-size:22px;flex-shrink:0">✅</span>
-            <div style="font-size:12px;color:#888;line-height:1.9">
-              Files you upload are synced to your account via <b style="color:#06D6A0">Firebase</b>.<br>
-              Sign in on any device — your files will appear automatically. <b style="color:#EDE8E0">No browser limits.</b>
-            </div>
-           </div>`
-        : `<div style="display:flex;align-items:flex-start;gap:10px">
-            <span style="font-size:22px;flex-shrink:0">⚠️</span>
-            <div>
-              <div style="font-size:12px;color:#888;line-height:1.9;margin-bottom:10px">
-                Files are stored locally but <b style="color:#FF6B35">not synced across devices</b> until you sign in.<br>
-                Sign in with Google to link your uploads to your account.
-              </div>
-              <button onclick="googleSignIn()" style="background:linear-gradient(135deg,#4285F4,#34A853);border:none;color:#fff;padding:8px 18px;border-radius:8px;font-family:inherit;font-size:12px;cursor:pointer;font-weight:bold">
-                🔐 Sign in to sync files
-              </button>
-            </div>
-           </div>`}
+        ? `<span style="color:#06D6A0;display:flex">${I.cloud}</span><div>Signed in — your uploads sync to your account and appear on every device.</div>`
+        : `<span style="color:#FF6B35;display:flex">${I.cloud}</span><div>Files are stored on this device only. Sign in to sync them across devices.</div><button onclick="googleSignIn()">Sign in with Google</button>`}
     </div>
   </div>`;
 }

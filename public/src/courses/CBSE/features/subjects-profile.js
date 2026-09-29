@@ -334,140 +334,155 @@ async function renderProfile(){
   else if(pct>=40) rank="📚 Student";
   else if(pct>=20) rank="🌿 Learner";
 
-  // Next upcoming exam
   const nextExam=getSubjects().filter(s=>getDaysLeft(getExamDate(s.id))!==null&&getDaysLeft(getExamDate(s.id))>=0).slice().sort((a,b)=>getDaysLeft(getExamDate(a.id))-getDaysLeft(getExamDate(b.id)))[0]||null;
 
-  // Pro status details
   const proCache=_proCache||{};
   const proExpiresAt=proCache.expiresAt||0;
   const planType=proCache.planType||"monthly";
   const proExpiryStr=proExpiresAt>0?new Date(proExpiresAt).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}):"—";
-
-  // Member since
   const memberSince=AppStateShared.currentUser?.metadata?.creationTime
     ? new Date(AppStateShared.currentUser.metadata.creationTime).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})
     : null;
 
-  if(!AppStateShared.currentUser) return `<div class="fade-in">
-    <div class="card" style="text-align:center;padding:48px 20px">
-      <div style="font-size:64px;margin-bottom:16px">👤</div>
-      <div style="font-size:20px;font-weight:bold;color:#ccc;margin-bottom:8px">Your Study Profile</div>
-      <div style="font-size:13px;color:#555;margin-bottom:24px">Sign in to see personalised stats, achievements & AI insights</div>
-      <button onclick="googleSignIn()" style="background:linear-gradient(135deg,#4285F4,#34A853);border:none;color:#fff;padding:14px 28px;border-radius:12px;font-family:inherit;font-size:14px;cursor:pointer;font-weight:bold">🔐 Sign in with Google</button>
-    </div>
-    </div>`;
-  return `<div class="fade-in">
+  const css=`<style>
+.pf{--line:var(--border-2,#2a2a3a);--surf:var(--surface,#0f0f18);--mute:var(--text-5,#777);--txt:var(--text,#eee);--acc:var(--gold,#FFE66D);max-width:760px;margin:0 auto}
+.pf *{box-sizing:border-box}
+.pf-card{background:var(--glass-bg,var(--surf));border:1px solid var(--line);border-radius:20px;padding:20px;margin-bottom:14px}
+.pf-card.click{cursor:pointer;transition:.2s}
+.pf-card.click:hover{transform:translateY(-2px);border-color:var(--acc)}
+.pf-lbl{font-size:10px;font-weight:800;letter-spacing:1.6px;color:var(--mute)}
+.pf-ch{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px}
+.pf-more{font-size:11.5px;color:var(--mute);font-weight:600}
+.pf-hero{position:relative;overflow:hidden;background:radial-gradient(circle at 0% 0%,color-mix(in srgb,var(--acc) 16%,transparent),transparent 60%),var(--glass-bg,var(--surf));border-color:color-mix(in srgb,var(--acc) 25%,var(--line))}
+.pf-id{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.pf-avw{position:relative;flex-shrink:0}
+.pf-av{width:80px;height:80px;border-radius:50%;border:3px solid var(--acc);object-fit:cover;display:block;background:var(--surface-3,#1a1a24)}
+.pf-avb{position:absolute;bottom:-3px;right:-3px;background:var(--acc);color:#12100a;border-radius:50%;width:26px;height:26px;display:grid;place-items:center;font-size:13px;border:2px solid var(--bg,#08080f)}
+.pf-nm{font-size:22px;font-weight:800;letter-spacing:-.4px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-ms{font-size:10.5px;color:var(--mute);margin-top:4px;letter-spacing:.5px;font-weight:600}
+.pf-rank{display:inline-block;margin-top:10px;background:color-mix(in srgb,var(--acc) 14%,transparent);border:1px solid color-mix(in srgb,var(--acc) 35%,transparent);color:var(--acc);padding:4px 12px;border-radius:99px;font-size:11px;font-weight:800}
+.pf-sub{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.pf-sub b{display:block;font-size:17px;font-weight:800}
+.pf-sub span{font-size:12px;color:var(--mute)}
+.pf-sub .ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:20px;flex-shrink:0}
+.pf-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:520px){.pf-stats{gap:8px}}
+.pf-stat{--c:#FFE66D;background:var(--glass-bg,var(--surf));border:1px solid var(--line);border-radius:18px;padding:16px 8px;text-align:center;cursor:pointer;transition:.2s;position:relative;overflow:hidden}
+.pf-stat:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--c) 16%,transparent),transparent 70%)}
+.pf-stat>*{position:relative}
+.pf-stat:hover{transform:translateY(-2px)}
+.pf-stat .ic{font-size:22px}
+.pf-stat b{display:block;font-size:24px;font-weight:800;color:var(--c);letter-spacing:-1px;margin:6px 0 2px}
+.pf-stat span{font-size:9.5px;color:var(--mute);letter-spacing:1px;font-weight:700}
+.pf-ai{border-color:color-mix(in srgb,#4ECDC4 30%,var(--line))}
+.pf-ai-t{font-size:12.5px;font-weight:800;color:#4ECDC4;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.pf-tag{font-size:9px;font-weight:800;background:color-mix(in srgb,var(--txt) 10%,transparent);color:var(--mute);border-radius:99px;padding:2px 8px}
+.pf-ai-b{font-size:13px;color:var(--text-3,#aaa);line-height:1.75;padding:14px;background:color-mix(in srgb,var(--txt) 4%,transparent);border-radius:14px}
+.pf-next{display:flex;align-items:center;gap:16px}
+.pf-next .ic{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:28px;background:color-mix(in srgb,#FF6B35 14%,transparent);flex-shrink:0}
+.pf-next b{display:block;font-size:15.5px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-next span{font-size:11.5px;color:var(--mute)}
+.pf-days{text-align:right;flex-shrink:0}
+.pf-days b{font-size:36px;font-weight:800;color:#FF6B35;letter-spacing:-2px;line-height:1}
+.pf-days small{display:block;font-size:9.5px;color:var(--mute);letter-spacing:1px;font-weight:700;margin-top:2px}
+.pf-row{margin-bottom:14px}
+.pf-row:last-child{margin:0}
+.pf-row-h{display:flex;justify-content:space-between;font-size:13px;margin-bottom:7px;color:var(--text-2,#ccc);font-weight:600}
+.pf-row-h b{color:var(--c);font-weight:800}
+.pf-bar{height:7px;border-radius:99px;background:color-mix(in srgb,var(--txt) 8%,transparent);overflow:hidden}
+.pf-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 55%,transparent),var(--c))}
+.pf-badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:10px}
+.pf-badge{text-align:center;padding:14px 8px;border-radius:16px;border:1px solid var(--line);background:color-mix(in srgb,var(--txt) 4%,transparent)}
+.pf-badge .i{font-size:28px;margin-bottom:6px}
+.pf-badge b{display:block;font-size:11px;color:var(--txt);line-height:1.3}
+.pf-badge span{font-size:9.5px;color:var(--mute)}
+.pf-out{width:100%;padding:13px;border-radius:14px;border:1px solid #FF6B3544;background:transparent;color:#FF6B35;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer;transition:.2s}
+.pf-out:hover{background:#FF6B3514;border-color:#FF6B35}
+.pf-g{border:none;background:linear-gradient(135deg,#4285F4,#34A853);color:#fff;padding:14px 28px;border-radius:14px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 8px 24px -8px #4285F4aa}
+</style>`;
 
-    <!-- ── Identity Card (non-clickable, it's the hero) ── -->
-    <div class="card" style="margin-bottom:16px;border-color:#FFE66D22;padding:24px 20px">
-      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
-        <div style="position:relative;flex-shrink:0">
-          <img src="${esc(AppStateShared.currentUser.photoURL||"")}" onerror="this.style.display='none'" style="width:72px;height:72px;border-radius:50%;border:2px solid #FFE66D44;object-fit:cover"/>
-          <div style="position:absolute;bottom:-4px;right:-4px;background:#FFE66D;color:#08080f;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px">${pct>=80?"🏆":pct>=50?"⭐":"📚"}</div>
+  if(!AppStateShared.currentUser) return `${css}<div class="pf fade-in">
+    <div class="pf-card" style="text-align:center;padding:52px 20px">
+      <div style="font-size:64px;margin-bottom:14px">👤</div>
+      <div style="font-size:22px;font-weight:800;color:var(--txt);margin-bottom:8px">Your Study Profile</div>
+      <div style="font-size:13px;color:var(--mute);margin-bottom:24px">Sign in to see personalised stats, achievements &amp; AI insights</div>
+      <button class="pf-g" onclick="googleSignIn()">🔐 Sign in with Google</button>
+    </div>
+  </div>`;
+
+  return `${css}<div class="pf fade-in">
+
+    <div class="pf-card pf-hero">
+      <div class="pf-id">
+        <div class="pf-avw">
+          <img class="pf-av" src="${esc(AppStateShared.currentUser.photoURL||"")}" onerror="this.style.display='none'"/>
+          <div class="pf-avb">${pct>=80?"🏆":pct>=50?"⭐":"📚"}</div>
         </div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:20px;font-weight:700;letter-spacing:-0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(AppStateShared.currentUser.displayName||"Student")}</div>
-          ${memberSince?`<div style="font-size:10px;color:#3a3a4a;margin-top:3px;letter-spacing:0.3px">MEMBER SINCE ${memberSince.toUpperCase()}</div>`:""}
-          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <span style="background:#FFE66D14;border:1px solid #FFE66D33;color:#FFE66D;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.5px">${rank}</span>
-          </div>
+          <div class="pf-nm">${esc(AppStateShared.currentUser.displayName||"Student")}</div>
+          ${memberSince?`<div class="pf-ms">MEMBER SINCE ${memberSince.toUpperCase()}</div>`:""}
+          <span class="pf-rank">${rank}</span>
         </div>
       </div>
     </div>
 
-    <!-- ── Subscription ── -->
-    <div class="card" onclick="${pro?"":"openProModal()"}" style="margin-bottom:16px;border-color:${pro?"#FFE66D22":"#2a2a3a"};cursor:${pro?"default":"pointer"}">
-      <div style="display:flex;justify-content:space-between;align-items:center">
+    <div class="pf-card ${pro?"":"click"}" onclick="${pro?"":"openProModal()"}" ${pro?`style="border-color:color-mix(in srgb,var(--acc) 35%,var(--line))"`:""}>
+      <div class="pf-sub">
         <div>
-          <div style="font-size:11px;color:#444;letter-spacing:1px;font-weight:600;margin-bottom:5px">SUBSCRIPTION</div>
-          <div style="font-size:15px;font-weight:700;color:${pro?"#FFE66D":"#ccc"}">${pro?"Pro Plan":"Free Plan"}</div>
-          <div style="font-size:11px;color:#555;margin-top:3px">${pro?`<span style="text-transform:capitalize">${esc(planType)}</span> · Renews ${proExpiryStr}`:"Tap to unlock Pro features →"}</div>
+          <div class="pf-lbl" style="margin-bottom:6px">SUBSCRIPTION</div>
+          <b style="color:${pro?"var(--acc)":"var(--txt)"}">${pro?"Pro Plan":"Free Plan"}</b>
+          <span>${pro?`<span style="text-transform:capitalize">${esc(planType)}</span> · Renews ${proExpiryStr}`:"Tap to unlock Pro features →"}</span>
         </div>
-        ${pro
-          ? `<div style="width:36px;height:36px;background:linear-gradient(135deg,#FFE66D,#ffb700);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⭐</div>`
-          : `<div style="width:36px;height:36px;background:#1a1a2a;border:1px solid #2e2e4e;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🔒</div>`}
+        <div class="ic" style="${pro?"background:linear-gradient(135deg,#FFE66D,#ffb700)":"background:color-mix(in srgb,var(--txt) 8%,transparent)"}">${pro?"⭐":"🔒"}</div>
       </div>
     </div>
 
-    <!-- ── Stats Row (clickable → analytics) ── -->
-    <div class="grid-3" style="margin-bottom:16px">
-      ${[["📊",pct+"%","Completed","analytics"],["⏱️",totalHours+"h","Hours Logged","log"],["🔥",streak+"d","Day Streak","log"]].map(([ic,v,l,view])=>`
-      <div class="stat-box" style="padding:18px 10px;cursor:pointer" onclick="switchView('${view}')">
-        <div style="font-size:22px;margin-bottom:6px">${ic}</div>
-        <div style="font-size:22px;font-weight:700;color:#FFE66D;margin-bottom:4px">${v}</div>
-        <div style="font-size:9px;color:#444;letter-spacing:1px;text-transform:uppercase">${l}</div>
-      </div>`).join("")}
+    <div class="pf-stats">
+      ${[["📊",pct+"%","COMPLETED","analytics","#FFE66D"],["⏱️",totalHours+"h","HOURS LOGGED","log","#06D6A0"],["🔥",streak+"d","DAY STREAK","log","#FF6B35"]].map(([ic,v,l,view,c])=>`
+      <div class="pf-stat" style="--c:${c}" onclick="switchView('${view}')"><span class="ic">${ic}</span><b>${v}</b><span>${l}</span></div>`).join("")}
     </div>
 
-    <!-- ── AI Study Insights ── -->
-    <div class="card" onclick="${pro?"generateProfileInsight()":"openProModal()"}" style="margin-bottom:16px;border-color:#4ECDC422;cursor:pointer">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="font-size:13px;font-weight:700;color:#4ECDC4;letter-spacing:0.3px">AI STUDY INSIGHTS</div>
-          ${pro?"":`<span style="font-size:9px;background:#1a1a2a;color:#555;border-radius:6px;padding:1px 7px;font-weight:700">PRO</span>`}
-        </div>
-        <span style="font-size:11px;color:#4ECDC466">${pro?"Tap to refresh →":"Upgrade →"}</span>
+    <div class="pf-card pf-ai click" onclick="${pro?"generateProfileInsight()":"openProModal()"}">
+      <div class="pf-ch" style="margin-bottom:12px">
+        <div class="pf-ai-t">✨ AI STUDY INSIGHTS ${pro?"":`<span class="pf-tag">PRO</span>`}</div>
+        <span class="pf-more" style="color:#4ECDC4">${pro?"Tap to refresh →":"Upgrade →"}</span>
       </div>
-      <div id="profile-insight" style="font-size:13px;color:#888;line-height:1.7;padding:12px;background:#0a0a12;border-radius:8px">
+      <div id="profile-insight" class="pf-ai-b">
         ${pro
           ? (pct>=80?"🔥 Excellent! You're well-prepared. Focus on weak spots and do timed mock tests.":
              pct>=50?"📈 Good progress! Keep consistent — daily small sessions beat cramming.":
              "💪 Start with your nearest exam subject. Every topic checked builds momentum!")
-          : `<span style="color:#3a3a4a">Unlock AI-powered personalised study insights tailored to your progress and upcoming exams.</span>`}
+          : `<span style="color:var(--mute)">Unlock AI-powered personalised study insights tailored to your progress and upcoming exams.</span>`}
       </div>
     </div>
 
-    <!-- ── Next Exam Countdown ── -->
-    ${nextExam?`<div class="card" onclick="switchView('subjects')" style="margin-bottom:16px;border-color:#FF6B3522;cursor:pointer">
-      <div style="font-size:11px;color:#444;letter-spacing:1px;font-weight:600;margin-bottom:12px">NEXT EXAM</div>
-      <div style="display:flex;align-items:center;gap:16px">
-        <div style="font-size:32px;line-height:1">${nextExam.icon}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(nextExam.name)}</div>
-          <div style="font-size:11px;color:#555;margin-top:3px">${esc(getExamDate(nextExam.id))}</div>
-        </div>
-        ${getDaysLeft(getExamDate(nextExam.id))!==null?`<div style="text-align:right;flex-shrink:0">
-          <div style="font-size:30px;font-weight:700;color:#FF6B35;line-height:1">${getDaysLeft(getExamDate(nextExam.id))}</div>
-          <div style="font-size:9px;color:#555;letter-spacing:1px;text-transform:uppercase">days left</div>
-        </div>`:""}
+    ${nextExam?`<div class="pf-card click" onclick="switchView('subjects')" style="border-color:color-mix(in srgb,#FF6B35 30%,var(--line))">
+      <div class="pf-lbl" style="margin-bottom:12px">NEXT EXAM</div>
+      <div class="pf-next">
+        <div class="ic">${nextExam.icon}</div>
+        <div style="flex:1;min-width:0"><b>${esc(nextExam.name)}</b><span>${esc(getExamDate(nextExam.id))}</span></div>
+        ${getDaysLeft(getExamDate(nextExam.id))!==null?`<div class="pf-days"><b>${getDaysLeft(getExamDate(nextExam.id))}</b><small>DAYS LEFT</small></div>`:""}
       </div>
     </div>`:""}
 
-    <!-- ── Subject Progress ── -->
-    <div class="card" onclick="switchView('subjects')" style="margin-bottom:16px;cursor:pointer">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div style="font-size:11px;color:#444;letter-spacing:1px;font-weight:600">SUBJECT PROGRESS</div>
-        <span style="font-size:11px;color:#444">View all →</span>
-      </div>
-      ${subProgress.map(s=>`<div style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-          <span style="font-size:13px">${s.icon} ${s.name}</span>
-          <span style="font-size:12px;color:${s.color};font-weight:700">${s.pct}%</span>
-        </div>
-        <div class="pbar"><div class="pfill" style="width:${s.pct}%;background:linear-gradient(90deg,${s.color}66,${s.color})"></div></div>
+    <div class="pf-card click" onclick="switchView('subjects')">
+      <div class="pf-ch"><div class="pf-lbl">SUBJECT PROGRESS</div><span class="pf-more">View all →</span></div>
+      ${subProgress.map(s=>`<div class="pf-row" style="--c:${s.color}">
+        <div class="pf-row-h"><span>${s.icon} ${esc(s.name)}</span><b>${s.pct}%</b></div>
+        <div class="pf-bar"><i style="width:${s.pct}%"></i></div>
       </div>`).join("")}
     </div>
 
-    <!-- ── Achievements ── -->
-    <div class="card" onclick="switchView('analytics')" style="margin-bottom:16px;cursor:pointer">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div style="font-size:11px;color:#444;letter-spacing:1px;font-weight:600">ACHIEVEMENTS</div>
-        <span style="font-size:10px;color:#444">${badges.length} earned</span>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">
-        ${badges.map(b=>`<div style="background:#111122;border:1px solid #1e1e2e;border-radius:10px;padding:10px 12px;text-align:center;min-width:82px">
-          <div style="font-size:24px;margin-bottom:5px">${b.icon}</div>
-          <div style="font-size:10px;font-weight:700;color:#ccc;line-height:1.3">${b.name}</div>
-          <div style="font-size:9px;color:#3a3a4a;margin-top:2px">${b.desc}</div>
-        </div>`).join("")}
+    <div class="pf-card click" onclick="switchView('analytics')">
+      <div class="pf-ch"><div class="pf-lbl">ACHIEVEMENTS</div><span class="pf-more">${badges.length} earned</span></div>
+      <div class="pf-badges">
+        ${badges.map(b=>`<div class="pf-badge"><div class="i">${b.icon}</div><b>${b.name}</b><span>${b.desc}</span></div>`).join("")}
       </div>
     </div>
 
-    <!-- ── Sign Out ── -->
-    <button class="btn-danger" onclick="googleSignOut()" style="width:100%;padding:12px;margin-bottom:4px;font-size:13px;letter-spacing:0.3px">Sign Out</button>
+    <button class="pf-out" onclick="googleSignOut()">Sign Out</button>
   </div>`;
 }
-
 
 
 async function generateProfileInsight(){

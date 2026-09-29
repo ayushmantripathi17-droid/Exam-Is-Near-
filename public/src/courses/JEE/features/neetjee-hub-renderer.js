@@ -72,33 +72,44 @@ function renderNeetJee(){
                   : isNEET ? 'Specialised tools for NEET UG preparation'
                   :          'Specialised tools for medical & engineering exam prep';
 
-  return `<div class="fade-in">
-    <!-- Hero -->
-    <div style="background:linear-gradient(135deg,#0f0f1a,#12101a);border:1px solid #1e1e2e;border-radius:18px;padding:22px;margin-bottom:18px;position:relative;overflow:hidden">
-      <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,#FFE66D08,transparent 70%);pointer-events:none"></div>
-      <div style="position:absolute;bottom:-20px;left:-20px;width:100px;height:100px;background:radial-gradient(circle,#06D6A008,transparent 70%);pointer-events:none"></div>
-      <div style="font-size:22px;font-weight:800;background:${heroGrad};-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px">${heroTitle}</div>
-      <div style="font-size:12px;color:#444;margin-bottom:16px">${heroSub}</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${isNEET||(!isJEE&&!isNEET)?`<div style="background:#06D6A022;border:1px solid #06D6A033;border-radius:8px;padding:6px 12px;font-size:11px;color:#06D6A0;font-weight:600">🩺 NEET 2026</div>`:''}
-        ${isJEE||(!isJEE&&!isNEET)?`<div style="background:#4ECDC422;border:1px solid #4ECDC433;border-radius:8px;padding:6px 12px;font-size:11px;color:#4ECDC4;font-weight:600">⚡ JEE 2026</div>`:''}
+  const css=`<style>
+.hb{--line:var(--border-2,#2a2a3a);--surf:var(--surface,#0f0f18);--mute:var(--text-5,#777);--txt:var(--text,#eee);max-width:820px;margin:0 auto}
+.hb *{box-sizing:border-box}
+.hb-hero{position:relative;overflow:hidden;padding:24px 22px;margin-bottom:16px;border-radius:24px;border:1px solid var(--line);background:radial-gradient(circle at 100% 0%,color-mix(in srgb,${isJEE?"#4ECDC4":"#06D6A0"} 22%,transparent),transparent 60%),radial-gradient(circle at 0% 100%,color-mix(in srgb,#FFE66D 12%,transparent),transparent 55%),var(--glass-bg,var(--surf))}
+.hb-t{font-size:28px;font-weight:800;letter-spacing:-.8px;background:${heroGrad};-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1}
+.hb-s{font-size:13px;color:var(--mute);margin:8px 0 16px}
+.hb-tags{display:flex;gap:8px;flex-wrap:wrap}
+.hb-tag{border:1px solid;border-radius:99px;padding:5px 13px;font-size:11.5px;font-weight:800}
+.hb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.hb-f{--c:#FFE66D;position:relative;overflow:hidden;cursor:pointer;padding:18px;border-radius:20px;border:1px solid var(--line);background:radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--c) 16%,transparent),transparent 62%),var(--glass-bg,var(--surf));transition:transform .2s,border-color .2s,box-shadow .2s;animation:hbIn .35s ease both}
+.hb-f:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--c) 60%,var(--line));box-shadow:0 14px 30px -14px color-mix(in srgb,var(--c) 60%,transparent)}
+@keyframes hbIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hb-fh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.hb-ic{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;font-size:24px;background:color-mix(in srgb,var(--c) 16%,transparent)}
+.hb-f b{display:block;font-size:15px;font-weight:800;color:var(--c);margin-bottom:4px}
+.hb-f span.d{font-size:12px;color:var(--mute);line-height:1.55}
+.hb-bd{font-size:10px;font-weight:800;border-radius:99px;padding:3px 9px;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);border:1px solid color-mix(in srgb,var(--c) 30%,transparent)}
+</style>`;
+  const mkBadge2 = (id) => {
+    if(id==='mistakes') return `<span class="hb-bd">${njState.mistakes.length}</span>`;
+    if(id==='srs') return `<span class="hb-bd">${getDueSRSCards().length} due</span>`;
+    return '';
+  };
+  return `${css}<div class="hb fade-in">
+    <div class="hb-hero">
+      <div class="hb-t">${heroTitle}</div>
+      <div class="hb-s">${heroSub}</div>
+      <div class="hb-tags">
+        ${isNEET||(!isJEE&&!isNEET)?`<span class="hb-tag" style="color:#06D6A0;border-color:#06D6A055;background:#06D6A014">🩺 NEET 2026</span>`:''}
+        ${isJEE||(!isJEE&&!isNEET)?`<span class="hb-tag" style="color:#4ECDC4;border-color:#4ECDC455;background:#4ECDC414">⚡ JEE 2026</span>`:''}
       </div>
     </div>
-
-    <!-- Feature grid -->
-    <div class="grid-2" style="gap:10px">
-      ${visibleFeatures.map(f=>`
-        <div onclick="njState.tab='${f.id}';switchView('neetjee')"
-          style="background:${f.bg};border:1px solid ${f.color}22;border-radius:14px;padding:16px;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden"
-          onmouseover="this.style.borderColor='${f.color}55';this.style.transform='translateY(-2px)'"
-          onmouseout="this.style.borderColor='${f.color}22';this.style.transform='translateY(0)'">
-          <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,${f.color}88,transparent)"></div>
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
-            <div style="font-size:26px">${f.icon}</div>
-            ${mkBadge(f.id)}
-          </div>
-          <div style="font-size:13px;font-weight:700;color:${f.color};margin-bottom:3px">${f.label}</div>
-          <div style="font-size:11px;color:#444;line-height:1.5">${f.desc}</div>
+    <div class="hb-grid">
+      ${visibleFeatures.map((f,i)=>`
+        <div class="hb-f" style="--c:${f.color};animation-delay:${i*0.05}s" onclick="njState.tab='${f.id}';switchView('neetjee')">
+          <div class="hb-fh"><div class="hb-ic">${f.icon}</div>${mkBadge2(f.id)}</div>
+          <b>${f.label}</b>
+          <span class="d">${f.desc}</span>
         </div>`).join('')}
     </div>
   </div>`;
@@ -106,13 +117,10 @@ function renderNeetJee(){
 
 function wrapNJ(inner, tab){
   return `<div class="fade-in">
-    <button onclick="history.pushState(null,'',location.href);njState.tab='home';switchView('neetjee')" style="background:none;border:none;color:#555;font-size:12px;cursor:pointer;padding:0;margin-bottom:14px;display:flex;align-items:center;gap:6px;font-family:inherit;transition:color 0.2s" onmouseover="this.style.color='#ccc'" onmouseout="this.style.color='#555'">
-      ← Back to Hub
-    </button>
+    <button onclick="history.pushState(null,'',location.href);njState.tab='home';switchView('neetjee')" style="display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border-2,#2a2a3a);background:var(--surface,#0f0f18);color:var(--text-3,#aaa);padding:9px 15px;border-radius:12px;font-weight:700;font-size:12.5px;font-family:inherit;cursor:pointer;margin-bottom:16px">← Back to Hub</button>
     ${inner}
   </div>`;
 }
-
 
 export { NJ_FEATURES, renderNeetJee, wrapNJ };
 

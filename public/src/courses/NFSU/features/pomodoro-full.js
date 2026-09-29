@@ -332,144 +332,174 @@ function renderPomodoro(){
   const r=90, circumference=2*Math.PI*r;
   const offset=circumference*(1-pct);
   const ringColor=pomState.mode==="work"?"#FFE66D":pomState.mode==="longbreak"?"#C77DFF":"#06D6A0";
+  const ringColor2=pomState.mode==="work"?"#ff6b35":pomState.mode==="longbreak"?"#a78bfa":"#059669";
   const activeSub=subs.find(sub=>sub.id===pomState.subject);
   const isLongBreak=pomState.mode==="longbreak";
+  const modeLabel=pomState.mode==="work"?"🍅 Focus Time":pomState.mode==="longbreak"?"🏆 Long Break":"☕ Short Break";
+  const statusText=pomState.running?"● RUNNING":pomState.mode==="work"?"READY":"PAUSED";
+  const dotOn=(i)=>i<=(pomState.sessions%4)||(pomState.sessions>0&&pomState.sessions%4===0&&i===4);
 
-  // Break overlay
   const breakOverlayHTML=pomState.breakOverlay?`
-    <div style="position:fixed;inset:0;background:#00000099;z-index:9998;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)">
-      <div style="background:#0f0f18;border:2px solid ${isLongBreak?'#C77DFF':'#06D6A0'};border-radius:20px;padding:40px 32px;text-align:center;max-width:380px;width:92%;animation:fadeInUp 0.3s ease">
+    <div class="pm-ovl">
+      <div class="pm-ovl-box" style="--bc:${isLongBreak?'#C77DFF':'#06D6A0'}">
         <div style="font-size:60px;margin-bottom:12px;animation:float 2s ease-in-out infinite">${isLongBreak?"🏆":"☕"}</div>
-        <div style="font-size:22px;font-weight:bold;color:${isLongBreak?'#C77DFF':'#06D6A0'};margin-bottom:6px">${isLongBreak?"Long Break Earned!":"Session Complete!"}</div>
-        <div style="font-size:13px;color:#888;margin-bottom:4px">Session <b style="color:#FFE66D">${pomState.sessions}</b> done${activeSub?" · "+esc(activeSub.icon+" "+activeSub.name):""}</div>
-        ${isLongBreak?`<div style="font-size:12px;color:#C77DFF;margin-bottom:4px;font-weight:bold">🎉 4 sessions completed! You've earned a long break!</div>`:""}
-        <div style="font-size:13px;color:#555;margin-bottom:28px;line-height:1.8">${isLongBreak?"Enjoy a well-deserved "+pomState.longBreak+"-minute break.":"You've earned a "+pomState.shortBreak+"-minute break.<br>Your brain will thank you!"}</div>
-        <div style="font-size:11px;color:#333;font-style:italic;margin-bottom:20px;padding:10px;background:#0a0a12;border-radius:8px">"${POM_QUOTES[pomState.quoteIdx]}"</div>
+        <div style="font-size:22px;font-weight:800;color:var(--bc);margin-bottom:6px">${isLongBreak?"Long Break Earned!":"Session Complete!"}</div>
+        <div style="font-size:13px;color:var(--text-4,#888);margin-bottom:4px">Session <b style="color:#FFE66D">${pomState.sessions}</b> done${activeSub?" · "+esc(activeSub.icon+" "+activeSub.name):""}</div>
+        ${isLongBreak?`<div style="font-size:12px;color:#C77DFF;margin-bottom:4px;font-weight:700">🎉 4 sessions completed! You've earned a long break!</div>`:""}
+        <div style="font-size:13px;color:var(--text-5,#777);margin-bottom:22px;line-height:1.8">${isLongBreak?"Enjoy a well-deserved "+pomState.longBreak+"-minute break.":"You've earned a "+pomState.shortBreak+"-minute break.<br>Your brain will thank you!"}</div>
+        <div style="font-size:12px;color:var(--text-5,#777);font-style:italic;margin-bottom:20px;padding:12px;background:color-mix(in srgb,var(--text,#eee) 5%,transparent);border-radius:12px">"${POM_QUOTES[pomState.quoteIdx]}"</div>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-          <button class="btn-gold" onclick="pomStartBreak()" style="padding:13px 26px;font-size:14px">${isLongBreak?"🏆":"☕"} Start Break (${isLongBreak?pomState.longBreak:pomState.shortBreak} min)</button>
-          <button class="btn-ghost" onclick="pomSkipBreak()" style="padding:13px 20px;font-size:13px;color:#FF6B35;border-color:#FF6B3544">⏭ Skip Break</button>
+          <button class="pm-btn p" onclick="pomStartBreak()">${isLongBreak?"🏆":"☕"} Start Break (${isLongBreak?pomState.longBreak:pomState.shortBreak} min)</button>
+          <button class="pm-btn" onclick="pomSkipBreak()" style="color:#FF6B35;border-color:#FF6B3555">⏭ Skip Break</button>
         </div>
       </div>
-    </div>`:""
+    </div>`:"";
 
   const subjectStats=subs.filter(s=>pomState.subjectHours[s.id]>0).map(s=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#0a0a12;border-radius:8px;border:1px solid #1e1e2e">
-      <span style="font-size:18px">${s.icon}</span>
+    <div class="pm-row" style="--c:${s.color}">
+      <span class="pm-row-ic">${s.icon}</span>
       <div style="flex:1;min-width:0">
-        <div style="font-size:12px;color:#ccc;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.name)}</div>
-        <div style="height:3px;background:#111;border-radius:2px;margin-top:5px;overflow:hidden">
-          <div style="height:100%;width:${Math.min(100,(pomState.subjectHours[s.id]||0)/3600*20)}%;background:${s.color};border-radius:2px;transition:width 0.5s"></div>
-        </div>
+        <div class="pm-row-n">${esc(s.name)}</div>
+        <div class="pm-mini"><i style="width:${Math.min(100,(pomState.subjectHours[s.id]||0)/3600*20)}%"></i></div>
       </div>
-      <div style="font-size:13px;font-weight:bold;color:${s.color};flex-shrink:0">${pomGetSubjectHoursFormatted(s.id)}</div>
+      <div class="pm-row-v">${pomGetSubjectHoursFormatted(s.id)}</div>
     </div>`).join("");
 
-  // Recent session log (last 5)
-  const recentLog = pomState.sessionLog.filter(l=>l.mode==="work").slice(-5).reverse();
+  const recentLog=pomState.sessionLog.filter(l=>l.mode==="work").slice(-5).reverse();
 
-  return`${breakOverlayHTML}
-  <div id="pom-fullscreen-wrap" style="background:#08080f;min-height:100%">
-  <div class="fade-in" style="width:100%;padding:22px 24px 40px">
+  const css=`<style>
+.pm{--line:var(--border-2,#2a2a3a);--surf:var(--surface,#0f0f18);--mute:var(--text-5,#777);--txt:var(--text,#eee);--acc:var(--gold,#FFE66D);--rc:${ringColor};width:100%;padding:8px 4px 40px}
+.pm *{box-sizing:border-box}
+.pm-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.pm-h1{font-size:26px;font-weight:800;letter-spacing:-.5px;color:var(--txt);line-height:1.1}
+.pm-h2{font-size:13px;color:var(--mute);margin-top:6px}
+.pm-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--mute)}
+.pm-tools b{font-size:15px}
+.pm-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:var(--surf);color:var(--text-2,#ccc);padding:10px 16px;border-radius:12px;font-weight:700;font-size:13px;font-family:inherit;cursor:pointer;transition:.2s}
+.pm-btn:hover{border-color:var(--acc);transform:translateY(-1px)}
+.pm-btn.p{background:linear-gradient(135deg,#FFE66D,#ffb700);color:#12100a;border-color:transparent;box-shadow:0 6px 18px -6px #FFB70088}
+.pm-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.pm-grid{display:grid;grid-template-columns:minmax(300px,440px) 1fr;gap:18px;align-items:start}
+@media(max-width:860px){.pm-grid{grid-template-columns:1fr}}
+.pm-card{background:var(--glass-bg,var(--surf));border:1px solid var(--line);border-radius:20px;padding:20px}
+.pm-lbl{font-size:10px;font-weight:800;letter-spacing:1.6px;color:var(--mute);margin-bottom:12px}
+.pm-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
+.pm-pre{border:1px solid var(--line);background:var(--surf);color:var(--mute);padding:9px 4px;border-radius:12px;font-family:inherit;font-size:11.5px;font-weight:600;cursor:pointer;transition:.2s;text-align:center}
+.pm-pre small{display:block;font-size:9.5px;opacity:.7;margin-top:2px}
+.pm-pre.on{border-color:var(--rc);color:var(--rc);background:color-mix(in srgb,var(--rc) 14%,var(--surf));font-weight:800}
+.pm-timer{text-align:center;padding:26px 20px;border-color:color-mix(in srgb,var(--rc) 35%,var(--line));background:radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--rc) 14%,transparent),transparent 65%),var(--glass-bg,var(--surf))}
+.pm-mode{font-size:11px;letter-spacing:3px;color:var(--text-4,#888);text-transform:uppercase;margin-bottom:14px;font-weight:700}
+.pm-ringw{position:relative;display:inline-block;margin-bottom:16px;max-width:100%}
+.pm-ringw svg{display:block;max-width:100%;height:auto}
+.pm-ringt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#pom-display{font-size:56px;font-weight:800;color:var(--rc);font-family:'JetBrains Mono',monospace;line-height:1;letter-spacing:-2px;text-shadow:0 0 30px color-mix(in srgb,var(--rc) 40%,transparent)}
+#pom-status{font-size:10px;color:var(--mute);margin-top:8px;letter-spacing:2px;font-weight:700}
+.pm-task{width:100%;text-align:center;font-size:13px;border-radius:12px;padding:11px 13px;margin:0 0 16px}
+.pm-ctl{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.pm-ctl .pm-btn.p{padding:12px 30px;font-size:14px}
+.pm-ctl .pm-btn{padding:12px 20px;font-size:14px}
+.pm-hint{font-size:10px;color:var(--text-7,#666);margin-top:12px;letter-spacing:1px}
+.pm-dots{display:flex;justify-content:center;gap:8px;margin-top:18px}
+.pm-dots i{width:10px;height:10px;border-radius:50%;background:color-mix(in srgb,var(--txt) 12%,transparent);transition:.4s}
+.pm-dots i.on{background:#FFE66D;box-shadow:0 0 8px #FFE66D99}
+.pm-cap{font-size:10px;color:var(--mute);margin-top:7px;letter-spacing:1px}
+.pm-quote{margin-top:12px;padding:12px 16px;border:1px solid var(--line);border-radius:14px;text-align:center;font-size:12px;color:var(--mute);font-style:italic}
+.pm-how{margin-top:14px;font-size:12.5px;color:var(--mute);line-height:2}
+.pm-how b{color:var(--txt)}
+.pm-side{display:flex;flex-direction:column;gap:14px}
+.pm-subs{display:flex;flex-wrap:wrap;gap:8px}
+.pm-sub{--c:#7C6CF0;border:1px solid var(--line);background:var(--surf);color:var(--mute);padding:9px 14px;border-radius:99px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:.2s}
+.pm-sub:hover{color:var(--txt);border-color:var(--c)}
+.pm-sub.on{border-color:var(--c);color:var(--c);background:color-mix(in srgb,var(--c) 16%,var(--surf));box-shadow:0 6px 16px -8px var(--c);font-weight:800}
+.pm-cur{margin-top:14px;padding:12px 14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--c) 30%,var(--line));background:color-mix(in srgb,var(--c) 8%,transparent);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.pm-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin-bottom:8px}
+.pm-row-ic{font-size:19px}
+.pm-row-n{font-size:12.5px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm-mini{height:4px;border-radius:99px;background:color-mix(in srgb,var(--txt) 8%,transparent);margin-top:6px;overflow:hidden}
+.pm-mini i{display:block;height:100%;background:var(--c);border-radius:99px;transition:width .5s}
+.pm-row-v{font-size:13px;font-weight:800;color:var(--c);flex-shrink:0}
+.pm-empty{text-align:center;padding:30px 0;color:var(--mute)}
+.pm-empty b{display:block;color:var(--txt);margin:8px 0 3px}
+.pm-log{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:color-mix(in srgb,var(--txt) 4%,transparent);margin-bottom:6px}
+.pm-ovl{position:fixed;inset:0;background:#000000aa;z-index:9998;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.pm-ovl-box{background:var(--surf);border:2px solid var(--bc);border-radius:24px;padding:36px 30px;text-align:center;max-width:400px;width:92%;animation:fadeInUp .3s ease}
+</style>`;
 
-    <!-- Header row -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px">
+  return`${breakOverlayHTML}${css}
+  <div id="pom-fullscreen-wrap" style="background:var(--bg);min-height:100%">
+  <div class="pm fade-in">
+
+    <div class="pm-head">
       <div>
-        <div style="font-size:20px;font-weight:bold;letter-spacing:0.3px">🍅 Pomodoro Timer</div>
-        <div style="font-size:10px;color:#444;letter-spacing:1.5px;text-transform:uppercase;margin-top:3px">Focus · Flow · Succeed · Exam Is Near</div>
+        <div class="pm-h1">🍅 Pomodoro</div>
+        <div class="pm-h2">Focus · Flow · Succeed</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <div style="font-size:12px;color:#444">Sessions: <span style="color:#06D6A0;font-weight:bold;font-size:15px">${pomState.sessions}</span>${pomState.sessions>0?` &nbsp;·&nbsp; <span style="color:#FFE66D;font-weight:bold">${pomTotalHoursFormatted()}</span> total`:""}</div>
-        <button onclick="pomToggleSound()" title="Toggle sound" style="background:#0f0f18;border:1px solid #2a2a3a;color:${pomState.soundOn?'#FFE66D':'#444'};padding:7px 12px;border-radius:10px;font-family:inherit;font-size:13px;cursor:pointer;transition:all 0.2s">${pomState.soundOn?"🔔":"🔕"}</button>
-        <button onclick="pomToggleFullScreen()" style="background:#0f0f18;border:1px solid #2a2a3a;color:#888;padding:7px 15px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='#FFE66D';this.style.color='#FFE66D'" onmouseout="this.style.borderColor='#2a2a3a';this.style.color='#888'">⛶ Full Screen</button>
+      <div class="pm-tools">
+        <span>Sessions <b style="color:#06D6A0">${pomState.sessions}</b>${pomState.sessions>0?` · <b style="color:var(--gold,#FFE66D)">${pomTotalHoursFormatted()}</b> total`:""}</span>
+        <button class="pm-btn" onclick="pomToggleSound()" title="Toggle sound" style="padding:9px 13px;color:${pomState.soundOn?'#FFE66D':'var(--mute)'}">${pomState.soundOn?"🔔":"🔕"}</button>
+        <button class="pm-btn" onclick="pomToggleFullScreen()">⛶ Full Screen</button>
       </div>
     </div>
 
-    <!-- TWO-COLUMN MAIN LAYOUT -->
-    <div style="display:grid;grid-template-columns:minmax(280px,420px) 1fr;gap:20px;align-items:start">
-
-      <!-- LEFT: Timer -->
+    <div class="pm-grid">
       <div>
-        <!-- Preset selector -->
-        <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
-          ${POM_PRESETS.map((p,i)=>`<button onclick="pomSetPreset(${i})"
-            style="flex:1;min-width:60px;padding:7px 4px;border-radius:8px;font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.2s;border:1px solid ${pomState.preset===i?ringColor:'#222'};background:${pomState.preset===i?ringColor+'22':'#0f0f18'};color:${pomState.preset===i?ringColor:'#555'};font-weight:${pomState.preset===i?'bold':'normal'}">
-            ${p.label}${i<3?`<div style="font-size:9px;opacity:0.7;margin-top:2px">${p.work}m</div>`:"<div style='font-size:9px;opacity:0.7;margin-top:2px'>Set</div>"}
-          </button>`).join("")}
+        <div class="pm-presets">
+          ${POM_PRESETS.map((p,i)=>`<button class="pm-pre ${pomState.preset===i?"on":""}" onclick="pomSetPreset(${i})">${p.label}${i<3?`<small>${p.work}m</small>`:`<small>Set</small>`}</button>`).join("")}
         </div>
 
-        <!-- Custom timer inputs (show when Custom preset selected) -->
         ${pomState.preset===3?`
-        <div class="card" style="margin-bottom:14px;padding:14px;border-color:#333">
-          <div class="section-label" style="margin-bottom:10px">⚙️ Custom Duration</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
-            <div><div style="font-size:10px;color:#555;margin-bottom:4px">Work (min)</div><input id="pom-custom-work" type="number" min="1" max="90" value="${pomState.workMins}" style="text-align:center;font-size:14px;font-weight:bold;color:#FFE66D"/></div>
-            <div><div style="font-size:10px;color:#555;margin-bottom:4px">Short break</div><input id="pom-custom-short" type="number" min="1" max="30" value="${pomState.shortBreak}" style="text-align:center;font-size:14px;font-weight:bold;color:#06D6A0"/></div>
-            <div><div style="font-size:10px;color:#555;margin-bottom:4px">Long break</div><input id="pom-custom-long" type="number" min="1" max="60" value="${pomState.longBreak}" style="text-align:center;font-size:14px;font-weight:bold;color:#C77DFF"/></div>
+        <div class="pm-card" style="margin-bottom:14px;padding:16px">
+          <div class="pm-lbl">⚙️ CUSTOM DURATION</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+            <div><div style="font-size:10px;color:var(--mute);margin-bottom:5px">Work (min)</div><input id="pom-custom-work" type="number" min="1" max="90" value="${pomState.workMins}" style="text-align:center;font-size:14px;font-weight:800;color:#FFE66D;margin:0"/></div>
+            <div><div style="font-size:10px;color:var(--mute);margin-bottom:5px">Short break</div><input id="pom-custom-short" type="number" min="1" max="30" value="${pomState.shortBreak}" style="text-align:center;font-size:14px;font-weight:800;color:#06D6A0;margin:0"/></div>
+            <div><div style="font-size:10px;color:var(--mute);margin-bottom:5px">Long break</div><input id="pom-custom-long" type="number" min="1" max="60" value="${pomState.longBreak}" style="text-align:center;font-size:14px;font-weight:800;color:#C77DFF;margin:0"/></div>
           </div>
-          <button class="btn-gold" onclick="pomApplyCustom()" style="width:100%;padding:9px;font-size:12px">✅ Apply Custom</button>
+          <button class="pm-btn p" onclick="pomApplyCustom()" style="width:100%">✅ Apply Custom</button>
         </div>`:""}
 
-        <div class="card" style="padding:32px 24px;text-align:center;border-color:${pomState.mode==='work'?'#FFE66D33':pomState.mode==='longbreak'?'#C77DFF33':'#06D6A033'};background:linear-gradient(160deg,#0f0f18,#12121f)">
-          <div id="pom-label" style="font-size:11px;color:#888;margin-bottom:18px;letter-spacing:3px;text-transform:uppercase">${pomState.mode==="work"?"🍅 Focus Time":pomState.mode==="longbreak"?"🏆 Long Break":"☕ Short Break"}</div>
-
-          <!-- SVG Ring -->
-          <div style="position:relative;display:inline-block;margin-bottom:18px">
-            <svg width="240" height="240" viewBox="0 0 260 260" style="transform:rotate(-90deg)">
+        <div class="pm-card pm-timer">
+          <div id="pom-label" class="pm-mode">${modeLabel}</div>
+          <div class="pm-ringw">
+            <svg width="250" height="250" viewBox="0 0 260 260" style="transform:rotate(-90deg)">
               <defs>
                 <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" style="stop-color:${ringColor};stop-opacity:1"/>
-                  <stop offset="100%" style="stop-color:${pomState.mode==='work'?'#ff6b35':pomState.mode==='longbreak'?'#a78bfa':'#059669'};stop-opacity:1"/>
+                  <stop offset="100%" style="stop-color:${ringColor2};stop-opacity:1"/>
                 </linearGradient>
               </defs>
-              <circle cx="130" cy="130" r="${r+10}" fill="none" stroke="#0d0d18" stroke-width="2"/>
-              <circle cx="130" cy="130" r="${r}" fill="none" stroke="#1a1a28" stroke-width="18"/>
-              <circle id="pom-ring-fill" cx="130" cy="130" r="${r}" fill="none" stroke="url(#ringGrad)" stroke-width="18"
+              <circle cx="130" cy="130" r="${r}" fill="none" stroke="currentColor" style="color:color-mix(in srgb,var(--txt) 9%,transparent)" stroke-width="16"/>
+              <circle id="pom-ring-fill" cx="130" cy="130" r="${r}" fill="none" stroke="url(#ringGrad)" stroke-width="16"
                 stroke-linecap="round"
-                style="stroke-dasharray:${circumference};stroke-dashoffset:${offset};transition:stroke-dashoffset 1s linear,stroke 0.5s;filter:drop-shadow(0 0 10px ${ringColor}88)"/>
+                style="stroke-dasharray:${circumference};stroke-dashoffset:${offset};transition:stroke-dashoffset 1s linear,stroke .5s;filter:drop-shadow(0 0 8px ${ringColor}66)"/>
             </svg>
-            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-              <div id="pom-display" style="font-size:58px;font-weight:bold;color:${ringColor};font-family:monospace;line-height:1;text-shadow:0 0 30px ${ringColor}55">${m}:${s}</div>
-              <div id="pom-status" style="font-size:10px;color:#444;margin-top:6px;letter-spacing:2px">${pomState.running?"● RUNNING":pomState.mode==="work"?"READY":"PAUSED"}</div>
-              ${activeSub?`<div style="margin-top:6px;font-size:11px;color:${activeSub.color};font-weight:bold">${activeSub.icon} ${esc(activeSub.name)}</div>`:""}
+            <div class="pm-ringt">
+              <div id="pom-display">${m}:${s}</div>
+              <div id="pom-status">${statusText}</div>
+              ${activeSub?`<div style="margin-top:8px;font-size:11.5px;color:${activeSub.color};font-weight:700">${activeSub.icon} ${esc(activeSub.name)}</div>`:""}
             </div>
           </div>
 
-          <!-- Task input -->
-          <div style="margin-bottom:16px">
-            <input placeholder="What are you working on? (optional)" value="${esc(pomState.taskName)}"
-              oninput="pomState.taskName=this.value"
-              style="text-align:center;font-size:12px;color:#888;background:#0a0a12;border-color:#1e1e2e"/>
-          </div>
+          <input class="pm-task" placeholder="What are you working on? (optional)" value="${esc(pomState.taskName)}" oninput="pomState.taskName=this.value"/>
 
-          <!-- Controls -->
-          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-            <button class="btn-gold" onclick="pomStart()" ${pomState.running?"disabled":""} style="padding:13px 30px;font-size:14px;${pomState.running?'opacity:0.45;cursor:not-allowed':''}">▶ ${pomState.running?"Running…":"Start"}</button>
-            <button class="btn-ghost" onclick="pomPause()" style="padding:13px 22px;font-size:14px" title="Pause (Space)">⏸</button>
-            <button class="btn-ghost" onclick="pomReset()" style="padding:13px 22px;font-size:14px" title="Reset (R)">↺</button>
+          <div class="pm-ctl">
+            <button class="pm-btn p" onclick="pomStart()" ${pomState.running?"disabled":""}>▶ ${pomState.running?"Running…":"Start"}</button>
+            <button class="pm-btn" onclick="pomPause()" title="Pause (Space)">⏸</button>
+            <button class="pm-btn" onclick="pomReset()" title="Reset (R)">↺</button>
           </div>
+          <div class="pm-hint">SPACE = Start/Pause &nbsp;·&nbsp; R = Reset</div>
 
-          <!-- Keyboard hint -->
-          <div style="font-size:10px;color:#1e1e2e;margin-top:10px;letter-spacing:1px">SPACE = Start/Pause &nbsp;·&nbsp; R = Reset</div>
-
-          <!-- Session dots -->
-          <div style="display:flex;justify-content:center;gap:8px;margin-top:18px">
-            ${[1,2,3,4].map(i=>`<div style="width:10px;height:10px;border-radius:50%;background:${i<=(pomState.sessions%4)||(pomState.sessions>0&&pomState.sessions%4===0&&i===4)?'#FFE66D':'#1e1e2e'};transition:background 0.4s;box-shadow:${i<=(pomState.sessions%4)||(pomState.sessions>0&&pomState.sessions%4===0&&i===4)?'0 0 6px #FFE66D88':'none'}"></div>`).join("")}
-          </div>
-          <div style="font-size:10px;color:#222;margin-top:6px;letter-spacing:1px">4 SESSIONS → LONG BREAK (${pomState.longBreak} min)</div>
+          <div class="pm-dots">${[1,2,3,4].map(i=>`<i class="${dotOn(i)?"on":""}"></i>`).join("")}</div>
+          <div class="pm-cap">4 SESSIONS → LONG BREAK (${pomState.longBreak} min)</div>
         </div>
 
-        <!-- Motivational quote -->
-        ${pomState.running?`
-        <div style="margin-top:12px;padding:12px 16px;background:#0a0a12;border:1px solid #1a1a28;border-radius:10px;text-align:center">
-          <div style="font-size:11px;color:#333;font-style:italic">"${POM_QUOTES[pomState.quoteIdx]}"</div>
-        </div>`:""}
+        ${pomState.running?`<div class="pm-quote">"${POM_QUOTES[pomState.quoteIdx]}"</div>`:""}
 
-        <!-- How it works -->
-        <div class="card" style="margin-top:14px">
-          <div class="section-label">ℹ️ How It Works</div>
-          <div style="font-size:12px;color:#555;line-height:2.1">
+        <div class="pm-card" style="margin-top:14px">
+          <div class="pm-lbl">ℹ️ HOW IT WORKS</div>
+          <div class="pm-how">
             1️⃣ Pick a subject &amp; set a task<br>
-            2️⃣ Hit <b style="color:#FFE66D">Start</b> — focus session begins<br>
+            2️⃣ Hit <b>Start</b> — focus session begins<br>
             3️⃣ Break overlay appears — take it or skip it<br>
             4️⃣ Every <b style="color:#C77DFF">4 sessions</b> = ${pomState.longBreak}-min long break 🏆<br>
             📊 Hours tracked per subject automatically &amp; synced!
@@ -477,71 +507,47 @@ function renderPomodoro(){
         </div>
       </div>
 
-      <!-- RIGHT: Subject + Stats -->
-      <div style="display:flex;flex-direction:column;gap:14px">
-
-        <!-- Subject Selector -->
-        <div class="card" style="border-color:${activeSub?activeSub.color+'55':'#2a2a3a'}">
-          <div class="section-label" style="margin-bottom:12px">📚 Choose Subject</div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px">
-            ${subs.map(s=>`<button onclick="pomSetSubject('${s.id}')"
-              style="background:${pomState.subject===s.id?s.color+'22':'#0a0a12'};border:1px solid ${pomState.subject===s.id?s.color:'#1e1e2e'};color:${pomState.subject===s.id?s.color:'#555'};padding:9px 15px;border-radius:22px;font-family:inherit;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:${pomState.subject===s.id?'bold':'normal'};box-shadow:${pomState.subject===s.id?'0 0 12px '+s.color+'44':'none'}">
-              ${s.icon} ${esc(s.name)}
-            </button>`).join("")}
+      <div class="pm-side">
+        <div class="pm-card" ${activeSub?`style="border-color:color-mix(in srgb,${activeSub.color} 40%,var(--line))"`:""}>
+          <div class="pm-lbl">📚 CHOOSE SUBJECT</div>
+          <div class="pm-subs">
+            ${subs.map(s=>`<button class="pm-sub ${pomState.subject===s.id?"on":""}" style="--c:${s.color}" onclick="pomSetSubject('${s.id}')">${s.icon} ${esc(s.name)}</button>`).join("")}
           </div>
-          ${activeSub?`<div style="margin-top:14px;padding:10px 14px;background:#0a0a12;border-radius:10px;border:1px solid ${activeSub.color}33;display:flex;align-items:center;justify-content:space-between">
-            <div style="font-size:13px;color:${activeSub.color};font-weight:bold">${activeSub.icon} ${esc(activeSub.name)}</div>
-            <div style="font-size:12px;color:#FFE66D;font-weight:bold">⏱ ${pomGetSubjectHoursFormatted(activeSub.id)} logged</div>
-          </div>`:`<div style="margin-top:12px;font-size:12px;color:#333;text-align:center;padding:8px">← Select a subject to begin</div>`}
+          ${activeSub?`<div class="pm-cur" style="--c:${activeSub.color}">
+            <div style="font-size:13.5px;color:${activeSub.color};font-weight:800">${activeSub.icon} ${esc(activeSub.name)}</div>
+            <div style="font-size:12px;color:var(--gold,#FFE66D);font-weight:800">⏱ ${pomGetSubjectHoursFormatted(activeSub.id)} logged</div>
+          </div>`:`<div style="margin-top:14px;font-size:12.5px;color:var(--mute);text-align:center">Select a subject to begin</div>`}
         </div>
 
-        <!-- Study Hours per Subject -->
-        <div class="card" style="flex:1">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:6px">
-            <div class="section-label" style="margin-bottom:0">📊 Study Hours by Subject</div>
-            ${Object.keys(pomState.subjectHours).length>0?`<button onclick="if(confirm('Clear all study hour data?')){pomState.subjectHours={};pomSaveHours();render();}" style="background:none;border:1px solid #2a2a3a;color:#444;padding:4px 10px;border-radius:6px;font-family:inherit;font-size:10px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.color='#FF6B35';this.style.borderColor='#FF6B3544'" onmouseout="this.style.color='#444';this.style.borderColor='#2a2a3a'">🗑 Clear</button>`:""}
+        <div class="pm-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:6px">
+            <div class="pm-lbl" style="margin:0">📊 STUDY HOURS BY SUBJECT</div>
+            ${Object.keys(pomState.subjectHours).length>0?`<button class="pm-btn" style="padding:5px 11px;font-size:11px" onclick="if(confirm('Clear all study hour data?')){pomState.subjectHours={};pomSaveHours();render();}">Clear</button>`:""}
           </div>
-          ${subjectStats?`<div style="display:flex;flex-direction:column;gap:8px">${subjectStats}</div>`
-            :`<div style="text-align:center;padding:40px 0;color:#2a2a3a">
-              <div style="font-size:36px;margin-bottom:10px">📭</div>
-              <div style="font-size:13px">No data yet</div>
-              <div style="font-size:11px;margin-top:4px;color:#222">Start a session to track your hours</div>
-            </div>`}
-          <!-- All subjects summary even if 0 -->
-          ${subjectStats?"":subs.map(s=>`
-            <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;opacity:0.35">
-              <span style="font-size:16px">${s.icon}</span>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:11px;color:#555">${esc(s.name)}</div>
-                <div style="height:2px;background:#111;border-radius:2px;margin-top:4px"></div>
-              </div>
-              <div style="font-size:11px;color:#333">0m</div>
-            </div>`).join("")}
+          ${subjectStats?subjectStats
+            :`<div class="pm-empty"><div style="font-size:34px">📭</div><b>No data yet</b><span style="font-size:12px">Start a session to track your hours</span></div>`}
         </div>
 
-        <!-- Recent session log -->
         ${recentLog.length>0?`
-        <div class="card">
-          <div class="section-label" style="margin-bottom:10px">🕓 Recent Sessions</div>
+        <div class="pm-card">
+          <div class="pm-lbl">🕓 RECENT SESSIONS</div>
           ${recentLog.map(l=>{
             const sub=subs.find(s=>s.id===l.subject);
             const mins=Math.floor(l.duration/60);
             const t=new Date(l.timestamp);
             const timeStr=t.getHours().toString().padStart(2,"0")+":"+t.getMinutes().toString().padStart(2,"0");
-            return `<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;background:#0a0a12;margin-bottom:5px">
-              <span style="font-size:14px">${sub?.icon||"📚"}</span>
+            return `<div class="pm-log">
+              <span style="font-size:15px">${sub?.icon||"📚"}</span>
               <div style="flex:1;min-width:0">
-                <div style="font-size:11px;color:#aaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(sub?.name||l.subject)}</div>
-                <div style="font-size:10px;color:#333">${timeStr}</div>
+                <div style="font-size:12px;font-weight:600;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(sub?.name||l.subject)}</div>
+                <div style="font-size:10.5px;color:var(--mute)">${timeStr}</div>
               </div>
-              <div style="font-size:11px;font-weight:bold;color:#FFE66D;flex-shrink:0">${mins}m</div>
+              <div style="font-size:12px;font-weight:800;color:var(--gold,#FFE66D)">${mins}m</div>
             </div>`;
           }).join("")}
         </div>`:""}
-
       </div>
-
-    </div><!-- end grid -->
+    </div>
   </div>
   </div>`;
 }

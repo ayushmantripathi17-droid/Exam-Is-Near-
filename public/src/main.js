@@ -100,6 +100,7 @@ import "./shared/groq.js";
 import "./shared/pro-footer-bar.js";
 import "./utils/constants.js";
 import "./utils/helpers.js";
+import "./core/theme-fix.js";
 
 import { CourseRuntime } from "./core/course-runtime.js";
 import { PwaInstall } from "./shared/pwa-install.js";
@@ -129,7 +130,10 @@ function paintThemeIcon() {
   const btn = document.getElementById("theme-toggle-btn");
   if (!btn) return;
   const t = document.documentElement.getAttribute("data-theme") || "dark";
-  btn.textContent = t === "dark" ? "🌙" : "☀️";
+  if (!btn.querySelector(".tt-thumb")) {
+    btn.innerHTML = '<span class="tt-ic tt-sun">☀️</span><span class="tt-ic tt-moon">🌙</span><span class="tt-thumb"></span>';
+  }
+  btn.setAttribute("title", t === "dark" ? "Switch to day mode" : "Switch to night mode");
 }
 window.__toggleTheme = function () {
   const cur = document.documentElement.getAttribute("data-theme") || "dark";
