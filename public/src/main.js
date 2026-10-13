@@ -101,6 +101,9 @@ import "./shared/pro-footer-bar.js";
 import "./utils/constants.js";
 import "./utils/helpers.js";
 import "./core/theme-fix.js";
+import "./core/icons.js";
+import "./core/ai-style.js";
+import "./core/hub-style.js";
 
 import { CourseRuntime } from "./core/course-runtime.js";
 import { PwaInstall } from "./shared/pwa-install.js";

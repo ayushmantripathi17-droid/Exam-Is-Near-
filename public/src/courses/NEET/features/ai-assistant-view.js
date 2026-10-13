@@ -168,8 +168,108 @@ function _aiSessionTitle(msgs){
   if(!first) return 'New chat';
   return first.text.replace(/<[^>]+>/g,'').trim().slice(0,42) || 'New chat';
 }
+
+const _AI_SPARK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>';
+const _AI_CHAT='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+const _AI_COPY='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+AiAssistantViewShared.subjectCtx = 'all';
+
+function _aiSessionsHtml(){
+  if(!_aiSessions.length) return '<div class="ai-empty-sess">No conversations yet.<br>Start a new chat!</div>';
+  const today = new Date(); today.setHours(0,0,0,0);
+  const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
+  const week = new Date(today); week.setDate(today.getDate()-7);
+  const grouped = {Today:[], Yesterday:[], 'This week':[], Older:[]};
+  _aiSessions.forEach(s=>{
+    const d=new Date(s.ts); d.setHours(0,0,0,0);
+    if(d>=today) grouped.Today.push(s);
+    else if(d>=yesterday) grouped.Yesterday.push(s);
+    else if(d>=week) grouped['This week'].push(s);
+    else grouped.Older.push(s);
+  });
+  return Object.entries(grouped).map(([label,items])=>{
+    if(!items.length) return '';
+    return '<div class="ai-sidebar-label">'+label+'</div>'+
+      items.map(s=>'<div class="ai-session-item'+(AiAssistantViewShared._aiActiveSession===s.id?' active':'')+'" onclick="aiLoadSession(\''+s.id+'\')">'+
+        '<span class="ai-sess-icon">'+_AI_CHAT+'</span>'+
+        '<span class="ai-sess-title">'+esc(s.title)+'</span>'+
+        '<span class="ai-sess-time">'+_aiRelTime(s.ts)+'</span>'+
+        '<button class="ai-sess-del" onclick="aiDeleteSession(\''+s.id+'\',event)" title="Delete">\u2715</button>'+
+        '</div>').join('');
+  }).join('');
+}
+
+function _aiWelcomeHtml(){
+  const userName = AppStateShared.currentUser?.displayName?.split(' ')[0] || 'there';
+  const cards = getAIWelcomeCards().map((c,i)=>
+    '<div class="ai-welcome-card" onclick="setWelcomePrompt('+i+')">'+
+    '<div class="ai-wc-icon">'+c.icon+'</div>'+
+    '<div class="ai-wc-title">'+esc(c.title)+'</div>'+
+    '<div class="ai-wc-desc">'+esc(c.desc)+'</div></div>').join('');
+  return '<div class="ai-welcome">'+
+    '<div class="ai-welcome-logo">'+_AI_SPARK.replace('width="16" height="16"','width="30" height="30"')+'</div>'+
+    '<div><div class="ai-welcome-h">Hello, '+esc(userName)+'</div>'+
+    '<div class="ai-welcome-s">What would you like to study today?</div></div>'+
+    '<div class="ai-welcome-grid">'+cards+'</div></div>';
+}
+
+function aiSetCtx(v){ AiAssistantViewShared.subjectCtx = v || 'all'; }
+function aiClearChat(){
+  AiAssistantSetupShared.aiHistory = [];
+  _aiPersistCurrentSession();
+  render();
+}
+function aiCopyMsg(i){
+  const m = AiAssistantSetupShared.aiHistory[i];
+  if(!m) return;
+  const done = ()=>showToast('Copied to clipboard','success');
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(m.text).then(done,()=>showToast('Could not copy','alarm')); }
+    else{ const ta=document.createElement('textarea'); ta.value=m.text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); done(); }
+  }catch(e){ showToast('Could not copy','alarm'); }
+}
+
+// Safe mini-markdown → HTML (input is escaped first)
+function _aiMd(raw){
+  let t = esc(String(raw==null?'':raw));
+  const blocks=[], codes=[];
+  t = t.replace(/```[a-zA-Z0-9+#-]*\n?([\s\S]*?)```/g,(m,code)=>{ blocks.push('<pre><code>'+code.replace(/\n$/,'')+'</code></pre>'); return '\u0000B'+(blocks.length-1)+'\u0000'; });
+  t = t.replace(/`([^`\n]+)`/g,(m,c)=>{ codes.push('<code>'+c+'</code>'); return '\u0000C'+(codes.length-1)+'\u0000'; });
+  t = t.replace(/\*\*([^*\n]+?)\*\*/g,'<strong>$1</strong>')
+       .replace(/(^|[^*\w])\*(?=\S)([^*\n]*?\S)\*(?!\*)/g,'$1<em>$2</em>');
+  const out=[]; let list=null;
+  const close=()=>{ if(list){ out.push('</'+list+'>'); list=null; } };
+  t.split('\n').forEach(ln=>{
+    let m;
+    if(/^\u0000B\d+\u0000$/.test(ln.trim())){ close(); out.push(ln.trim()); }
+    else if((m=ln.match(/^\s{0,3}#{1,4}\s+(.+)$/))){ close(); out.push('<div class="ai-h">'+m[1]+'</div>'); }
+    else if((m=ln.match(/^\s*[-*\u2022]\s+(.+)$/))){ if(list!=='ul'){ close(); out.push('<ul>'); list='ul'; } out.push('<li>'+m[1]+'</li>'); }
+    else if((m=ln.match(/^\s*(\d+)[.)]\s+(.+)$/))){ if(list!=='ol'){ close(); out.push('<ol>'); list='ol'; } out.push('<li>'+m[2]+'</li>'); }
+    else if((m=ln.match(/^&gt;\s?(.*)$/))){ close(); out.push('<blockquote>'+m[1]+'</blockquote>'); }
+    else if(!ln.trim()){ close(); }
+    else{ close(); out.push('<p>'+ln+'</p>'); }
+  });
+  close();
+  let html = out.join('').replace(/\u0000C(\d+)\u0000/g,(m,i)=>codes[+i]).replace(/\u0000B(\d+)\u0000/g,(m,i)=>blocks[+i]);
+  if(window.DOMPurify){
+    html = DOMPurify.sanitize(html,{ALLOWED_TAGS:['strong','em','pre','code','div','br','span','p','ul','ol','li','blockquote'],ALLOWED_ATTR:['class']});
+  }
+  return html;
+}
+
+function _aiPruneEmpty(){
+  _aiLoadSessions();   // always start from what is actually stored
+  const keep = _aiSessions.filter(s => (s.messages && s.messages.length) || s.id === AiAssistantViewShared._aiActiveSession);
+  if(keep.length !== _aiSessions.length){ _aiSessions = keep; _aiSaveSessions(); }
+}
 function aiNewChat(){
-  _aiLoadSessions();
+  _aiPruneEmpty();
+  // Already on an empty chat? Just refocus instead of adding another one.
+  if(AiAssistantViewShared._aiActiveSession && AiAssistantSetupShared.aiHistory.length===0 && _aiSessions.some(s=>s.id===AiAssistantViewShared._aiActiveSession)){
+    const ta0=document.getElementById('ai-input'); if(ta0) ta0.focus();
+    if(window.innerWidth<=700) _closeAISidebarMobile();
+    return;
+  }
   const id = 'sess_'+Date.now();
   AiAssistantViewShared._aiActiveSession = id;
   AiAssistantSetupShared.aiHistory = [];
@@ -184,40 +284,14 @@ function aiNewChat(){
   const hintEl = document.querySelector('.ai-hint');
 
   if(chatBox){
-    // Render welcome/empty state instead of wiping to blank
-    chatBox.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:#333;text-align:center;padding:32px 24px">'
-      +'<div style="font-size:36px;opacity:0.3">🤖</div>'
-      +'<div style="font-size:14px;font-weight:600;color:#444">New conversation</div>'
-      +'<div style="font-size:12px;color:#2a2a3a;line-height:1.6">Ask me anything about your syllabus,<br>concepts, or exam strategy.</div>'
-      +'</div>';
+    chatBox.innerHTML = _aiWelcomeHtml();
   }
   if(topbarTitle) topbarTitle.textContent = 'AI Study Assistant';
   if(clearBtn) clearBtn.remove();
 
   // Refresh session list in sidebar
   const sessListEl = document.querySelector('.ai-sessions-list');
-  if(sessListEl){
-    const proFromCache = !!(_proCache?.isPro);
-    // rebuild sessions HTML inline (same logic as renderAI)
-    const today = new Date(); today.setHours(0,0,0,0);
-    const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
-    const week = new Date(today); week.setDate(today.getDate()-7);
-    const grouped = {Today:[], Yesterday:[], 'This week':[], Older:[]};
-    _aiSessions.forEach(s=>{
-      const d=new Date(s.ts); d.setHours(0,0,0,0);
-      if(d>=today) grouped.Today.push(s);
-      else if(d>=yesterday) grouped.Yesterday.push(s);
-      else if(d>=week) grouped['This week'].push(s);
-      else grouped.Older.push(s);
-    });
-    let sessHtml='';
-    for(const [label,items] of Object.entries(grouped)){
-      if(!items.length) continue;
-      sessHtml+='<div class="ai-sidebar-label">'+label+'</div>';
-      sessHtml+=items.map(s=>'<div class="ai-session-item'+(AiAssistantViewShared._aiActiveSession===s.id?' active':'')+'" onclick="aiLoadSession(\''+s.id+'\')">'+'<span class="ai-session-title">'+esc(s.title)+'</span>'+'<span class="ai-session-meta">'+_aiRelTime(s.ts)+'</span>'+'<button class="ai-session-del" onclick="aiDeleteSession(\''+s.id+'\',event)" title="Delete">✕</button>'+'</div>').join('');
-    }
-    sessListEl.innerHTML = sessHtml || '<div style="padding:20px 14px;font-size:11px;color:#222;text-align:center;line-height:1.6">No conversations yet.<br>Start a new chat!</div>';
-  }
+  if(sessListEl) sessListEl.innerHTML = _aiSessionsHtml();
 
   // On mobile, close sidebar after starting new chat
   if(window.innerWidth<=700) _closeAISidebarMobile();
@@ -298,72 +372,40 @@ function _aiRelTime(ts){
 }
 
 function renderAI(){
-  _aiLoadSessions();
+  _aiPruneEmpty();
   const hasHistory = AiAssistantSetupShared.aiHistory.length > 0;
   const proFromCache = !!(_proCache?.isPro);
   const sidebarCollapsed = !_aiSidebarOpen;
-  const userName = AppStateShared.currentUser?.displayName?.split(' ')[0] || 'there';
 
-  const today = new Date(); today.setHours(0,0,0,0);
-  const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
-  const week = new Date(today); week.setDate(today.getDate()-7);
-  const grouped = {Today:[], Yesterday:[], 'This week':[], Older:[]};
-  _aiSessions.forEach(s=>{
-    const d=new Date(s.ts); d.setHours(0,0,0,0);
-    if(d>=today) grouped.Today.push(s);
-    else if(d>=yesterday) grouped.Yesterday.push(s);
-    else if(d>=week) grouped['This week'].push(s);
-    else grouped.Older.push(s);
-  });
+  const ctx = AiAssistantViewShared.subjectCtx || 'all';
+  const subSel = '<select id="ai-subject-ctx" class="ai-subject-select" onchange="aiSetCtx(this.value)"><option value="all">All subjects</option>'+
+    getSubjects().map(s=>'<option value="'+s.id+'"'+(ctx===s.id?' selected':'')+'>'+esc(s.name)+'</option>').join('')+'</select>';
 
-  const sessHtml = Object.entries(grouped).map(([label,items])=>{
-    if(!items.length) return '';
-    return '<div class="ai-sidebar-label">'+label+'</div>'+
-      items.map(s=>'<div class="ai-session-item'+(AiAssistantViewShared._aiActiveSession===s.id?' active':'')+'" onclick="aiLoadSession(\''+s.id+'\')">'+
-        '<span class="ai-sess-icon">\uD83D\uDCAC</span>'+
-        '<span class="ai-sess-title">'+esc(s.title)+'</span>'+
-        '<span class="ai-sess-time">'+_aiRelTime(s.ts)+'</span>'+
-        '<button class="ai-sess-del" onclick="aiDeleteSession(\''+s.id+'\',event)" title="Delete">\u2715</button>'+
-        '</div>').join('');
-  }).join('');
-
-  const subSel = '<select id="ai-subject-ctx" class="ai-subject-select" onchange="render()"><option value="all">All subjects</option>'+
-    getSubjects().map(s=>'<option value="'+s.id+'">'+s.icon+' '+s.name+'</option>').join('')+'</select>';
-
-  const quickChips = getAIQuickPrompts().map((p,i)=>'<button class="ai-chip" onclick="setQuickPrompt('+i+')">'+p.icon+' '+p.label+'</button>').join('');
-
-  const welcomeCards = getAIWelcomeCards().map((c,i)=>
-    '<div class="ai-welcome-card" onclick="setWelcomePrompt('+i+')">'+
-    '<div class="ai-wc-icon">'+c.icon+'</div>'+
-    '<div class="ai-wc-title">'+c.title+'</div>'+
-    '<div class="ai-wc-desc">'+c.desc+'</div></div>').join('');
+  const quickChips = getAIQuickPrompts().map((p,i)=>'<button class="ai-chip" onclick="setQuickPrompt('+i+')">'+p.icon+' '+esc(p.label)+'</button>').join('');
 
   const msgs = hasHistory
     ? AiAssistantSetupShared.aiHistory.map((m,i)=>renderAIMsgBubble(m,i)).join('')
-    : '<div class="ai-welcome">'+
-        '<div class="ai-welcome-logo">\u2736</div>'+
-        '<div><div style="font-size:20px;font-weight:700;color:#ccc;margin-bottom:6px">Hello, '+esc(userName)+'</div>'+
-        '<div style="font-size:13px;color:#333;line-height:1.7">What would you like to study today?</div></div>'+
-        '<div class="ai-welcome-grid">'+welcomeCards+'</div>'+
-        '</div>';
+    : _aiWelcomeHtml();
 
-  const sendBtn = '<button class="ai-send-btn" id="ai-send-btn" onclick="sendAIMessage()" '+(CourseRuntime.aiTyping||((!proFromCache)&&freeAiMsgCount>=FREE_AI_MSG_LIMIT)?'disabled':'')+'>'+
+  const blocked = CourseRuntime.aiTyping||((!proFromCache)&&freeAiMsgCount>=FREE_AI_MSG_LIMIT);
+  const sendBtn = '<button class="ai-send-btn" id="ai-send-btn" onclick="sendAIMessage()" '+(blocked?'disabled':'')+' title="Send">'+
     (CourseRuntime.aiTyping
-      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#555" stroke-width="2"/><path d="M12 6v6l4 2" stroke="#555" stroke-width="2" stroke-linecap="round"/></svg>'
-      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>')+
+      ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9" opacity=".35"/><path d="M12 3a9 9 0 0 1 9 9"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur=".9s" repeatCount="indefinite"/></path></svg>'
+      : '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>')+
     '</button>';
 
   const hint = proFromCache
-    ? 'Enter to send \u00B7 Shift+Enter for new line \u00B7 Claude AI'
-    : 'Enter to send \u00B7 <span style="color:#FFE66D66">Free: '+Math.max(0,FREE_AI_MSG_LIMIT-freeAiMsgCount)+' messages left</span> \u00B7 <span style="color:#4ECDC466;cursor:pointer" onclick="showProModal()">Upgrade \u2197</span>';
+    ? 'Enter to send \u00B7 Shift+Enter for new line'
+    : 'Enter to send \u00B7 <span class="ai-hint-free">'+Math.max(0,FREE_AI_MSG_LIMIT-freeAiMsgCount)+' free messages left</span> \u00B7 <span class="ai-hint-up" onclick="openProModal()">Upgrade</span>';
 
   return '<div class="fade-in ai-page">'+
+    '<div class="ai-sidebar-overlay" id="ai-sidebar-overlay" onclick="aiToggleSidebar()"></div>'+
     '<div class="ai-sidebar'+(sidebarCollapsed?' collapsed':'')+'" id="ai-sidebar">'+
       '<div class="ai-sidebar-top">'+
         '<button class="ai-new-chat-btn" onclick="aiNewChat()">'+
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'+
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>'+
           'New chat</button></div>'+
-      '<div class="ai-sessions-list">'+(_aiSessions.length ? sessHtml : '<div style="padding:20px 14px;font-size:11px;color:#222;text-align:center;line-height:1.6">No conversations yet.<br>Start a new chat!</div>')+'</div>'+
+      '<div class="ai-sessions-list">'+_aiSessionsHtml()+'</div>'+
       '<div class="ai-sidebar-bottom">'+
         '<div class="ai-model-badge">'+
           '<div class="ai-model-dot'+(CourseRuntime.aiTyping?' thinking':'')+'"></div>'+
@@ -380,21 +422,19 @@ function renderAI(){
         '</button>'+
         '<div class="ai-topbar-title">'+(hasHistory ? esc(_aiSessionTitle(AiAssistantSetupShared.aiHistory)) : 'AI Study Assistant')+'</div>'+
         '<div class="ai-topbar-actions">'+
-          (proFromCache?'<span style="font-size:9px;background:linear-gradient(135deg,#FFE66D,#ffb700);color:#08080f;border-radius:6px;padding:2px 8px;font-weight:700">PRO \u2B50</span>':'')+
+          (proFromCache?'<span class="ai-pro-badge">PRO</span>':'')+
           subSel+
-          (hasHistory?'<button class="ai-clear-btn" onclick="aiHistory=[];_aiPersistCurrentSession();render()">Clear</button>':'')+
+          (hasHistory?'<button class="ai-clear-btn" onclick="aiClearChat()">Clear</button>':'')+
         '</div>'+
       '</div>'+
       '<div class="ai-chat-wrap" id="ai-chat-box">'+msgs+'</div>'+
       '<div class="ai-input-area">'+
+        '<div class="ai-chips">'+quickChips+'</div>'+
         '<div class="ai-input-box">'+
-          '<textarea id="ai-input" class="ai-textarea" placeholder="Message AI tutor\u2026" rows="1"'+
+          '<textarea id="ai-input" class="ai-textarea" placeholder="Ask your AI tutor anything\u2026" rows="1"'+
             ' onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendAIMessage()}"'+
-            ' oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,140)+\'px\'"></textarea>'+
-          '<div class="ai-input-footer">'+
-            '<div class="ai-chips">'+quickChips+'</div>'+
-            sendBtn+
-          '</div>'+
+            ' oninput="this.style.height=\'auto\';this.style.height=Math.min(this.scrollHeight,150)+\'px\'"></textarea>'+
+          sendBtn+
         '</div>'+
         '<div class="ai-hint">'+hint+'</div>'+
       '</div>'+
@@ -407,38 +447,25 @@ function renderAIMsgBubble(m, i){
   const isThinking = m.text === '\u23F3 Thinking\u2026';
   const timeStr = m.ts ? new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
 
-  let html = esc(m.text);
-  if(!isUser && !isThinking){
-    html = html
-      .replace(/\*\*(.*?)\*\*/g,'<strong style="color:#EDE8E0">$1</strong>')
-      .replace(/\*(.*?)\*/g,'<em style="color:#aaa">$1</em>')
-      .replace(/```([\s\S]*?)```/g,'<pre>$1</pre>')
-      .replace(/`([^`]+)`/g,'<code>$1</code>')
-      .replace(/^#{1,3}\s(.+)$/gm,'<div style="font-weight:bold;color:#4ECDC4;margin:10px 0 4px">$1</div>')
-      .replace(/^[-\u2022]\s(.+)$/gm,'<div style="padding-left:14px;margin:3px 0">\u2022 $1</div>')
-      .replace(/\n/g,'<br>');
-    if(window.DOMPurify){
-      html = DOMPurify.sanitize(html,{ALLOWED_TAGS:['strong','em','pre','code','div','br','span'],ALLOWED_ATTR:['style']});
-    }
-  }
-
-  if(isThinking) return '<div class="ai-msg-row" style="animation:fadeInUp 0.2s ease">'+
-    '<div class="ai-avatar bot" style="font-size:13px">\u2736</div>'+
+  if(isThinking) return '<div class="ai-msg-row">'+
+    '<div class="ai-avatar bot">'+_AI_SPARK+'</div>'+
     '<div class="ai-bubble-wrap"><div class="ai-sender-name">AI Tutor</div>'+
     '<div class="ai-bubble bot thinking-bubble"><div class="ai-typing"><span></span><span></span><span></span></div></div></div></div>';
 
+  const html = isUser ? esc(m.text).replace(/\n/g,'<br>') : _aiMd(m.text);
   const userAvatar = isUser
     ? (AppStateShared.currentUser?.photoURL
-        ? '<img src="'+AppStateShared.currentUser.photoURL+'" style="width:100%;height:100%;border-radius:8px;object-fit:cover" onerror="this.parentElement.textContent=\'&#128100;\'">'
-        : '&#128100;')
-    : '\u2736';
+        ? '<img src="'+esc(AppStateShared.currentUser.photoURL)+'" alt="" onerror="this.parentElement.textContent=\'\'">'
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>')
+    : _AI_SPARK;
+  const name = isUser ? (AppStateShared.currentUser?.displayName?.split(' ')[0]||'You') : 'AI Tutor';
 
   return '<div class="ai-msg-row '+(isUser?'user':'')+'">'+
     '<div class="ai-avatar '+(isUser?'user':'bot')+'">'+userAvatar+'</div>'+
     '<div class="ai-bubble-wrap">'+
-      '<div class="ai-sender-name">'+(isUser?(AppStateShared.currentUser?.displayName?.split(' ')[0]||'You'):'AI Tutor')+'</div>'+
+      '<div class="ai-sender-name">'+esc(name)+'</div>'+
       '<div class="ai-bubble '+(isUser?'user':'bot')+'">'+html+'</div>'+
-      '<div class="ai-meta">'+timeStr+'</div>'+
+      '<div class="ai-meta">'+timeStr+(isUser?'':'<button class="ai-copy" onclick="aiCopyMsg('+i+')" title="Copy">'+_AI_COPY+' Copy</button>')+'</div>'+
     '</div></div>';
 }
 
@@ -455,8 +482,8 @@ function installPWA(){
 // ══════════════════════════════════════════════════════════════
 // MOBILE NAV DRAWER
 
-export { AI_QUICK_PROMPTS, AI_SESSIONS_KEY, AI_SESSION_MAX, AI_WELCOME_CARDS, _aiLoadSessions, _aiPersistCurrentSession, _aiRelTime, _aiSaveSessions, _aiSessionTitle, _aiSessions, _aiSidebarOpen, _aiToggleIconClosed, _aiToggleIconOpen, _closeAISidebarMobile, aiDeleteSession, aiLoadSession, aiNewChat, aiToggleSidebar, getAIQuickPrompts, getAIWelcomeCards, installPWA, renderAI, renderAIMsgBubble };
+export { AI_QUICK_PROMPTS, AI_SESSIONS_KEY, AI_SESSION_MAX, AI_WELCOME_CARDS, _aiLoadSessions, _aiPersistCurrentSession, _aiRelTime, _aiSaveSessions, _aiSessionTitle, _aiSessions, _aiSidebarOpen, _aiToggleIconClosed, _aiToggleIconOpen, _closeAISidebarMobile, aiDeleteSession, aiLoadSession, aiNewChat, aiToggleSidebar, getAIQuickPrompts, getAIWelcomeCards, installPWA, renderAI, renderAIMsgBubble, aiClearChat, aiSetCtx, aiCopyMsg, _aiSessionsHtml, _aiWelcomeHtml, _aiMd };
 
 if (typeof window !== "undefined") {
-  Object.assign(window, { AI_QUICK_PROMPTS, AI_SESSIONS_KEY, AI_SESSION_MAX, AI_WELCOME_CARDS, _aiLoadSessions, _aiPersistCurrentSession, _aiRelTime, _aiSaveSessions, _aiSessionTitle, _aiSessions, _aiSidebarOpen, _aiToggleIconClosed, _aiToggleIconOpen, _closeAISidebarMobile, aiDeleteSession, aiLoadSession, aiNewChat, aiToggleSidebar, getAIQuickPrompts, getAIWelcomeCards, installPWA, renderAI, renderAIMsgBubble });
+  Object.assign(window, { AI_QUICK_PROMPTS, AI_SESSIONS_KEY, AI_SESSION_MAX, AI_WELCOME_CARDS, _aiLoadSessions, _aiPersistCurrentSession, _aiRelTime, _aiSaveSessions, _aiSessionTitle, _aiSessions, _aiSidebarOpen, _aiToggleIconClosed, _aiToggleIconOpen, _closeAISidebarMobile, aiDeleteSession, aiLoadSession, aiNewChat, aiToggleSidebar, getAIQuickPrompts, getAIWelcomeCards, installPWA, renderAI, renderAIMsgBubble, aiClearChat, aiSetCtx, aiCopyMsg, _aiSessionsHtml, _aiWelcomeHtml, _aiMd });
 }

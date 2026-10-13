@@ -121,12 +121,13 @@ service cloud.firestore {
     // Super admin: full read/write
     // Team members: can read ONLY their own doc (to verify their own access on login)
     // docId is the member's email with dots replaced by underscores
+    // NOTE: replace() takes a REGEX in rules — '.' would match every char, so escape it ('\\.')
     // No client can self-grant (write locked to super admin only)
     // FIX: was `isSignedIn()` which let ANY logged-in user list all team members.
     // Now restricted: team members can only read their own doc (by email-derived docId).
     match /adminRoles/{docId} {
       allow read:  if isAdmin()
-                   || (isSignedIn() && docId == request.auth.token.email.replace('.', '_'));
+                   || (isSignedIn() && docId == request.auth.token.email.replace('\\.', '_'));
       allow write: if isAdmin();
     }
 

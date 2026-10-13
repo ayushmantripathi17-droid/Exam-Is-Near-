@@ -17,7 +17,7 @@ function renderAbout(){
 .ab *{box-sizing:border-box}
 .ab-hero{position:relative;overflow:hidden;text-align:center;padding:38px 20px 30px;margin-bottom:14px;border-radius:24px;border:1px solid var(--line);background:radial-gradient(circle at 50% 0%,color-mix(in srgb,#FF6B35 20%,transparent),transparent 65%),radial-gradient(circle at 0% 100%,color-mix(in srgb,#4ECDC4 14%,transparent),transparent 55%),var(--glass-bg,var(--surf))}
 .ab-hero:before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#FFE66D,#ff6b35,#4ECDC4)}
-.ab-logo{width:72px;height:72px;margin:0 auto 14px;border-radius:22px;display:grid;place-items:center;font-size:36px;background:color-mix(in srgb,var(--acc) 14%,transparent);border:1px solid color-mix(in srgb,var(--acc) 30%,transparent)}
+.ab-logo{width:92px;height:92px;margin:0 auto 14px;display:grid;place-items:center;font-size:44px}
 .ab-t{font-size:30px;font-weight:800;letter-spacing:-1px;background:linear-gradient(90deg,#FFE66D,#ff6b35);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1}
 .ab-by{font-size:11px;color:var(--mute);letter-spacing:3px;text-transform:uppercase;margin:8px 0 12px;font-weight:700}
 .ab-d{font-size:13.5px;color:var(--text-3,#aaa);line-height:1.8;max-width:440px;margin:0 auto}
@@ -60,7 +60,7 @@ function renderAbout(){
 </style>`;
   return`${css}<div class="ab fade-in">
     <div class="ab-hero">
-      <div class="ab-logo">📚</div>
+      <div class="ab-logo">${(()=>{const l=document.querySelector(".header img");return l&&l.src?`<img src="${l.src}" alt="Exam Is Near logo"/>`:"📚";})()}</div>
       <div class="ab-t">Exam Is Near</div>
       <div class="ab-by">by ArkSetu</div>
       <div class="ab-d">A free AI-powered study companion for JEE, NEET, CBSE, UPSC, CLAT, and NFSU students.</div>

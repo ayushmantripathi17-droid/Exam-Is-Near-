@@ -207,7 +207,7 @@ function renderFlashcards(){
           <button class="fc-btn" onclick="flashState.showHistory=false;render()">← Back</button>
           <div class="fc-h1" style="font-size:22px">📋 Flashcard Logs</div>
         </div>
-        ${CourseRuntime.flashLog.length>0?`<button class="fc-btn d" onclick="if(confirm('Clear flashcard logs?')){flashLog=[];saveFlashLog();render();}">🗑️ Clear</button>`:''}
+        ${CourseRuntime.flashLog.length>0?`<button class="fc-btn d" onclick="clearFlashLog()">🗑️ Clear</button>`:''}
       </div>
       ${CourseRuntime.flashLog.length===0?`<div class="fc-empty"><div class="e">🃏</div><b>No flashcard logs yet</b><p>Generate flashcards and your sessions will appear here</p></div>`:`
       <div class="fc-stats">

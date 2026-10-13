@@ -27,6 +27,8 @@ function saveQuizLog(){
   localStorage.setItem('ein_quiz_log', JSON.stringify(CourseRuntime.quizLog.slice(-QUIZ_LOG_MAX)));
   if(!_firestoreUpdating){ clearTimeout(S._timer); S._timer = setTimeout(pushToFirebase, 1200); }
 }
+function clearQuizLog(){ if(!confirm('Clear all quiz logs?')) return; CourseRuntime.quizLog=[]; saveQuizLog(); render(); }
+function clearFlashLog(){ if(!confirm('Clear flashcard logs?')) return; CourseRuntime.flashLog=[]; saveFlashLog(); render(); }
 function saveFlashLog(){
   localStorage.setItem('ein_flash_log', JSON.stringify(CourseRuntime.flashLog.slice(-FLASH_LOG_MAX)));
   if(!_firestoreUpdating){ clearTimeout(S._timer); S._timer = setTimeout(pushToFirebase, 1200); }
@@ -381,7 +383,7 @@ function renderQuiz(){
     logsHtml=`<div style="margin-top:26px">
       <div class="qz-sec">
         <h3>📋 Quiz Logs</h3>
-        <button class="qz-btn" style="padding:6px 12px;font-size:11.5px" onclick="if(confirm('Clear all quiz logs?')){quizLog=[];saveQuizLog();render();}">🗑️ Clear</button>
+        <button class="qz-btn" style="padding:6px 12px;font-size:11.5px" onclick="clearQuizLog()">🗑️ Clear</button>
       </div>
       ${inner}
     </div>`;
@@ -404,8 +406,8 @@ function renderQuiz(){
 // ══════════════════════════════════════════════════════════════
 // ANALYTICS
 
-export { FLASH_LOG_MAX, QUIZ_LOG_MAX, nextQuestion, quizState, renderQuiz, saveFlashLog, saveQuizLog, selectAnswer, startQuiz, toggleQuizReview };
+export { FLASH_LOG_MAX, QUIZ_LOG_MAX, nextQuestion, quizState, renderQuiz, saveFlashLog, clearQuizLog, clearFlashLog, saveQuizLog, selectAnswer, startQuiz, toggleQuizReview };
 
 if (typeof window !== "undefined") {
-  Object.assign(window, { FLASH_LOG_MAX, QUIZ_LOG_MAX, nextQuestion, quizState, renderQuiz, saveFlashLog, saveQuizLog, selectAnswer, startQuiz, toggleQuizReview });
+  Object.assign(window, { FLASH_LOG_MAX, QUIZ_LOG_MAX, nextQuestion, quizState, renderQuiz, saveFlashLog, clearQuizLog, clearFlashLog, saveQuizLog, selectAnswer, startQuiz, toggleQuizReview });
 }
