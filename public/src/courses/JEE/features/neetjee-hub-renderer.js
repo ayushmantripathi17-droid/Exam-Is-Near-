@@ -115,15 +115,48 @@ function renderNeetJee(){
   </div>`;
 }
 
+// Hub tiles for the main (Overview) page — only for the selected NEET / JEE course.
+// Returns '' for every other course so NFSU / CBSE dashboards are untouched.
+function renderHubStrip(){
+  const ac = CourseSelectorShared.activeCourse;
+  const isJEE = ac === 'jee', isNEET = ac === 'neet';
+  if(!isJEE && !isNEET) return '';
+  njState.exam = isJEE ? 'jee' : 'neet';
+  const feats = NJ_FEATURES.filter(f => f.exam === 'both' || (f.exam === 'neet' && isNEET) || (f.exam === 'jee' && isJEE));
+  const badge = (id) => {
+    if(id==='mistakes') return `<span class="hb-bd">${njState.mistakes.length}</span>`;
+    if(id==='srs') return `<span class="hb-bd">${getDueSRSCards().length} due</span>`;
+    return '';
+  };
+  const css = `<style>
+.hb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-bottom:22px}
+.hb-f{--c:#FFE66D;position:relative;overflow:hidden;cursor:pointer;padding:18px;border-radius:20px;border:1px solid var(--line,var(--border-2,#2a2a3a));background:radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--c) 16%,transparent),transparent 62%),var(--glass-bg,var(--surface,#0f0f18));transition:transform .2s,border-color .2s,box-shadow .2s;animation:hbIn .35s ease both}
+.hb-f:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--c) 60%,var(--line,#2a2a3a));box-shadow:0 14px 30px -14px color-mix(in srgb,var(--c) 60%,transparent)}
+@keyframes hbIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hb-fh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.hb-ic{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;font-size:24px;background:color-mix(in srgb,var(--c) 16%,transparent)}
+.hb-f b{display:block;font-size:15px;font-weight:800;color:var(--c);margin-bottom:4px}
+.hb-f span.d{font-size:12px;color:var(--mute,var(--text-5,#777));line-height:1.55}
+.hb-bd{font-size:10px;font-weight:800;border-radius:99px;padding:3px 9px;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);border:1px solid color-mix(in srgb,var(--c) 30%,transparent)}
+</style>`;
+  return `${css}<div class="ov-sec"><h3>${isJEE ? '⚡ JEE Tools' : '🩺 NEET Tools'}</h3></div>
+  <div class="hb-grid">${feats.map((f,i)=>`
+    <div class="hb-f" style="--c:${f.color};animation-delay:${i*0.05}s" onclick="njState.tab='${f.id}';switchView('neetjee')">
+      <div class="hb-fh"><div class="hb-ic">${f.icon}</div>${badge(f.id)}</div>
+      <b>${f.label}</b>
+      <span class="d">${f.desc}</span>
+    </div>`).join('')}</div>`;
+}
+
 function wrapNJ(inner, tab){
   return `<div class="fade-in">
-    <button onclick="history.pushState(null,'',location.href);njState.tab='home';switchView('neetjee')" style="display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border-2,#2a2a3a);background:var(--surface,#0f0f18);color:var(--text-3,#aaa);padding:9px 15px;border-radius:12px;font-weight:700;font-size:12.5px;font-family:inherit;cursor:pointer;margin-bottom:16px">← Back to Hub</button>
+    <button onclick="njState.tab='home';switchView('dashboard')" style="display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border-2,#2a2a3a);background:var(--surface,#0f0f18);color:var(--text-3,#aaa);padding:9px 15px;border-radius:12px;font-weight:700;font-size:12.5px;font-family:inherit;cursor:pointer;margin-bottom:16px">← Back</button>
     ${inner}
   </div>`;
 }
 
-export { NJ_FEATURES, renderNeetJee, wrapNJ };
+export { NJ_FEATURES, renderNeetJee, renderHubStrip, wrapNJ };
 
 if (typeof window !== "undefined") {
-  Object.assign(window, { NJ_FEATURES, renderNeetJee, wrapNJ });
+  Object.assign(window, { NJ_FEATURES, renderNeetJee, renderHubStrip, wrapNJ });
 }

@@ -6,8 +6,8 @@
 // structure) and fetch the new app fresh. See MIGRATION_NOTES.md.
 // ══════════════════════════════════════════════════════════
 
-const CACHE_NAME = 'exam-is-near-v9';
-const CACHE_STATIC = 'ein-static-v8';
+const CACHE_NAME = 'exam-is-near-v10';
+const CACHE_STATIC = 'ein-static-v9';
 
 // Core assets to pre-cache on install — NO external URLs (they fail in SW context)
 const PRECACHE_ASSETS = [

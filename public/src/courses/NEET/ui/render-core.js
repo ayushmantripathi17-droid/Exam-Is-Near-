@@ -6,7 +6,7 @@ import { renderQuiz } from "../features/quiz.js";
 import { renderAnalytics } from "../features/analytics.js";
 import { renderAI } from "../features/ai-assistant-view.js";
 import { renderFolderPicker, renderProfile, renderSectionModal, renderSubjectSectionTabs } from "../features/subjects-profile.js";
-import { renderNeetJee } from "../../JEE/features/neetjee-hub-renderer.js";
+import { renderNeetJee, renderHubStrip } from "../../JEE/features/neetjee-hub-renderer.js";
 import { AppStateShared, state } from "../../../core/app-state.js";
 import { RINGTONES, selectedRingtone, updateTimerDisplay } from "../features/clock-alarms-timer.js";
 import { loadAIChatHistory } from "../features/ai-assistant-setup.js";
@@ -439,6 +439,7 @@ function renderDashboard(){
       </div>
     </div>
 
+    ${renderHubStrip()}
     <div class="ov-sec"><h3>Subject Progress</h3></div>
     <div class="ov-grid">${subCards}</div>
   </div>`;
