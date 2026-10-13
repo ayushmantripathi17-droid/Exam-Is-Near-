@@ -687,11 +687,20 @@ let _users=[], _payments=[], _coupons=[], _expenses=[];
 const {initializeApp,getApps} = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
 const {getFirestore,collection,getDocs,addDoc,deleteDoc,doc,serverTimestamp} = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
 const {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged} = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
-const {getFunctions,httpsCallable} = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js");
+// Cloud Functions (httpsCallable) need the Blaze plan; Razorpay fees now come from the Vercel API.
+const VERCEL_API = "https://exam-is-near.vercel.app/api";   // change if your Vercel domain differs
+const httpsCallable = (_fns, name) => async () => {
+  if (name === "fetchGCPBilling") throw new Error("GCP billing export needs Blaze + BigQuery. Add this expense manually instead.");
+  const tok = await auth.currentUser.getIdToken();
+  const r = await fetch(VERCEL_API + "/fetch-razorpay-fees", { headers: { Authorization: "Bearer " + tok } });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error?.message || "HTTP " + r.status);
+  return { data: j.result };
+};
 
 const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
 db = getFirestore(app); auth = getAuth(app);
-const functions = getFunctions(app, "asia-south1");
+const functions = null;
 
 // ── expose to window (done after all functions defined below) ──
 

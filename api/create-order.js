@@ -4,6 +4,7 @@
 const { handleCORS } = require("./_lib/cors");
 const { verifyToken } = require("./_lib/auth");
 const Razorpay = require("razorpay");
+const { logEvent } = require("./_lib/paylog");
 const {
   PLAN_PRICE,
   validateCoupon,
@@ -98,6 +99,7 @@ module.exports = async (req, res) => {
         discountValue: String(couponResult?.discountValue || 0),
       },
     });
+    await logEvent("pendingOrders", { orderId: order.id, uid: decoded.uid, plan, amount: finalPaise / 100, couponCode: couponCode || null, status: "created" }, order.id);
     res.status(200).json({
       result: {
         orderId: order.id,
@@ -110,6 +112,7 @@ module.exports = async (req, res) => {
       },
     });
   } catch (e) {
+    await logEvent("paymentFailures", { stage: "create-order", uid: decoded.uid, plan, error: rzpErrMsg(e) });
     res.status(502).json({ error: { message: "Razorpay error: " + rzpErrMsg(e) } });
   }
 };

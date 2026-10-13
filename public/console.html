@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>ArkSetu Console</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--tx:#1c2030;--mu:#6b7280;--bd:#e3e6ec;--ac:#4f46e5;--ok:#16a34a;--bad:#dc2626;--warn:#d97706}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1220;--card:#181c2e;--tx:#e8eaf2;--mu:#98a0b8;--bd:#272c45;--ac:#8b85ff;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24}}
+*{box-sizing:border-box}body{margin:0;font:14px system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+header{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--card);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+header h1{font-size:16px;margin:0;flex:1}nav{display:flex;gap:4px}
+button{font:inherit;cursor:pointer;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:7px 12px;border-radius:8px}
+button.on,button.pri{background:var(--ac);color:#fff;border-color:var(--ac)}button.bad{color:var(--bad);border-color:var(--bad)}button:disabled{opacity:.5;cursor:default}
+main{max-width:1100px;margin:0 auto;padding:20px}.hide{display:none!important}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px}
+.stat b{display:block;font-size:26px;margin-top:4px}.mu{color:var(--mu);font-size:12px}
+.bc{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-width:36px}.bv{width:70%;background:var(--ac);border-radius:4px 4px 0 0;min-height:2px}#pay-chart{display:flex;gap:6px;align-items:flex-end;height:170px}.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}h3{margin:18px 0 8px}
+.bar{display:flex;gap:8px;margin-bottom:12px}input{font:inherit;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);flex:1;min-width:0}
+.wrap{overflow-x:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bd);white-space:nowrap}
+th{font-size:11px;text-transform:uppercase;color:var(--mu)}tr[data-uid]{cursor:pointer}tr[data-uid]:hover{background:var(--bg)}
+.tag{font-size:11px;padding:2px 7px;border-radius:99px;border:1px solid currentColor}.ok{color:var(--ok)}.bd{color:var(--bad)}.wn{color:var(--warn)}
+#detail{position:fixed;inset:0 0 0 auto;width:min(420px,100%);background:var(--card);border-left:1px solid var(--bd);padding:20px;overflow:auto;box-shadow:-8px 0 24px #0003}
+#detail dl{display:grid;grid-template-columns:110px 1fr;gap:6px;margin:14px 0}dt{color:var(--mu)}dd{margin:0;word-break:break-all}
+.acts{display:flex;flex-wrap:wrap;gap:8px}#login{text-align:center;margin:18vh auto;max-width:340px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:10px 16px;border-radius:8px}
+</style>
+</head>
+<body>
+<div id="login" class="card"><h1>ArkSetu Console</h1><p class="mu">Admin &amp; team members only.</p><button class="pri" id="signin">Sign in with Google</button><p id="lerr" class="bd"></p></div>
+
+<div id="app" class="hide">
+<header><h1>⚡ ArkSetu Console</h1>
+<nav><button data-tab="overview" class="on">Overview</button><button data-tab="users">Users</button><button data-tab="payments">Payments</button><button data-tab="coupons">Coupons</button><button data-tab="content">Content</button><button data-tab="audit">Audit log</button></nav>
+<span class="mu" id="who"></span><button id="signout">Sign out</button></header>
+<main>
+<section id="t-overview"><div class="grid" id="stats"></div></section>
+<section id="t-users" class="hide">
+<div class="bar"><input id="q" placeholder="Search by exact email or UID, press Enter (empty = list all)"><button id="go" class="pri">Search</button></div>
+<div class="card wrap"><table><thead><tr><th>User</th><th>Status</th><th>Plan</th><th>Joined</th><th>Last login</th></tr></thead><tbody id="rows"></tbody></table></div>
+<p><button id="more" class="hide">Load more</button></p>
+</section>
+<section id="t-payments" class="hide"><div class="card"><b>Revenue by month (₹, from Pro activations)</b><div id="pay-chart"></div></div>
+<h3>Logs <select id="lk"><option value="payments">Payments</option><option value="paymentFailures">Failures</option><option value="fraudAttempts">Fraud attempts</option><option value="webhookEvents">Webhooks</option><option value="pendingOrders">Orders</option></select></h3>
+<div class="card wrap"><table><tbody id="lrows"></tbody></table></div></section>
+<section id="t-coupons" class="hide"><div class="card row" id="cform"><input id="c-code" placeholder="CODE"><select id="c-type"><option value="percent">% off</option><option value="flat">₹ flat</option></select><input id="c-val" type="number" placeholder="Value"><input id="c-uses" type="number" placeholder="Uses (100)"><input id="c-exp" type="date"><button class="pri" data-co="add">Create</button></div>
+<div class="card wrap"><table><thead><tr><th>Code</th><th>Discount</th><th>Uses left</th><th>Expires</th><th>Status</th><th></th></tr></thead><tbody id="crows"></tbody></table></div></section>
+<section id="t-content" class="hide">
+<div class="card"><b>Announcement</b><div class="row" style="margin-top:8px"><input id="a-b" placeholder="Banner text (top of app)"><input id="a-t" placeholder="Popup title (optional)"><input id="a-p" placeholder="Popup message"></div><button class="pri" data-ct="ann">Publish</button> <button data-ct="annx">Clear</button> <span class="mu" id="a-s"></span></div>
+<div class="card" style="margin-top:12px" id="mcard"><b>Maintenance mode</b><div class="row" style="margin-top:8px"><input id="m-msg" placeholder="Message shown to users"></div><button class="bad" data-ct="mon">Turn ON</button> <button data-ct="moff">Turn OFF</button> <span class="mu" id="m-s"></span></div>
+<div class="card" style="margin-top:12px"><b>Exam dates</b><div class="row" style="margin-top:8px"><input id="e-c" placeholder="Course (e.g. NEET)"><input id="e-i" placeholder="Subject id"><input id="e-n" placeholder="Subject name"><input id="e-d" placeholder="Date (e.g. 12 Dec 2026)"><button class="pri" data-ct="exam">Save</button></div><div class="wrap"><table><tbody id="erows"></tbody></table></div></div>
+<div class="card" style="margin-top:12px"><b>Study materials</b><div class="row" style="margin-top:8px"><input id="s-c" placeholder="Course"><input id="s-s" placeholder="Subject"><input id="s-t" placeholder="Title"><input id="s-u" placeholder="https:// link (Drive etc.)"><select id="s-y"><option>pdf</option><option>video</option><option>notes</option><option>link</option></select><label><input type="checkbox" id="s-p" style="flex:none"> Pro only</label><button class="pri" data-ct="mat">Add</button></div><div class="wrap"><table><tbody id="mrows"></tbody></table></div></div>
+</section>
+<section id="t-audit" class="hide"><div class="card wrap"><table><thead><tr><th>When</th><th>Action</th><th>Target</th><th>Details</th><th>By</th></tr></thead><tbody id="arows"></tbody></table></div></section>
+</main>
+<aside id="detail" class="hide"></aside>
+</div>
+<div id="toast" class="hide"></div>
+
+<script type="module">
+// Public web config (same values as public/src/admin-core/firebase-core.js)
+const CFG={apiKey:"AIzaSyAzd_5MxraedOo_3OuczMdNOvtOk-JRQBo",authDomain:"exam-is-near.firebaseapp.com",projectId:"exam-is-near",appId:"1:568104262716:web:5cfb621349b5e234be7739"};
+const API="https://exam-is-near.vercel.app/api/admin";   // change if your Vercel domain differs
+const {initializeApp}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+const {getAuth,GoogleAuthProvider,signInWithPopup,signOut,onAuthStateChanged}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+const auth=getAuth(initializeApp(CFG));
+const $=(id)=>document.getElementById(id);
+const esc=(s)=>String(s??"").replace(/[&<>"']/g,(c)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=(t)=>t?new Date(t).toLocaleString():"—";
+let role="",perms=[],next=null,list=[];
+
+function toast(m){const t=$("toast");t.textContent=m;t.classList.remove("hide");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.add("hide"),3500)}
+async function api(action,params={}){
+  const tok=await auth.currentUser.getIdToken();
+  const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+tok},body:JSON.stringify({action,...params})});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error?.message||("HTTP "+r.status));
+  role=j.result._role||role;perms=j.result._perms||perms;return j.result;
+}
+const can=(a)=>perms.includes(a);
+const NEED={overview:"stats",users:"listUsers",payments:"payments",coupons:"listCoupons",content:"getContent",audit:"audit"};
+const val=(id)=>$(id).value.trim();
+
+$("signin").onclick=()=>signInWithPopup(auth,new GoogleAuthProvider()).catch((e)=>$("lerr").textContent=e.message);
+$("signout").onclick=()=>signOut(auth);
+onAuthStateChanged(auth,async(u)=>{
+  $("app").classList.toggle("hide",!u);$("login").classList.toggle("hide",!!u);
+  if(!u)return;
+  try{await api("whoami");$("who").textContent=u.email+" · "+role;document.querySelectorAll("nav button").forEach((b)=>b.hidden=!can(NEED[b.dataset.tab]));showTab(Object.keys(NEED).find((t)=>can(NEED[t])))}
+  catch(e){$("lerr").textContent=e.message;$("login").classList.remove("hide");$("app").classList.add("hide");signOut(auth)}
+});
+
+function showTab(t){
+  if(!t)return toast("Your role has no console access");
+  document.querySelectorAll("nav button").forEach((b)=>b.classList.toggle("on",b.dataset.tab===t));
+  Object.keys(NEED).forEach((n)=>$("t-"+n).classList.toggle("hide",n!==t));$("detail").classList.add("hide");
+  ({overview:loadStats,users:()=>list.length||loadUsers(true),payments:loadPay,coupons:loadCoupons,content:loadContent,audit:loadAudit})[t]();
+}
+document.querySelector("nav").onclick=(e)=>e.target.dataset.tab&&showTab(e.target.dataset.tab);
+
+async function loadStats(){
+  const s=await api("stats");
+  const c=(l,v,x="")=>`<div class="card stat"><span class="mu">${l}</span><b>${esc(v)}</b>${x}</div>`;
+  $("stats").innerHTML=c("Total users",s.total,s.truncated?'<span class="mu">first 20,000 only</span>':"")+c("New (7 days)",s.newThisWeek)+
+    c("Active Pro",s.activePro,`<span class="mu">${s.paidPro} paid</span>`)+c("Revenue recorded","₹"+s.revenue.toLocaleString("en-IN"))+c("Banned / disabled",s.disabled);
+}
+
+async function loadUsers(reset){
+  try{
+    const q=$("q").value.trim();
+    const r=await api("listUsers",{query:q,pageToken:reset?undefined:next});
+    list=reset?r.users:list.concat(r.users);next=r.nextPageToken;
+    $("rows").innerHTML=list.map((u)=>`<tr data-uid="${esc(u.uid)}"><td>${esc(u.name||"(no name)")}<div class="mu">${esc(u.email)}</div></td>
+      <td>${u.disabled?'<span class="tag bd">banned</span>':'<span class="tag ok">active</span>'}</td>
+      <td>${u.isPro?`<span class="tag wn">${esc(u.plan)}${u.manual?" · gift":""}</span><div class="mu">to ${esc(fmt(u.expiresAt).split(",")[0])}</div>`:'<span class="mu">free</span>'}</td>
+      <td>${esc(fmt(Date.parse(u.created)).split(",")[0])}</td><td>${esc(fmt(Date.parse(u.lastLogin)))}</td></tr>`).join("")||'<tr><td colspan="5" class="mu">No users found.</td></tr>';
+    $("more").classList.toggle("hide",!next);
+  }catch(e){toast(e.message)}
+}
+$("go").onclick=()=>loadUsers(true);$("q").onkeydown=(e)=>e.key==="Enter"&&loadUsers(true);$("more").onclick=()=>loadUsers(false);
+$("rows").onclick=(e)=>{const tr=e.target.closest("tr[data-uid]");if(tr)openUser(tr.dataset.uid)};
+
+async function openUser(uid){
+  const d=$("detail");d.classList.remove("hide");d.innerHTML='<p class="mu">Loading…</p>';
+  try{
+    const u=await api("getUser",{uid}),B=(a,l,cls="")=>can(a)?`<button class="${cls}" data-do="${a}">${l}</button>`:"";
+    d.innerHTML=`<div class="bar"><b style="flex:1">${esc(u.name||u.email)}</b><button data-do="close">✕</button></div>
+      ${u.banned?`<p class="bd">Banned by ${esc(u.bannedBy)}: ${esc(u.banReason)}</p>`:""}
+      <dl><dt>Email</dt><dd>${esc(u.email)}</dd><dt>UID</dt><dd>${esc(u.uid)}</dd><dt>Sign-in</dt><dd>${esc(u.providers.join(", "))}</dd>
+      <dt>Joined</dt><dd>${esc(fmt(Date.parse(u.created)))}</dd><dt>Last login</dt><dd>${esc(fmt(Date.parse(u.lastLogin)))}</dd>
+      <dt>Plan</dt><dd>${u.isPro?esc(u.plan)+" until "+esc(fmt(u.expiresAt)):"Free"}</dd><dt>Trial used</dt><dd>${u.trialUsed?"Yes":"No"}</dd>
+      <dt>Streak</dt><dd>${esc(u.streak)} days</dd><dt>Study hours</dt><dd>${esc(u.totalHours)}</dd></dl>
+      <div class="acts" data-uid="${esc(u.uid)}" data-email="${esc(u.email)}" data-banned="${u.banned||u.disabled}">
+      ${B("grantPro","🎁 Grant / extend Pro","pri")}${u.isPro?B("revokePro","Revoke Pro"):""}${B("resetStudy","Reset study data")}
+      ${can("setBan")?`<button class="bad" data-do="ban">${u.disabled?"Unban":"Ban user"}</button>`:""}${B("deleteUser","Delete account","bad")}</div>`;
+  }catch(e){d.innerHTML=`<p class="bd">${esc(e.message)}</p><button data-do="close">Close</button>`}
+}
+$("detail").onclick=async(e)=>{
+  const act=e.target.dataset.do;if(!act)return;
+  if(act==="close")return $("detail").classList.add("hide");
+  const box=e.target.parentElement,uid=box.dataset.uid;
+  try{
+    if(act==="grantPro"){
+      const plan=prompt("Plan (monthly / annual):","monthly");if(!plan)return;
+      const days=prompt("Days to add:",plan==="annual"?"366":"32");if(!days)return;
+      await api("grantPro",{uid,plan:plan.trim(),days:Number(days)});toast("Pro granted");
+    }else if(act==="revokePro"){if(!confirm("Revoke Pro now?"))return;await api("revokePro",{uid});toast("Pro revoked")}
+    else if(act==="resetStudy"){if(!confirm("Erase this user's study progress?"))return;await api("resetStudy",{uid});toast("Study data reset")}
+    else if(act==="ban"){
+      const was=box.dataset.banned==="true",reason=was?"":prompt("Reason for ban:","Violation of terms");
+      if(!was&&reason===null)return;await api("setBan",{uid,banned:!was,reason});toast(was?"Unbanned":"Banned — sessions revoked");
+    }else if(act==="deleteUser"){
+      const em=prompt("PERMANENT. Deletes the login and all data. Type the user's email to confirm:");
+      if(em===null)return;await api("deleteUser",{uid,confirmEmail:em});toast("Account deleted");$("detail").classList.add("hide");loadUsers(true);return;
+    }
+    openUser(uid);loadUsers(true);
+  }catch(err){toast(err.message)}
+};
+
+async function loadPay(){
+  try{const p=await api("payments"),mx=Math.max(1,...p.months.map((m)=>m.amount));
+    $("pay-chart").innerHTML=p.months.map((m)=>`<div class="bc"><b class="mu">₹${esc(m.amount)}</b><div class="bv" style="height:${Math.round(m.amount/mx*110)}px"></div><span class="mu">${esc(m.month.slice(2))}</span></div>`).join("")||'<span class="mu">No paid orders yet.</span>';
+    loadLogs();}catch(e){toast(e.message)}
+}
+async function loadLogs(){
+  try{const r=await api("logs",{kind:$("lk").value});
+    $("lrows").innerHTML=r.entries.map((e)=>`<tr><td>${esc(fmt(e.at))}</td><td class="mu" style="white-space:normal">${esc(Object.entries(e).filter(([k])=>k!=="at").map(([k,v])=>k+"="+v).join("  ").slice(0,300))}</td></tr>`).join("")||'<tr><td class="mu">Nothing logged yet.</td></tr>';}catch(e){toast(e.message)}
+}
+$("lk").onchange=loadLogs;
+
+async function loadCoupons(){
+  try{const r=await api("listCoupons"),w=can("saveCoupon");$("cform").classList.toggle("hide",!w);
+    $("crows").innerHTML=r.coupons.map((c)=>`<tr><td><b>${esc(c.code)}</b></td><td>${c.discountType==="flat"?"₹"+esc(c.discountValue):esc(c.discountValue??c.discount)+"%"}</td><td>${esc(c.usesLeft??"∞")} / ${esc(c.uses??"∞")}</td><td>${esc(c.expiry||"never")}</td><td>${c.active?'<span class="tag ok">on</span>':'<span class="tag bd">off</span>'}</td>
+    <td>${w?`<button data-co="tog" data-id="${esc(c.id)}" data-on="${c.active}">${c.active?"Disable":"Enable"}</button> <button class="bad" data-co="del" data-id="${esc(c.id)}">Delete</button>`:""}</td></tr>`).join("")||'<tr><td colspan="6" class="mu">No coupons.</td></tr>';}catch(e){toast(e.message)}
+}
+$("t-coupons").onclick=async(e)=>{
+  const a=e.target.dataset.co;if(!a)return;
+  try{
+    if(a==="add")await api("saveCoupon",{code:val("c-code"),discountType:$("c-type").value,discountValue:Number(val("c-val")),uses:Number(val("c-uses")),expiry:val("c-exp")});
+    if(a==="tog")await api("toggleCoupon",{id:e.target.dataset.id,active:e.target.dataset.on!=="true"});
+    if(a==="del"){if(!confirm("Delete this coupon?"))return;await api("deleteCoupon",{id:e.target.dataset.id})}
+    toast("Done");loadCoupons();
+  }catch(err){toast(err.message)}
+};
+
+async function loadContent(){
+  try{const c=await api("getContent"),a=c.announcement,m=c.maintenance;
+    $("a-s").textContent=a.active?"Live: "+(a.bannerText||a.popupTitle):"No active announcement";
+    $("m-s").textContent=m.enabled?"⚠ Maintenance is ON":"App is live";$("mcard").classList.toggle("hide",!can("setMaintenance"));
+    $("erows").innerHTML=c.examDates.map((x)=>`<tr><td>${esc(x.courseId)}</td><td>${esc(x.subjectName)}</td><td>${esc(x.date)}</td><td><button class="bad" data-ct="xe" data-id="${esc(x.id)}">Remove</button></td></tr>`).join("")||'<tr><td class="mu">No exam dates.</td></tr>';
+    $("mrows").innerHTML=c.materials.map((x)=>`<tr><td>${esc(x.course)}</td><td>${esc(x.title)}${x.proOnly?' <span class="tag wn">pro</span>':""}</td><td class="mu">${esc(x.subject)}</td><td><button class="bad" data-ct="xm" data-id="${esc(x.id)}">Delete</button></td></tr>`).join("")||'<tr><td class="mu">No materials.</td></tr>';}catch(e){toast(e.message)}
+}
+$("t-content").onclick=async(e)=>{
+  const a=e.target.dataset.ct;if(!a)return;
+  try{
+    if(a==="ann")await api("setAnnouncement",{bannerText:val("a-b"),popupTitle:val("a-t"),popupBody:val("a-p")});
+    if(a==="annx")await api("clearAnnouncement");
+    if(a==="mon"||a==="moff"){if(a==="mon"&&!confirm("Show the maintenance screen to ALL users?"))return;await api("setMaintenance",{enabled:a==="mon",message:val("m-msg")})}
+    if(a==="exam")await api("saveExamDate",{courseId:val("e-c"),subjectId:val("e-i"),subjectName:val("e-n"),date:val("e-d")});
+    if(a==="xe")await api("deleteExamDate",{id:e.target.dataset.id});
+    if(a==="mat")await api("saveMaterial",{course:val("s-c"),subject:val("s-s"),title:val("s-t"),url:val("s-u"),type:$("s-y").value,proOnly:$("s-p").checked});
+    if(a==="xm"){if(!confirm("Delete this material?"))return;await api("deleteMaterial",{id:e.target.dataset.id})}
+    toast("Saved");loadContent();
+  }catch(err){toast(err.message)}
+};
+
+async function loadAudit(){
+  try{
+    const r=await api("audit",{limit:150});
+    $("arows").innerHTML=r.entries.map((a)=>`<tr><td>${esc(fmt(a.at))}</td><td><span class="tag">${esc(a.action)}</span></td><td>${esc(a.targetEmail)}</td><td>${esc(a.details)}</td><td>${esc(a.byEmail)}</td></tr>`).join("")||'<tr><td colspan="5" class="mu">No actions logged yet.</td></tr>';
+  }catch(e){toast(e.message)}
+}
+</script>
+</body>
+</html>

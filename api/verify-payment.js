@@ -4,6 +4,7 @@
 const { handleCORS } = require("./_lib/cors");
 const { verifyToken } = require("./_lib/auth");
 const Razorpay = require("razorpay");
+const { logEvent } = require("./_lib/paylog");
 const crypto = require("crypto");
 const { PLAN_PRICE, validateCoupon, computeFinalAmount, activateProInDB, consumeCoupon, getUserMeta } = require("./_lib/billing");
 
@@ -30,6 +31,7 @@ module.exports = async (req, res) => {
     .update(`${orderId}|${paymentId}`)
     .digest("hex");
   if (expectedSig !== signature) {
+    await logEvent("fraudAttempts", { reason: "bad payment signature", uid: decoded.uid, orderId, paymentId, ip: req.headers["x-forwarded-for"] || "" });
     res.status(400).json({ error: { message: "Payment signature verification failed." } });
     return;
   }
@@ -76,8 +78,13 @@ module.exports = async (req, res) => {
       }
     }
 
+    const rec = { uid: decoded.uid, plan, orderId, paymentId, amount: Math.round(amountPaidPaise / 100), couponCode: couponCode || null, source: "verify" };
+    await logEvent("payments", rec, paymentId);
+    await logEvent("payment_logs", { ...rec, status: "captured" });
+    await logEvent("pendingOrders", { status: "paid" }, orderId);
     res.status(200).json({ result: { success: true, isPro: true, plan, expiresAt } });
   } catch (e) {
+    await logEvent("paymentFailures", { stage: "activation", uid: decoded.uid, orderId, paymentId, error: e.message });
     res.status(500).json({ error: { message: "DB write failed: " + e.message } });
   }
 };

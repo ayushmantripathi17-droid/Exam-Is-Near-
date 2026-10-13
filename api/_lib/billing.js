@@ -5,6 +5,7 @@
 // paid-payment path so proUsers/{uid} stays consistent either way.
 
 const admin = require("./firebaseAdmin");
+const { sendWelcome } = require("./welcome");
 const db = admin.firestore();
 
 const PLAN_PRICE = { monthly: 14900, annual: 99900 }; // paise
@@ -103,6 +104,8 @@ async function consumeCoupon(couponRef, uid, plan, adminOnly = false) {
 
 async function activateProInDB(uid, { plan, amountPaidRupees, couponCode, orderId, paymentId, displayName, email }) {
   const now = Date.now();
+  const prev = (await db.collection("proUsers").doc(uid).get()).data();
+  const wasActive = prev?.isPro === true && prev.expiresAt > now;
   const expiresAt = now + (PLAN_DURATION_MS[plan] || PLAN_DURATION_MS.monthly);
   await db.collection("proUsers").doc(uid).set(
     {
@@ -121,6 +124,7 @@ async function activateProInDB(uid, { plan, amountPaidRupees, couponCode, orderI
     },
     { merge: true }
   );
+  if (!wasActive) await sendWelcome({ email: email || prev?.email, displayName, plan, expiresAt });
   return expiresAt;
 }
 
