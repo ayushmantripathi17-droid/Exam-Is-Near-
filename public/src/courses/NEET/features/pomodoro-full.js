@@ -260,7 +260,7 @@ function pomRenderFSOverlay(el){
 window.addEventListener('popstate', ()=>{
   if(state.view === 'neetjee' && njState.tab !== 'home'){
     njState.tab = 'home';
-    switchView('dashboard', false);
+    switchView('neetjee');
   }
 });
 

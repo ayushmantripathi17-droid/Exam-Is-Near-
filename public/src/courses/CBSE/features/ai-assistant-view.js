@@ -163,10 +163,62 @@ function _aiLoadSessions(){
 function _aiSaveSessions(){
   try{ localStorage.setItem(AI_SESSIONS_KEY, JSON.stringify(_aiSessions.slice(0, AI_SESSION_MAX))); }catch(e){}
 }
+// ── Chat titles: short topic name instead of "New chat" / raw first sentence ──
+function _aiTopicFromText(raw){
+  let t = String(raw==null?'':raw).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  if(!t) return '';
+  if(/^(hi+|hello+|hey+|ok(ay)?|thanks?|thank you|test)\W*$/i.test(t)) return '';
+  const src = t;
+  const diff = t.match(/differences?\s+between\s+(.+?)\s+(?:and|&|vs\.?)\s+(.+?)\s*[?.!]*$/i);
+  if(diff){ t = diff[1]+' vs '+diff[2]; }
+  else {
+    t = t.replace(/^(hi|hello|hey)[,!.\s]+/i,'')
+         .replace(/^(please|pls|kindly)\s+/i,'')
+         .replace(/^(can|could|would|will)\s+you\s+(please\s+)?/i,'')
+         .replace(/^i\s+(want|need|would like|wanna)\s+(you\s+)?(to\s+)?/i,'')
+         .replace(/^(explain|describe|define|summari[sz]e|teach me|tell me|give me|show me|list|write|make|create|generate|solve|help me with|help me understand|help me)\s+(me\s+)?(about\s+|on\s+)?(the\s+)?/i,'')
+         .replace(/^(what|who|which|when|where|why|how)\s+(is|are|was|were|does|do|did|can|should|would|to)\s+(the\s+|an?\s+)?/i,'')
+         .replace(/^(what|how|why)\s+/i,'');
+  }
+  t = t.replace(/[\s?!.,;:]+$/,'').trim();
+  if(t.length < 2) t = src;
+  const MAX = 34;
+  if(t.length > MAX){
+    const head = t.slice(0, MAX + 1);
+    let cutAt = -1, m, re = /\s+(?:and|or|with|for|from|that|which|because|including)\s+|[,;:\u2014]|\s-\s/gi;
+    while((m = re.exec(head)) && m.index <= MAX){ if(m.index >= 12) cutAt = m.index; }
+    if(cutAt > 0) t = t.slice(0, cutAt).trim();
+    else { t = t.slice(0, MAX); t = t.slice(0, Math.max(t.lastIndexOf(' '), 12)).trim() + '\u2026'; }
+  }
+  const small = new Set(['of','and','the','in','on','for','to','a','an','vs','or','at','by','with','from','about','into']);
+  t = t.split(' ').map((w,i)=>{
+    if(!w) return w;
+    if(/[A-Z]/.test(w.slice(1)) || /\d/.test(w)) return w;
+    const lw = w.toLowerCase();
+    if(i>0 && small.has(lw)) return lw;
+    return lw.charAt(0).toUpperCase()+lw.slice(1);
+  }).join(' ');
+  return t;
+}
+function _aiEmptyTitle(){
+  const id = AiAssistantViewShared.subjectCtx;
+  if(id && id !== 'all'){
+    const s = getSubjects().find(x=>x.id===id);
+    if(s) return s.name;
+  }
+  return 'Untitled topic';
+}
 function _aiSessionTitle(msgs){
-  const first = msgs.find(m=>m.role==='user');
-  if(!first) return 'New chat';
-  return first.text.replace(/<[^>]+>/g,'').trim().slice(0,42) || 'New chat';
+  for(const m of (msgs||[])){
+    if(m.role!=='user') continue;
+    const t = _aiTopicFromText(m.text);
+    if(t) return t;
+  }
+  return _aiEmptyTitle();
+}
+function _aiDisplayTitle(s){
+  const hasUser = (s.messages||[]).some(m=>m.role==='user');
+  return hasUser ? _aiSessionTitle(s.messages) : _aiEmptyTitle();
 }
 
 const _AI_SPARK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>';
@@ -192,7 +244,7 @@ function _aiSessionsHtml(){
     return '<div class="ai-sidebar-label">'+label+'</div>'+
       items.map(s=>'<div class="ai-session-item'+(AiAssistantViewShared._aiActiveSession===s.id?' active':'')+'" onclick="aiLoadSession(\''+s.id+'\')">'+
         '<span class="ai-sess-icon">'+_AI_CHAT+'</span>'+
-        '<span class="ai-sess-title">'+esc(s.title)+'</span>'+
+        '<span class="ai-sess-title" title="'+esc(_aiDisplayTitle(s))+'">'+esc(_aiDisplayTitle(s))+'</span>'+
         '<span class="ai-sess-time">'+_aiRelTime(s.ts)+'</span>'+
         '<button class="ai-sess-del" onclick="aiDeleteSession(\''+s.id+'\',event)" title="Delete">\u2715</button>'+
         '</div>').join('');
@@ -213,7 +265,10 @@ function _aiWelcomeHtml(){
     '<div class="ai-welcome-grid">'+cards+'</div></div>';
 }
 
-function aiSetCtx(v){ AiAssistantViewShared.subjectCtx = v || 'all'; }
+function aiSetCtx(v){
+  AiAssistantViewShared.subjectCtx = v || 'all';
+  const l = document.querySelector('.ai-sessions-list'); if(l) l.innerHTML = _aiSessionsHtml();
+}
 function aiClearChat(){
   AiAssistantSetupShared.aiHistory = [];
   _aiPersistCurrentSession();
@@ -273,7 +328,7 @@ function aiNewChat(){
   const id = 'sess_'+Date.now();
   AiAssistantViewShared._aiActiveSession = id;
   AiAssistantSetupShared.aiHistory = [];
-  const sess = {id, title:'New chat', ts: Date.now(), messages:[]};
+  const sess = {id, title:_aiEmptyTitle(), ts: Date.now(), messages:[]};
   _aiSessions.unshift(sess);
   _aiSaveSessions();
 
@@ -482,8 +537,8 @@ function installPWA(){
 // ══════════════════════════════════════════════════════════════
 // MOBILE NAV DRAWER
 
-export { AI_QUICK_PROMPTS, AI_SESSIONS_KEY, AI_SESSION_MAX, AI_WELCOME_CARDS, _aiLoadSessions, _aiPersistCurrentSession, _aiRelTime, _aiSaveSessions, _aiSessionTitle, _aiSessions, _aiSidebarOpen, _aiToggleIconClosed, _aiToggleIconOpen, _closeAISidebarMobile, aiDeleteSession, aiLoadSession, aiNewChat, aiToggleSidebar, getAIQuickPrompts, getAIWelcomeCards, installPWA, renderAI, renderAIMsgBubble, aiClearChat, aiSetCtx, aiCopyMsg, _aiSessionsHtml, _aiWelcomeHtml, _aiMd };
+export { AI_QUICK_PROMPTS, AI_SESSIONS_KEY, AI_SESSION_MAX, AI_WELCOME_CARDS, _aiLoadSessions, _aiPersistCurrentSession, _aiRelTime, _aiSaveSessions, _aiSessionTitle, _aiTopicFromText, _aiEmptyTitle, _aiDisplayTitle, _aiSessions, _aiSidebarOpen, _aiToggleIconClosed, _aiToggleIconOpen, _closeAISidebarMobile, aiDeleteSession, aiLoadSession, aiNewChat, aiToggleSidebar, getAIQuickPrompts, getAIWelcomeCards, installPWA, renderAI, renderAIMsgBubble, aiClearChat, aiSetCtx, aiCopyMsg, _aiSessionsHtml, _aiWelcomeHtml, _aiMd };
 
 if (typeof window !== "undefined") {
-  Object.assign(window, { AI_QUICK_PROMPTS, AI_SESSIONS_KEY, AI_SESSION_MAX, AI_WELCOME_CARDS, _aiLoadSessions, _aiPersistCurrentSession, _aiRelTime, _aiSaveSessions, _aiSessionTitle, _aiSessions, _aiSidebarOpen, _aiToggleIconClosed, _aiToggleIconOpen, _closeAISidebarMobile, aiDeleteSession, aiLoadSession, aiNewChat, aiToggleSidebar, getAIQuickPrompts, getAIWelcomeCards, installPWA, renderAI, renderAIMsgBubble, aiClearChat, aiSetCtx, aiCopyMsg, _aiSessionsHtml, _aiWelcomeHtml, _aiMd });
+  Object.assign(window, { AI_QUICK_PROMPTS, AI_SESSIONS_KEY, AI_SESSION_MAX, AI_WELCOME_CARDS, _aiLoadSessions, _aiPersistCurrentSession, _aiRelTime, _aiSaveSessions, _aiSessionTitle, _aiTopicFromText, _aiEmptyTitle, _aiDisplayTitle, _aiSessions, _aiSidebarOpen, _aiToggleIconClosed, _aiToggleIconOpen, _closeAISidebarMobile, aiDeleteSession, aiLoadSession, aiNewChat, aiToggleSidebar, getAIQuickPrompts, getAIWelcomeCards, installPWA, renderAI, renderAIMsgBubble, aiClearChat, aiSetCtx, aiCopyMsg, _aiSessionsHtml, _aiWelcomeHtml, _aiMd });
 }

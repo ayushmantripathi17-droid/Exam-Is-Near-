@@ -106,7 +106,7 @@ function renderNeetJee(){
     </div>
     <div class="hb-grid">
       ${visibleFeatures.map((f,i)=>`
-        <div class="hb-f" style="--c:${f.color};animation-delay:${i*0.05}s" onclick="njState.tab='${f.id}';switchView('neetjee')">
+        <div class="hb-f" style="--c:${f.color};animation-delay:${i*0.05}s" onclick="njState.from='';njState.tab='${f.id}';switchView('neetjee')">
           <div class="hb-fh"><div class="hb-ic">${f.icon}</div>${mkBadge2(f.id)}</div>
           <b>${f.label}</b>
           <span class="d">${f.desc}</span>
@@ -115,48 +115,75 @@ function renderNeetJee(){
   </div>`;
 }
 
-// Hub tiles for the main (Overview) page — only for the selected NEET / JEE course.
-// Returns '' for every other course so NFSU / CBSE dashboards are untouched.
-function renderHubStrip(){
+
+// ══════════════════════════════════════════════════════════════
+// Main-page (Overview) toolkit — every hub tool, only for NEET / JEE courses
+function renderHubToolkit(){
   const ac = CourseSelectorShared.activeCourse;
   const isJEE = ac === 'jee', isNEET = ac === 'neet';
   if(!isJEE && !isNEET) return '';
-  njState.exam = isJEE ? 'jee' : 'neet';
   const feats = NJ_FEATURES.filter(f => f.exam === 'both' || (f.exam === 'neet' && isNEET) || (f.exam === 'jee' && isJEE));
+  const title = isJEE ? 'JEE Toolkit' : 'NEET Toolkit';
+  const accent = isJEE ? '#4ECDC4' : '#06D6A0';
   const badge = (id) => {
-    if(id==='mistakes') return `<span class="hb-bd">${njState.mistakes.length}</span>`;
-    if(id==='srs') return `<span class="hb-bd">${getDueSRSCards().length} due</span>`;
+    if(id === 'mistakes'){ const n = (njState.mistakes||[]).length; return n ? `<span class="tk-bd">${n} logged</span>` : ''; }
+    if(id === 'srs'){ const n = getDueSRSCards().length; return n ? `<span class="tk-bd due">${n} due</span>` : ''; }
     return '';
   };
   const css = `<style>
-.hb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-bottom:22px}
-.hb-f{--c:#FFE66D;position:relative;overflow:hidden;cursor:pointer;padding:18px;border-radius:20px;border:1px solid var(--line,var(--border-2,#2a2a3a));background:radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--c) 16%,transparent),transparent 62%),var(--glass-bg,var(--surface,#0f0f18));transition:transform .2s,border-color .2s,box-shadow .2s;animation:hbIn .35s ease both}
-.hb-f:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--c) 60%,var(--line,#2a2a3a));box-shadow:0 14px 30px -14px color-mix(in srgb,var(--c) 60%,transparent)}
-@keyframes hbIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.hb-fh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
-.hb-ic{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;font-size:24px;background:color-mix(in srgb,var(--c) 16%,transparent)}
-.hb-f b{display:block;font-size:15px;font-weight:800;color:var(--c);margin-bottom:4px}
-.hb-f span.d{font-size:12px;color:var(--mute,var(--text-5,#777));line-height:1.55}
-.hb-bd{font-size:10px;font-weight:800;border-radius:99px;padding:3px 9px;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);border:1px solid color-mix(in srgb,var(--c) 30%,transparent)}
+.tk{--line:var(--border-2,#2a2a3a);--surf:var(--surface,#0f0f18);--mute:var(--text-5,#777);--txt:var(--text,#eee);margin:6px 0 24px}
+.tk *{box-sizing:border-box}
+.tk-h{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.tk-h h3{margin:0;font-size:16px;font-weight:800;color:var(--txt);letter-spacing:-.3px;display:flex;align-items:center;gap:9px}
+.tk-h h3 i{font-style:normal;font-size:10px;font-weight:800;letter-spacing:1px;padding:3px 10px;border-radius:99px;color:${accent};background:color-mix(in srgb,${accent} 14%,transparent);border:1px solid color-mix(in srgb,${accent} 35%,transparent)}
+.tk-h p{margin:4px 0 0;font-size:12px;color:var(--mute)}
+.tk-all{border:1px solid var(--line);background:var(--surf);color:var(--text-3,#aaa);border-radius:99px;padding:7px 14px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:.2s}
+.tk-all:hover{border-color:${accent};color:var(--txt)}
+.tk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+@media(max-width:520px){.tk-grid{grid-template-columns:1fr 1fr;gap:8px}}
+.tk-c{--c:#FFE66D;position:relative;overflow:hidden;cursor:pointer;padding:14px;border-radius:18px;border:1px solid var(--line);background:radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--c) 15%,transparent),transparent 62%),var(--glass-bg,var(--surf));transition:transform .2s,border-color .2s,box-shadow .2s;animation:tkIn .35s ease both}
+.tk-c:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--c) 60%,var(--line));box-shadow:0 14px 28px -16px color-mix(in srgb,var(--c) 65%,transparent)}
+@keyframes tkIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.tk-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.tk-ic{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-size:20px;background:color-mix(in srgb,var(--c) 16%,transparent);transition:transform .3s cubic-bezier(.3,1.4,.5,1)}
+.tk-c:hover .tk-ic{transform:scale(1.12) rotate(-6deg)}
+.tk-bd{font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:99px;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);border:1px solid color-mix(in srgb,var(--c) 30%,transparent)}
+.tk-bd.due{background:#C77DFF22;color:#C77DFF;border-color:#C77DFF44}
+.tk-c b{display:block;font-size:13.5px;font-weight:800;color:var(--c);margin-bottom:3px}
+.tk-c span.d{display:block;font-size:11px;color:var(--mute);line-height:1.5}
 </style>`;
-  return `${css}<div class="ov-sec"><h3>${isJEE ? '⚡ JEE Tools' : '🩺 NEET Tools'}</h3></div>
-  <div class="hb-grid">${feats.map((f,i)=>`
-    <div class="hb-f" style="--c:${f.color};animation-delay:${i*0.05}s" onclick="njState.tab='${f.id}';switchView('neetjee')">
-      <div class="hb-fh"><div class="hb-ic">${f.icon}</div>${badge(f.id)}</div>
-      <b>${f.label}</b>
-      <span class="d">${f.desc}</span>
-    </div>`).join('')}</div>`;
+  return `${css}<div class="tk">
+    <div class="tk-h">
+      <div>
+        <h3>${title} <i>${feats.length} TOOLS</i></h3>
+        <p>Every exam tool, one tap away.</p>
+      </div>
+      <button class="tk-all" onclick="njState.from='';njState.tab='home';switchView('neetjee')">Open Hub →</button>
+    </div>
+    <div class="tk-grid">
+      ${feats.map((f,i)=>`
+      <div class="tk-c" style="--c:${f.color};animation-delay:${i*0.05}s" onclick="njState.from='dashboard';njState.tab='${f.id}';switchView('neetjee')">
+        <div class="tk-top"><div class="tk-ic">${f.icon}</div>${badge(f.id)}</div>
+        <b>${f.label}</b>
+        <span class="d">${f.desc}</span>
+      </div>`).join('')}
+    </div>
+  </div>`;
 }
 
 function wrapNJ(inner, tab){
+  const fromDash = njState.from === 'dashboard';
+  const go = fromDash
+    ? "njState.from='';njState.tab='home';switchView('dashboard')"
+    : "history.pushState(null,'',location.href);njState.tab='home';switchView('neetjee')";
   return `<div class="fade-in">
-    <button onclick="njState.tab='home';switchView('dashboard')" style="display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border-2,#2a2a3a);background:var(--surface,#0f0f18);color:var(--text-3,#aaa);padding:9px 15px;border-radius:12px;font-weight:700;font-size:12.5px;font-family:inherit;cursor:pointer;margin-bottom:16px">← Back</button>
+    <button onclick="${go}" style="display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border-2,#2a2a3a);background:var(--surface,#0f0f18);color:var(--text-3,#aaa);padding:9px 15px;border-radius:12px;font-weight:700;font-size:12.5px;font-family:inherit;cursor:pointer;margin-bottom:16px">← Back to ${fromDash?'Overview':'Hub'}</button>
     ${inner}
   </div>`;
 }
 
-export { NJ_FEATURES, renderNeetJee, renderHubStrip, wrapNJ };
+export { NJ_FEATURES, renderNeetJee, renderHubToolkit, wrapNJ };
 
 if (typeof window !== "undefined") {
-  Object.assign(window, { NJ_FEATURES, renderNeetJee, renderHubStrip, wrapNJ });
+  Object.assign(window, { renderHubToolkit, NJ_FEATURES, renderNeetJee, wrapNJ });
 }
