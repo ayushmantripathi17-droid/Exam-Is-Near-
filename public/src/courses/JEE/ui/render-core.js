@@ -439,7 +439,6 @@ function renderDashboard(){
       </div>
     </div>
 
-    ${renderHubToolkit()}
     <div class="ov-sec"><h3>Subject Progress</h3></div>
     <div class="ov-grid">${subCards}</div>
   </div>`;

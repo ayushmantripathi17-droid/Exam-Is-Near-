@@ -42,12 +42,13 @@ let freeQuizCount   = _initDailyCounter('ein_free_quiz_day');  // resets daily
 // ── PRO: AI Chat History persistence ──
 const AI_HISTORY_KEY = "ein_ai_chat_history";
 const AI_HISTORY_MAX = 120; // messages stored for Pro
+function _aiHistKey(){ return AI_HISTORY_KEY + "_" + (CourseSelectorShared.activeCourse || "default"); }
 
 async function loadAIChatHistory(){
   try{
     const pro = await CourseRuntime.isProUser();
     if(!pro) return;
-    const saved = localStorage.getItem(AI_HISTORY_KEY);
+    const saved = localStorage.getItem(_aiHistKey());
     if(saved){
       const parsed = JSON.parse(saved);
       if(Array.isArray(parsed) && parsed.length > 0){
@@ -64,7 +65,7 @@ async function saveAIChatHistory(){
     if(!pro) return;
     // Keep only last AI_HISTORY_MAX messages to stay within localStorage quota
     const toSave = aiHistory.slice(-AI_HISTORY_MAX);
-    localStorage.setItem(AI_HISTORY_KEY, JSON.stringify(toSave));
+    localStorage.setItem(_aiHistKey(), JSON.stringify(toSave));
   }catch(e){}
 }
 
@@ -203,6 +204,34 @@ function renderAIChat(){
   if(dot){dot.className="ai-dot"+(CourseRuntime.aiTyping?" thinking":"");}
 }
 
+// ── Plain-text maths: AI sometimes returns LaTeX (\frac, \theta…) which the app can't render ──
+const _LATEX_SYMS = {alpha:'α',beta:'β',gamma:'γ',delta:'δ',Delta:'Δ',epsilon:'ε',theta:'θ',lambda:'λ',mu:'μ',nu:'ν',pi:'π',rho:'ρ',sigma:'σ',Sigma:'Σ',tau:'τ',phi:'φ',omega:'ω',Omega:'Ω',times:'×',cdot:'·',pm:'±',leq:'≤',geq:'≥',le:'≤',ge:'≥',neq:'≠',approx:'≈',infty:'∞',rightarrow:'→',to:'→',degree:'°'};
+function _plainMath(s){
+  if(typeof s!=='string' || !/[\\$^{}]/.test(s)) return s;
+  let t=s;
+  for(let i=0;i<4;i++){
+    t=t.replace(/\\sqrt\s*\{([^{}]*)\}/g,'√($1)');
+    t=t.replace(/\\[dt]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,(m,a,b)=>'('+a+'/'+b+')');
+  }
+  t=t.replace(/\\(?:text|mathrm|mathbf|operatorname)\s*\{([^{}]*)\}/g,'$1');
+  t=t.replace(/\\left|\\right/g,'');
+  t=t.replace(/\\([A-Za-z]+)/g,(m,w,off,str)=>{
+    const sym=_LATEX_SYMS[w];
+    if(!sym) return w;
+    return (off>0 && /[A-Za-z0-9]/.test(str[off-1]) ? ' ' : '')+sym;
+  });
+  const _sup={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻','+':'⁺'};
+  t=t.replace(/\^\{([+-]?\d+)\}|\^([+-]?\d)/g,(m,a,b)=>[...(a||b)].map(c=>_sup[c]).join(''));
+  t=t.replace(/\^\{([^{}]*)\}/g,'^($1)');
+  t=t.replace(/_\{([^{}]*)\}/g,'_$1');
+  t=t.replace(/\\[,;! ]/g,' ').replace(/\$+/g,'');
+  return t.replace(/ {2,}/g,' ');
+}
+function _cleanMathQ(q){
+  return {...q, q:_plainMath(q.q), options:q.options.map(_plainMath), explanation:_plainMath(q.explanation)};
+}
+
+export { _plainMath };
 async function generateQuizFromAI(subject, count){
   const n = parseInt(count)||15;
   showToast("🧠 Generating "+n+"-question practice…","info");
@@ -260,9 +289,12 @@ STYLE RULES:
 - For NEET: prioritise Biology (60%), Physics (20%), Chemistry (20%) weighting if topic spans multiple subjects
 - For JEE: include formula derivation, dimensional analysis, and multi-step reasoning
 - Each explanation must be ≤ 2 sentences, sharp, pointing out WHY the wrong options fail
+- Tag every question with a specific sub-topic of the chapter in "topic" (2-5 words, e.g. "Rolling on an incline", "Moment of inertia"). Reuse the exact same wording when questions share a sub-topic.
+- Work out each answer carefully BEFORE writing it so the "answer" index is correct. The explanation must be final and clean: no self-corrections, no "let's", no notes to yourself.
+- Write ALL maths in plain text with Unicode symbols. NEVER use LaTeX, backslashes or $ signs. Examples: (1/3) tan θ, μ ≥ (2/7) tan θ, √(2gh), v², 3×10⁸ m/s, x₁
 
 OUTPUT FORMAT — ONLY a raw JSON array, nothing else:
-[{"q":"question text","options":["A. ...","B. ...","C. ...","D. ..."],"answer":0,"explanation":"Why correct + why distractors fail","difficulty":"easy|medium|hard"}]
+[{"q":"question text","options":["A. ...","B. ...","C. ...","D. ..."],"answer":0,"explanation":"Why correct + why distractors fail","difficulty":"easy|medium|hard","topic":"specific sub-topic, 2-5 words"}]
 where "answer" is 0-based index of correct option.
 Output all ${n} questions. Do not truncate.`;
   const resp = await askAI(prompt, true);
@@ -281,7 +313,7 @@ Output all ${n} questions. Do not truncate.`;
     // Validate each question has required fields (explanation & difficulty are optional bonuses)
     const valid = qs.filter(q => q.q && Array.isArray(q.options) && q.options.length >= 2 && typeof q.answer === 'number');
     if(valid.length === 0) return null;
-    return valid.sort(()=>Math.random()-0.5).slice(0,n);
+    return valid.map(_cleanMathQ).sort(()=>Math.random()-0.5).slice(0,n);
   }catch(e){
     showToast("⚠️ Could not parse practice response. Try again.", "alarm");
     return null;

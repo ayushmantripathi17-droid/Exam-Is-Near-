@@ -157,11 +157,12 @@ let _aiSessions = [];       // [{id, title, ts, messages:[]}]
 AiAssistantViewShared._aiActiveSession = null; // id of active session
 let _aiSidebarOpen = true;
 
+function _aiSessKey(){ return AI_SESSIONS_KEY + "_" + (CourseSelectorShared.activeCourse || "default"); }
 function _aiLoadSessions(){
-  try{ _aiSessions = JSON.parse(localStorage.getItem(AI_SESSIONS_KEY)||'[]'); }catch(e){ _aiSessions=[]; }
+  try{ _aiSessions = JSON.parse(localStorage.getItem(_aiSessKey())||'[]'); }catch(e){ _aiSessions=[]; }
 }
 function _aiSaveSessions(){
-  try{ localStorage.setItem(AI_SESSIONS_KEY, JSON.stringify(_aiSessions.slice(0, AI_SESSION_MAX))); }catch(e){}
+  try{ localStorage.setItem(_aiSessKey(), JSON.stringify(_aiSessions.slice(0, AI_SESSION_MAX))); }catch(e){}
 }
 // ── Chat titles: short topic name instead of "New chat" / raw first sentence ──
 function _aiTopicFromText(raw){
@@ -427,6 +428,7 @@ function _aiRelTime(ts){
 }
 
 function renderAI(){
+  if(AiAssistantSetupShared._aiSyncCourse) AiAssistantSetupShared._aiSyncCourse();
   _aiPruneEmpty();
   const hasHistory = AiAssistantSetupShared.aiHistory.length > 0;
   const proFromCache = !!(_proCache?.isPro);

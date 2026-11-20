@@ -7,8 +7,12 @@ import { AiAssistantSetupShared, FREE_QUIZ_LIMIT, _incDailyCounter, generateQuiz
 import { CourseSelectorShared, getSubjects } from "../../../core/course-selector.js";
 import { spawnStars } from "./clock-alarms-timer.js";
 import { renderFocusAnalysis } from "../../../shared/weak-topics.js";
+import { _plainMath } from "./ai-assistant-setup.js";
 
 // ══════════════════════════════════════════════════════════════
+// Display helpers: clean leftover LaTeX and drop duplicated option letters ("A. A. text")
+const _fx=s=>_plainMath(typeof s==='string'?s:String(s==null?'':s));
+const _fxOpt=o=>_fx(o).replace(/^\s*[A-Da-d][.)]\s+/,'');
 let quizState={questions:[],current:0,selected:null,score:0,done:false,generating:false,subSel:'',unitSel:'',countSel:'15',showHistory:false,doneFilter:'All',reviewFilter:'All',reviewId:null,openReviewId:null};
 CourseRuntime._proStatusCache = false; // updated by isProUser calls, used in sync renders
 
@@ -60,7 +64,8 @@ async function startQuiz(unitName, qCount){
   }
 
   const subName=getSubjects().find(s=>s.id===sub)?.name||sub;
-  const chapterCtx = unitName ? unitName+" ("+subName+")" : subName;
+  const chapterCtx = (unitName ? unitName+" ("+subName+")" : subName) + (quizState.focusTopic ? " — focus especially on the sub-topic: "+quizState.focusTopic : "");
+  quizState.focusTopic = "";
   quizState.generating=true;
   render();
   const questions=await generateQuizFromAI(chapterCtx, numQ);
@@ -70,6 +75,7 @@ async function startQuiz(unitName, qCount){
   quizState.selected=null;
   quizState.score=0;
   quizState.done=false;
+  quizState.showDoneReview=false;
   quizState.generating=false;
   quizState.userAnswers=[];
   render();
@@ -117,7 +123,8 @@ function nextQuestion(){
           userAnswer: (quizState.userAnswers||[])[i]??null,
           correct: (quizState.userAnswers||[])[i]===q.answer,
           difficulty: q.difficulty||null,
-          explanation: q.explanation||""
+          explanation: q.explanation||"",
+          topic: q.topic||null
         }))
       });
       saveQuizLog();
@@ -204,7 +211,7 @@ function renderQuiz(){
       const isAns=oi===qq.answer, isUser=oi===ua;
       const cls=isAns?"ok":(isUser?"bad":"");
       const pre=isAns?"✓ ":(isUser?"✗ ":"");
-      return `<div class="qz-ro ${cls}">${pre}<b>${String.fromCharCode(65+oi)}.</b> ${esc(opt)}</div>`;
+      return `<div class="qz-ro ${cls}">${pre}<b>${String.fromCharCode(65+oi)}.</b> ${esc(_fxOpt(opt))}</div>`;
     }).join(''):`<div style="font-size:11.5px;color:var(--mute);font-style:italic">Options not stored for this entry — only new practice sessions log full options</div>`;
     return `<div class="qz-rv" style="border-color:color-mix(in srgb,${col} 35%,var(--line));background:color-mix(in srgb,${col} 6%,transparent)">
       <div class="qz-rv-h">
@@ -212,9 +219,9 @@ function renderQuiz(){
         ${qq.difficulty?`<span style="font-size:10.5px;font-weight:800;color:${diffCol(qq.difficulty)}">${diffLbl(qq.difficulty)}</span>`:''}
         <span style="margin-left:auto;font-size:14px">${correct?"✅":"❌"}</span>
       </div>
-      <div class="qz-rv-q">${esc(qq.q)}</div>
+      <div class="qz-rv-q">${esc(_fx(qq.q))}</div>
       ${opts}
-      ${qq.explanation?`<div class="qz-ex">💡 ${esc(qq.explanation)}</div>`:''}
+      ${qq.explanation?`<div class="qz-ex">💡 ${esc(_fx(qq.explanation))}</div>`:''}
     </div>`;
   };
 
@@ -295,8 +302,8 @@ function renderQuiz(){
           <div style="font-size:13.5px;color:var(--text-4,#888);margin-bottom:20px">${quizState.score===total?"Perfect score! You're exam-ready 🌟":quizState.score>=Math.ceil(total*0.7)?"Good job! Review the ones you missed 💪":quizState.score>=Math.ceil(total*0.5)?"Keep going — revise the concepts and retry 📚":"Focus on fundamentals and reattempt 🔁"}</div>
           <button class="qz-btn p" onclick="startQuiz(quizState.unitSel||null, quizState.countSel||15)" style="padding:12px 32px;font-size:14px">🔁 Try Again</button>
         </div>
-        <div class="qz-sec"><h3>Question Review</h3><div class="qz-tabs">${tabs('doneFilter')}</div></div>
-        ${qs.filter((qq,i)=>{
+        ${!quizState.showDoneReview ? `<div style="text-align:center;margin-top:14px"><button class="qz-btn" onclick="quizState.showDoneReview=true;render()">📝 Review Questions</button></div>` : `<div class="qz-sec"><h3>Question Review</h3><div class="qz-tabs">${tabs('doneFilter')}</div></div>`}
+        ${!quizState.showDoneReview ? '' : qs.filter((qq,i)=>{
           const correct=(quizState.userAnswers||[])[i]===qq.answer;
           const f=quizState.doneFilter||'All';
           if(f==='Correct') return correct;
@@ -316,18 +323,18 @@ function renderQuiz(){
         <div class="qz-prog"><span>Question <b>${quizState.current+1}</b> / ${total}</span><span style="color:#06D6A0">Score: ${quizState.score}</span></div>
         <div class="qz-bar"><i style="width:${Math.round((quizState.current+(ans?1:0))/total*100)}%"></i></div>
         ${q.difficulty?`<div style="margin-bottom:12px"><span class="qz-diff" style="color:${dc};border-color:${dc}55;background:${dc}14">${diffLbl(q.difficulty)}</span></div>`:""}
-        <div class="qz-q">${esc(q.q)}</div>
+        <div class="qz-q">${esc(_fx(q.q))}</div>
         <div class="qz-opts">
           ${q.options.map((opt,i)=>{
             let cls="";
             if(ans){ if(i===q.answer) cls="ok"; else if(i===quizState.selected) cls="bad"; }
-            return `<button class="qz-opt ${cls}" onclick="selectAnswer(${i})" ${ans?"disabled":""}><span class="l">${String.fromCharCode(65+i)}</span><span>${esc(opt)}</span></button>`;
+            return `<button class="qz-opt ${cls}" onclick="selectAnswer(${i})" ${ans?"disabled":""}><span class="l">${String.fromCharCode(65+i)}</span><span>${esc(_fxOpt(opt))}</span></button>`;
           }).join("")}
         </div>
         ${ans?`
           <div class="qz-fb" style="--c:${right?"#06D6A0":"#FF6B35"}">
-            <b>${right?"✅ Correct!":"❌ Incorrect — Correct: "+String.fromCharCode(65+q.answer)+". "+esc(q.options[q.answer])}</b>
-            ${q.explanation?`<p>💡 <b>Explanation:</b> ${esc(q.explanation)}</p>`:""}
+            <b>${right?"✅ Correct!":"❌ Incorrect — Correct: "+String.fromCharCode(65+q.answer)+". "+esc(_fxOpt(q.options[q.answer]))}</b>
+            ${q.explanation?`<p>💡 <b>Explanation:</b> ${esc(_fx(q.explanation))}</p>`:""}
           </div>
           <button class="qz-btn p" onclick="nextQuestion()" style="width:100%;padding:13px;font-size:14px">${quizState.current<total-1?"Next Question →":"See Results 🏆"}</button>`:""}
       </div>`;
