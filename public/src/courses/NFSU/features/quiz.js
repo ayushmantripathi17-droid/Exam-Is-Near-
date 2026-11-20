@@ -6,6 +6,7 @@ import { isProUser, openProModal } from "./payments-pro.js";
 import { AiAssistantSetupShared, FREE_QUIZ_LIMIT, _incDailyCounter, generateQuizFromAI } from "./ai-assistant-setup.js";
 import { CourseSelectorShared, getSubjects } from "../../../core/course-selector.js";
 import { spawnStars } from "./clock-alarms-timer.js";
+import { renderFocusAnalysis } from "../../../shared/weak-topics.js";
 
 // ══════════════════════════════════════════════════════════════
 let quizState={questions:[],current:0,selected:null,score:0,done:false,generating:false,subSel:'',unitSel:'',countSel:'15',showHistory:false,doneFilter:'All',reviewFilter:'All',reviewId:null,openReviewId:null};
@@ -27,7 +28,7 @@ function saveQuizLog(){
   localStorage.setItem('ein_quiz_log', JSON.stringify(CourseRuntime.quizLog.slice(-QUIZ_LOG_MAX)));
   if(!_firestoreUpdating){ clearTimeout(S._timer); S._timer = setTimeout(pushToFirebase, 1200); }
 }
-function clearQuizLog(){ if(!confirm('Clear all quiz logs?')) return; CourseRuntime.quizLog=[]; saveQuizLog(); render(); }
+function clearQuizLog(){ if(!confirm('Clear all practice logs?')) return; CourseRuntime.quizLog=[]; saveQuizLog(); render(); }
 function clearFlashLog(){ if(!confirm('Clear flashcard logs?')) return; CourseRuntime.flashLog=[]; saveFlashLog(); render(); }
 function saveFlashLog(){
   localStorage.setItem('ein_flash_log', JSON.stringify(CourseRuntime.flashLog.slice(-FLASH_LOG_MAX)));
@@ -42,19 +43,19 @@ async function startQuiz(unitName, qCount){
   const _proForQuiz = await isProUser();
   if(!_proForQuiz){
     if(AiAssistantSetupShared.freeQuizCount >= FREE_QUIZ_LIMIT){
-      showToast("⭐ Free limit reached ("+FREE_QUIZ_LIMIT+" quizzes). Upgrade to Pro for unlimited quizzes!","alarm");
+      showToast("⭐ Free limit reached ("+FREE_QUIZ_LIMIT+" practice sessions). Upgrade to Pro for unlimited practice!","alarm");
       openProModal();
       return;
     }
     AiAssistantSetupShared.freeQuizCount = _incDailyCounter('ein_free_quiz_day');
   }
 
-  // ── PRO GATE: 50-question quizzes are Pro only ──
+  // ── PRO GATE: 50-question practice sets are Pro only ──
   const _proForCount = await isProUser();
   const requestedQ = parseInt(qCount)||15;
   const numQ = _proForCount ? requestedQ : Math.min(requestedQ, 20);
   if(!_proForCount && requestedQ > 20){
-    showToast("⭐ 50-question quizzes are Pro only. Generating 20 Qs instead — upgrade to Pro!","alarm");
+    showToast("⭐ 50-question practice sets are Pro only. Generating 20 Qs instead — upgrade to Pro!","alarm");
     openProModal();
   }
 
@@ -72,7 +73,7 @@ async function startQuiz(unitName, qCount){
   quizState.generating=false;
   quizState.userAnswers=[];
   render();
-  showToast("🧠 "+numQ+"-Q quiz ready"+(unitName?" · "+unitName:"")+"! Good luck!","success");
+  showToast("🧠 "+numQ+"-Q practice ready"+(unitName?" · "+unitName:"")+"! Good luck!","success");
 }
 
 function selectAnswer(idx){
@@ -120,6 +121,7 @@ function nextQuestion(){
         }))
       });
       saveQuizLog();
+      render(); // refresh so the Focus Areas card includes this attempt
     });
   }
 }
@@ -203,7 +205,7 @@ function renderQuiz(){
       const cls=isAns?"ok":(isUser?"bad":"");
       const pre=isAns?"✓ ":(isUser?"✗ ":"");
       return `<div class="qz-ro ${cls}">${pre}<b>${String.fromCharCode(65+oi)}.</b> ${esc(opt)}</div>`;
-    }).join(''):`<div style="font-size:11.5px;color:var(--mute);font-style:italic">Options not stored for this entry — only new quizzes log full options</div>`;
+    }).join(''):`<div style="font-size:11.5px;color:var(--mute);font-style:italic">Options not stored for this entry — only new practice sessions log full options</div>`;
     return `<div class="qz-rv" style="border-color:color-mix(in srgb,${col} 35%,var(--line));background:color-mix(in srgb,${col} 6%,transparent)">
       <div class="qz-rv-h">
         <span class="qz-tag">Q${idx+1}</span>
@@ -238,7 +240,7 @@ function renderQuiz(){
             <div style="font-size:34px;font-weight:800;letter-spacing:-1px;color:${pctColor}">${reviewEntry.pct}%</div>
             <div style="text-align:right">
               <div style="font-size:13.5px;color:var(--text-2,#ccc);font-weight:700">${reviewEntry.score}/${reviewEntry.total} correct</div>
-              <div style="font-size:11.5px;color:var(--mute)">${reviewEntry.total}-question quiz</div>
+              <div style="font-size:11.5px;color:var(--mute)">${reviewEntry.total}-question practice</div>
             </div>
           </div>
           <div class="qz-bar" style="margin-bottom:12px"><i style="width:${reviewEntry.pct}%;background:${pctColor}"></i></div>
@@ -267,9 +269,9 @@ function renderQuiz(){
   let body="";
   if(total===0){
     body=`<div class="qz-empty">
-        <div class="e">🧠</div><b>AI-Powered Quiz</b>
-        <p>Select a subject and click "Start Quiz" to test yourself!</p>
-        ${CourseRuntime._proStatusCache?"":"<div class='qz-free'>Free: "+Math.max(0,FREE_QUIZ_LIMIT-AiAssistantSetupShared.freeQuizCount)+" quiz attempts left this session · <span onclick='openProModal()'>Go Pro for unlimited ⭐</span></div>"}
+        <div class="e">🧠</div><b>AI-Powered Practice</b>
+        <p>Select a subject and click "Start Practice" to test yourself!</p>
+        ${CourseRuntime._proStatusCache?"":"<div class='qz-free'>Free: "+Math.max(0,FREE_QUIZ_LIMIT-AiAssistantSetupShared.freeQuizCount)+" practice attempts left this session · <span onclick='openProModal()'>Go Pro for unlimited ⭐</span></div>"}
       </div>`;
   } else if(quizState.done){
     const ratio=quizState.score/total;
@@ -279,7 +281,7 @@ function renderQuiz(){
     body=`<div>
         <div class="qz-card qz-score">
           <div style="font-size:50px;margin-bottom:8px">${quizState.score===total?"🏆":ratio>=0.7?"🎯":"📊"}</div>
-          <div style="font-size:20px;font-weight:800;color:var(--acc);margin-bottom:8px">Quiz Complete!</div>
+          <div style="font-size:20px;font-weight:800;color:var(--acc);margin-bottom:8px">Practice Complete!</div>
           <div class="big">${quizState.score}<small>/${total}</small></div>
           <div style="font-size:13px;color:var(--mute);margin:4px 0 14px">${pctN}% accuracy</div>
           <div class="qz-bar" style="margin-bottom:14px"><i style="width:${pctN}%;background:${ratio>=0.7?"#06D6A0":ratio>=0.5?"#FFE66D":"#FF6B35"}"></i></div>
@@ -339,10 +341,10 @@ function renderQuiz(){
     let inner="";
     if(filteredLog.length===0){
       if(CourseSelectorShared.activeCourse==='cbse11' && !CourseSelectorShared.cbse11Stream)
-        inner='<div style="font-size:12.5px;color:var(--acc);padding:8px 0">Select your Class 11 stream first to see quiz logs.</div>';
+        inner='<div style="font-size:12.5px;color:var(--acc);padding:8px 0">Select your Class 11 stream first to see practice logs.</div>';
       else if(CourseSelectorShared.activeCourse==='cbse12' && !CourseSelectorShared.cbse12Stream)
-        inner='<div style="font-size:12.5px;color:var(--acc);padding:8px 0">Select your Class 12 stream first to see quiz logs.</div>';
-      else inner='<div style="font-size:12.5px;color:var(--mute);font-style:italic;padding:8px 0">No quiz logs for this course yet.</div>';
+        inner='<div style="font-size:12.5px;color:var(--acc);padding:8px 0">Select your Class 12 stream first to see practice logs.</div>';
+      else inner='<div style="font-size:12.5px;color:var(--mute);font-style:italic;padding:8px 0">No practice logs for this course yet.</div>';
     } else {
       const grouped={};
       filteredLog.forEach(e=>{
@@ -382,23 +384,35 @@ function renderQuiz(){
     }
     logsHtml=`<div style="margin-top:26px">
       <div class="qz-sec">
-        <h3>📋 Quiz Logs</h3>
+        <h3>📋 Practice Logs</h3>
         <button class="qz-btn" style="padding:6px 12px;font-size:11.5px" onclick="clearQuizLog()">🗑️ Clear</button>
       </div>
       ${inner}
     </div>`;
   }
 
+  // ── Focus Areas (analysis of practice history) — shown on the setup / results screens ──
+  let focusHtml="";
+  if(total===0 || quizState.done){
+    if(CourseRuntime._proStatusCache){
+      const _ids=new Set(getSubjects().map(s=>s.id));
+      focusHtml=renderFocusAnalysis(CourseRuntime.quizLog.filter(e=>_ids.has(e.subject)));
+    } else {
+      focusHtml=`<div class="qz-card" style="margin-top:22px"><div class="qz-sec" style="margin-bottom:6px"><h3>🎯 Focus Areas <span class="qz-tag">PRO</span></h3></div><div style="font-size:12.5px;color:var(--mute);margin-bottom:12px">See which subjects and topics need more focus, based on your practice.</div><button class="qz-btn p" onclick="openProModal()">Unlock with Pro ⭐</button></div>`;
+    }
+  }
+
   return `${css}<div class="qz fade-in">
-    <div class="qz-h1">🧠 AI Quiz</div>
+    <div class="qz-h1">🧠 AI Practice</div>
     <div class="qz-h2">Test yourself chapter by chapter with AI-generated questions.</div>
     <div class="qz-setup">
       <div><label>SUBJECT</label><select onchange="quizState.subSel=this.value;quizState.unitSel='';render()"><option value="">— Select Subject —</option>${subOpts}</select></div>
       <div><label>CHAPTER</label><select onchange="quizState.unitSel=this.value"><option value="">All Chapters</option>${unitOpts}</select></div>
       <div><label>QUESTIONS</label><select onchange="quizState.countSel=this.value">${cntOpts}</select></div>
-      <button class="qz-btn p" onclick="startQuiz(quizState.unitSel||null, quizState.countSel||15)" ${quizState.generating||!quizState.subSel?"disabled":""}>${quizState.generating?"⏳ Generating…":"✨ Start Quiz"}</button>
+      <button class="qz-btn p" onclick="startQuiz(quizState.unitSel||null, quizState.countSel||15)" ${quizState.generating||!quizState.subSel?"disabled":""}>${quizState.generating?"⏳ Generating…":"✨ Start Practice"}</button>
     </div>
     ${body}
+    ${focusHtml}
     ${logsHtml}
   </div>`;
 }

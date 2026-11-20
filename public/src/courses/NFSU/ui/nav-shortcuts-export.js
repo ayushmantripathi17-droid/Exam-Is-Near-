@@ -68,7 +68,7 @@ function showKeyboardShortcuts(){
       <button onclick="document.getElementById('kbd-shortcuts-modal').remove()" style="background:none;border:none;color:#666;font-size:18px;cursor:pointer">✕</button>
     </div>
     <div style="font-size:11px;color:#444;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase">Navigation</div>
-    ${[['1','Overview / Dashboard'],['2','Study Subjects'],['3','Alarms & Timer'],['4','Pomodoro'],['5','Flashcards'],['6','Quiz Mode'],['7','AI Assistant'],['8','Analytics'],['L','Study Log'],['F','Files'],['S','Sync & Account']].map(([k,l])=>`<div class="kbd-shortcut"><span>${l}</span><kbd class="kbd-key">${k}</kbd></div>`).join("")}
+    ${[['1','Overview / Dashboard'],['2','Study Subjects'],['3','Alarms & Timer'],['4','Pomodoro'],['5','Flashcards'],['6','Practice Mode'],['7','AI Assistant'],['8','Analytics'],['L','Study Log'],['F','Files'],['S','Sync & Account']].map(([k,l])=>`<div class="kbd-shortcut"><span>${l}</span><kbd class="kbd-key">${k}</kbd></div>`).join("")}
     <div style="font-size:11px;color:#444;letter-spacing:1px;margin:12px 0;text-transform:uppercase">Pomodoro (when on timer page)</div>
     ${[['Space','Start / Pause'],['R','Reset timer']].map(([k,l])=>`<div class="kbd-shortcut"><span>${l}</span><kbd class="kbd-key">${k}</kbd></div>`).join("")}
     <div class="kbd-shortcut" style="margin-top:8px;border-top:1px solid #111;padding-top:10px"><span>Show this panel</span><kbd class="kbd-key">Shift + ?</kbd></div>

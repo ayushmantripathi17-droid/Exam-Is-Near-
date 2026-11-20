@@ -5,6 +5,8 @@
 // No new Firestore fields, no new sync logic — pure derived view.
 // ══════════════════════════════════════════════════════════════
 
+import { esc } from "../utils/helpers.js";
+
 const MIN_ATTEMPTS_TO_SURFACE = 1; // a topic needs at least one quiz attempt to be ranked
 
 /**
@@ -79,6 +81,101 @@ export function renderWeakTopicsCard(weakTopics, ctaHandler = "startWeakTopicMoc
   </div>`;
 }
 
+
+// ══════════════════════════════════════════════════════════════
+// PRACTICE FOCUS ANALYSIS — subject-wise accuracy + "focus on this next"
+// Pure derived view over practice history (CourseRuntime.quizLog).
+// ══════════════════════════════════════════════════════════════
+const MIN_Q_FOR_RANKING = 5;   // a topic needs at least this many questions answered before we judge it
+const STRONG_PCT = 70;         // at/above this we call a topic "strong"
+
+/** Groups the practice log by subject, then by chapter, with accuracy for each. */
+export function analyzePractice(quizLog){
+  const subjects = {};
+  (quizLog || []).forEach(e => {
+    if (!e || !e.total) return;
+    const sid = e.subject || "?";
+    const s = subjects[sid] || (subjects[sid] = { id: sid, name: e.subjectName || sid, total: 0, correct: 0, chapters: {} });
+    s.total += e.total; s.correct += e.score || 0;
+    const ch = e.chapter || "All Chapters";
+    const c = s.chapters[ch] || (s.chapters[ch] = { name: ch, total: 0, correct: 0 });
+    c.total += e.total; c.correct += e.score || 0;
+  });
+  return Object.values(subjects).map(s => {
+    const chapters = Object.values(s.chapters).map(c => ({
+      ...c, subject: s.id, subjectName: s.name, accuracy: Math.round((c.correct / c.total) * 100)
+    }));
+    return { ...s, accuracy: Math.round((s.correct / s.total) * 100), chapters };
+  });
+}
+
+/** Weakest topics across all subjects (only ones with enough questions), weakest first. */
+export function getFocusTopics(subjects, limit = 3){
+  const all = [];
+  subjects.forEach(s => s.chapters.forEach(c => {
+    if (c.total >= MIN_Q_FOR_RANKING && c.accuracy < STRONG_PCT) all.push(c);
+  }));
+  return all.sort((a, b) => a.accuracy - b.accuracy || b.total - a.total).slice(0, limit);
+}
+
+/** Card for the Practice screen: what to focus on + per-subject accuracy. */
+export function renderFocusAnalysis(quizLog){
+  const subjects = analyzePractice(quizLog);
+  if (!subjects.length){
+    return `<div class="qz-card" style="margin-top:22px">
+      <div class="qz-sec" style="margin-bottom:6px"><h3>🎯 Focus Areas</h3></div>
+      <div style="font-size:12.5px;color:var(--mute)">Complete a few practice sets — this will show which subjects and topics need more work.</div>
+    </div>`;
+  }
+  const pcOf = p => p >= 70 ? "#06D6A0" : p >= 50 ? "#FFE66D" : "#FF6B35";
+  const label = c => c.name === "All Chapters" ? "Mixed chapters" : c.name;
+  const focus = getFocusTopics(subjects);
+  if (typeof window !== "undefined") window.__focusTopics = focus;
+
+  const focusHtml = focus.length ? focus.map((t, i) => `
+    <div class="qz-log" style="margin-bottom:8px"><div class="qz-log-r">
+      <div class="qz-log-c" style="color:${pcOf(t.accuracy)};border-color:${pcOf(t.accuracy)}">${t.accuracy}%</div>
+      <div style="flex:1;min-width:0">
+        <b>${esc(label(t))}</b>
+        <span class="s">${esc(t.subjectName)} · ${t.correct}/${t.total} correct</span>
+      </div>
+      <button class="qz-btn" style="padding:7px 12px;font-size:11.5px;color:var(--acc)" onclick="startFocusPractice(${i})">Practice →</button>
+    </div></div>`).join("")
+    : `<div style="font-size:12.5px;color:#06D6A0;margin-bottom:6px">🌟 No weak topics right now — every topic you've practiced is at ${STRONG_PCT}%+. Try harder chapters or 50-question sets.</div>`;
+
+  const subjHtml = subjects.slice().sort((a, b) => a.accuracy - b.accuracy).map(s => {
+    const enough = s.total >= MIN_Q_FOR_RANKING;
+    const weakest = s.chapters.filter(c => c.name !== "All Chapters" && c.total >= MIN_Q_FOR_RANKING)
+      .sort((a, b) => a.accuracy - b.accuracy)[0];
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--txt);margin-bottom:4px">
+        <span><b>${esc(s.name)}</b> <span style="color:var(--mute)">· ${s.total} questions</span></span>
+        <span style="color:${enough ? pcOf(s.accuracy) : "var(--mute)"};font-weight:800">${enough ? s.accuracy + "%" : "Need more data"}</span>
+      </div>
+      <div class="qz-bar" style="margin-bottom:4px"><i style="width:${s.accuracy}%;background:${pcOf(s.accuracy)}"></i></div>
+      ${weakest && weakest.accuracy < STRONG_PCT ? `<div style="font-size:11.5px;color:var(--mute)">Weakest: ${esc(weakest.name)} (${weakest.accuracy}%)</div>` : ""}
+    </div>`;
+  }).join("");
+
+  return `<div class="qz-card" style="margin-top:22px">
+    <div class="qz-sec" style="margin-bottom:10px"><h3>🎯 Focus Areas</h3></div>
+    <div class="qz-grp" style="margin-top:0">Focus on these first</div>
+    ${focusHtml}
+    <div class="qz-grp">Subject-wise accuracy</div>
+    ${subjHtml}
+    <div style="font-size:10.5px;color:var(--mute)">Based on your practice history. Topics need ${MIN_Q_FOR_RANKING}+ questions to be ranked.</div>
+  </div>`;
+}
+
+/** Starts a practice set on one of the focus topics shown in the card (by index). */
+export function startFocusPractice(i){
+  const t = (window.__focusTopics || [])[i];
+  if (!t || !window.quizState) return;
+  window.quizState.subSel = t.subject;
+  window.quizState.unitSel = t.name === "All Chapters" ? "" : t.name;
+  window.startQuiz(window.quizState.unitSel || null, window.quizState.countSel || 15);
+}
+
 if (typeof window !== "undefined") {
-  Object.assign(window, { getWeakTopics, buildWeakTopicContext, renderWeakTopicsCard });
+  Object.assign(window, { getWeakTopics, buildWeakTopicContext, renderWeakTopicsCard, analyzePractice, getFocusTopics, renderFocusAnalysis, startFocusPractice });
 }

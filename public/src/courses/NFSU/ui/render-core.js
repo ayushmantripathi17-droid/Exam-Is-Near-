@@ -245,7 +245,7 @@ service cloud.firestore {
         <b style="color:var(--acc)">Exam Is Near</b> · Study Smart v15 · by ArkSetu<br>
         ✅ IndexedDB file storage<br>
         ✅ 15 alarm ringtones · 50 preset alarms<br>
-        ✅ Pomodoro, Flashcards, Quiz, Analytics<br>
+        ✅ Pomodoro, Flashcards, Practice, Analytics<br>
         ✅ AI Study Assistant (Gemini)<br>
         ✅ Link-based data sharing<br>
         ✅ Google Firebase real-time sync<br>

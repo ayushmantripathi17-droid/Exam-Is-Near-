@@ -53,7 +53,7 @@ export function renderStrategyComparisonCard(sim){
   const order = ["attemptAll", "skipGuesses", "skipUnsureAndGuess"];
   return `<div class="card" style="margin-bottom:16px;border-color:#4ECDC433">
     <div class="section-label" style="margin-bottom:4px">🎯 Attempt Strategy — What If?</div>
-    <div style="font-size:10px;color:#555;margin-bottom:14px">Same quiz, scored under NEET/JEE marking (+${sim.scheme.correct} / ${sim.scheme.wrong}) if you'd skipped low-confidence answers instead of guessing.</div>
+    <div style="font-size:10px;color:#555;margin-bottom:14px">Same practice set, scored under NEET/JEE marking (+${sim.scheme.correct} / ${sim.scheme.wrong}) if you'd skipped low-confidence answers instead of guessing.</div>
     <div style="display:flex;flex-direction:column;gap:8px">
       ${order.map(k => {
         const s = sim.strategies[k];

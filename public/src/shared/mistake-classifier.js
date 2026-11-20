@@ -91,7 +91,7 @@ export function renderMistakeBreakdownCard(breakdown){
   if (!breakdown.total){
     return `<div class="card" style="margin-bottom:16px">
       <div class="section-label" style="margin-bottom:8px">🔬 Mistake Breakdown</div>
-      <div style="font-size:12px;color:#333;text-align:center;padding:12px 0">No wrong answers yet to analyze — keep taking quizzes.</div>
+      <div style="font-size:12px;color:#333;text-align:center;padding:12px 0">No wrong answers yet to analyze — keep practicing.</div>
     </div>`;
   }
   const gapPct = Math.round((breakdown.conceptGaps / breakdown.total) * 100);

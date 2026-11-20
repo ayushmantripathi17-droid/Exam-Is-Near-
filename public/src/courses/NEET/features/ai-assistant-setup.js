@@ -213,7 +213,7 @@ function renderAIChat(){
 
 async function generateQuizFromAI(subject, count){
   const n = parseInt(count)||15;
-  showToast("🧠 Generating "+n+"-question quiz…","info");
+  showToast("🧠 Generating "+n+"-question practice…","info");
   const isJEE  = CourseSelectorShared.activeCourse === 'jee';
   const isNEET = CourseSelectorShared.activeCourse === 'neet';
   const isCBSE10  = CourseSelectorShared.activeCourse === 'cbse10';
@@ -276,7 +276,7 @@ Output all ${n} questions. Do not truncate.`;
   const resp = await askAI(prompt, true);
   // Guard: if AI returned an error string, don't try to parse
   if(!resp || typeof resp !== 'string' || resp.startsWith('⚠️') || resp.startsWith('No response')){
-    showToast("⚠️ Quiz generation failed: " + (resp||"No response"), "alarm");
+    showToast("⚠️ Practice generation failed: " + (resp||"No response"), "alarm");
     return null;
   }
   try{
@@ -291,7 +291,7 @@ Output all ${n} questions. Do not truncate.`;
     if(valid.length === 0) return null;
     return valid.sort(()=>Math.random()-0.5).slice(0,n);
   }catch(e){
-    showToast("⚠️ Could not parse quiz response. Try again.", "alarm");
+    showToast("⚠️ Could not parse practice response. Try again.", "alarm");
     return null;
   }
 }

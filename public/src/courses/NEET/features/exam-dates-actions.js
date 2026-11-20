@@ -102,7 +102,7 @@ const _pageMeta = {
   files:      { title: 'Study Material — Exam Is Near', desc: 'Manage and access your notes, PDFs and study files synced with Firebase Storage and Google Drive.' },
   pomodoro:   { title: 'Pomodoro Timer — Exam Is Near', desc: 'Boost focus with the Pomodoro technique. Free study timer with session tracking for JEE and NEET prep.' },
   flashcards: { title: 'Flashcards — Exam Is Near', desc: 'Create and review flashcards with spaced repetition (SRS) for long-term retention. Free for JEE, NEET, UPSC students.' },
-  quiz:       { title: 'Quiz Mode — Exam Is Near', desc: 'Test yourself with MCQ quiz mode. Instant feedback, quiz logs and review cards for exam preparation.' },
+  quiz:       { title: 'Practice Mode — Exam Is Near', desc: 'Test yourself with MCQ practice mode. Instant feedback, practice logs and review cards for exam preparation.' },
   analytics:  { title: 'Study Analytics — Exam Is Near', desc: 'Visualise your study hours, mood trends and subject-wise progress with detailed analytics and rank predictor.' },
   ai:         { title: 'AI Tutor — Exam Is Near', desc: 'Get instant doubt resolution from an AI tutor powered by Groq LLaMA 3.3. Free AI study assistant for students.' },
   sync:       { title: 'Sync & Account — Exam Is Near', desc: 'Sync your study data across devices with Firebase cloud backup. Sign in with Google.' },
@@ -111,13 +111,13 @@ const _pageMeta = {
   profile:    { title: 'Profile — Exam Is Near', desc: 'Manage your Exam Is Near profile, subscription and preferences.' },
   neetjee:    { title: 'NEET / JEE Hub — Exam Is Near', desc: 'Chapter-wise weightage, rank predictor and OMR practice for NEET UG and JEE Mains / Advanced.' },
   rank:       { title: 'Rank Predictor — Exam Is Near', desc: 'Free NEET & JEE Main rank predictor. Updated with NTA 2025 official data and JoSAA 2025 closing ranks. Predict your AIR and colleges instantly.' },
-  'course:jee':    { title: 'JEE Preparation — Exam Is Near', desc: 'Free JEE Mains and Advanced study app. Track Maths, Physics and Chemistry with AI tutor, flashcards, quiz mode and rank predictor.' },
-  'course:neet':   { title: 'NEET UG Preparation — Exam Is Near', desc: 'Free NEET UG study app. Track Biology, Physics and Chemistry with AI tutor, flashcards, quiz mode and rank predictor.' },
-  'course:nfsu':   { title: 'NFSU B.Sc. LL.B. Sem II — Exam Is Near', desc: 'Study companion for NFSU B.Sc. LL.B. Semester II. Track subjects, notes, flashcards and quiz mode for forensic law students.' },
+  'course:jee':    { title: 'JEE Preparation — Exam Is Near', desc: 'Free JEE Mains and Advanced study app. Track Maths, Physics and Chemistry with AI tutor, flashcards, practice mode and rank predictor.' },
+  'course:neet':   { title: 'NEET UG Preparation — Exam Is Near', desc: 'Free NEET UG study app. Track Biology, Physics and Chemistry with AI tutor, flashcards, practice mode and rank predictor.' },
+  'course:nfsu':   { title: 'NFSU B.Sc. LL.B. Sem II — Exam Is Near', desc: 'Study companion for NFSU B.Sc. LL.B. Semester II. Track subjects, notes, flashcards and practice mode for forensic law students.' },
   'course:nfsu1':  { title: 'NFSU B.Sc. LL.B. Sem I — Exam Is Near', desc: 'Study companion for NFSU B.Sc. LL.B. Semester I. Covers Legal Methods, Law of Tort, Computer Organization, C Programming and Discrete Mathematics.' },
   'course:nfsu3':  { title: 'NFSU B.Sc. LL.B. Sem III — Exam Is Near', desc: 'Study companion for NFSU B.Sc. LL.B. Semester III. Covers IPC, Constitutional Law, Contract Law, Family Law, Web Programming and OS Concepts.' },
   'course:cbse10': { title: 'CBSE Class 10 Preparation — Exam Is Near', desc: 'Free CBSE Class 10 board exam study app. Track Maths, Science, English and Social Science with AI tutor and flashcards.' },
-  'course:cbse12': { title: 'CBSE Class 12 Preparation — Exam Is Near', desc: 'Free CBSE Class 12 board exam study app. AI tutor, flashcards, quiz mode and syllabus tracker for all streams.' },
+  'course:cbse12': { title: 'CBSE Class 12 Preparation — Exam Is Near', desc: 'Free CBSE Class 12 board exam study app. AI tutor, flashcards, practice mode and syllabus tracker for all streams.' },
 };
 function _updatePageMeta(v){
   const m = _pageMeta[v] || _pageMeta['course:'+v] || _pageMeta['dashboard'];
